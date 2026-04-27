@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -40,6 +42,7 @@ public class ArtemisMBeanServerGuard extends AbstractGuardInvocationHandler {
    private JMXAccessControlList jmxAccessControlList = JMXAccessControlList.createDefaultList();
 
    private static final String defaultRoleClass = "org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal";
+   private final Cache<ObjectName, Boolean> bypassRBACCache = Caffeine.newBuilder().maximumSize(10000).build();
 
    @Override
    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -53,7 +56,7 @@ public class ArtemisMBeanServerGuard extends AbstractGuardInvocationHandler {
    }
 
    private boolean canBypassRBAC(ObjectName objectName) {
-      return jmxAccessControlList.isInAllowList(objectName);
+      return bypassRBACCache.get(objectName, jmxAccessControlList::isInAllowList);
    }
 
    @Override
