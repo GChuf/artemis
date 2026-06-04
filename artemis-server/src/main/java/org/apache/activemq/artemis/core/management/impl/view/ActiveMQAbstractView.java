@@ -20,7 +20,6 @@ import org.apache.activemq.artemis.core.management.impl.view.predicate.Predicate
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -116,24 +115,12 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
    }
 
    public List<T> getPagedResult(int page, int pageSize) {
-      List<T> builder = new ArrayList<>();
-      final int start;
-      final int end;
       if (page == -1 || pageSize == -1) {
-         start = 0;
-         end = collection.size();
+         return collection.stream().sorted(getComparator()).collect(Collectors.toUnmodifiableList());
       } else {
-         start = (page - 1) * pageSize;
-         end = Math.min(page * pageSize, collection.size());
+         int start = (page - 1) * pageSize;
+         return collection.stream().sorted(getComparator()).skip(start).limit(pageSize).collect(Collectors.toUnmodifiableList());
       }
-      int i = 0;
-      for (T e : collection.stream().sorted(getComparator()).collect(Collectors.toList())) {
-         if (i >= start && i < end) {
-            builder.add(e);
-         }
-         i++;
-      }
-      return Collections.unmodifiableList(builder);
    }
 
    public Predicate<T> getPredicate() {
