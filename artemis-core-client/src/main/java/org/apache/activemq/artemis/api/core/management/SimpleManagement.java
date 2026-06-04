@@ -180,13 +180,15 @@ public class SimpleManagement implements AutoCloseable {
       JsonObject queuesAsJsonObject = JsonUtil.readJsonObject(responseString);
       JsonArray array = queuesAsJsonObject.getJsonArray("data");
 
-      Map<String, Long> queues = new HashMap<>();
+      int size = array.size();
 
-      for (int i = 0; i < array.size(); i++) {
+      Map<String, Long> queues = new HashMap<>(size, 1.0f);
+
+      for (int i = 0; i < size; i++) {
          JsonObject object = array.getJsonObject(i);
          String name = object.getString("name");
-         String messageCount = object.getString("messageCount");
-         queues.put(name, Long.parseLong(messageCount));
+         long messageCount = Long.parseLong(object.getString("messageCount"));
+         queues.put(name, messageCount);
       }
 
       return queues;
