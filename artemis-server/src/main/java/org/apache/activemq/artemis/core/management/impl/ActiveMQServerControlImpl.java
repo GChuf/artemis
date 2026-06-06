@@ -2795,7 +2795,6 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
    }
 
    private JsonObject toJSONObject(ServerConsumer consumer) throws Exception {
-      List<MessageReference> deliveringMessages = consumer.getDeliveringMessages();
       JsonObjectBuilder obj = JsonLoader.createObjectBuilder()
             .add(ConsumerField.ID.getAlternativeName(), consumer.getID())
             .add(ConsumerField.SEQUENTIAL_ID.getAlternativeName(), consumer.getSequentialID())
