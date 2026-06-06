@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ConsumerPredicateFilterPart;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ConsumerFilterPredicate;
@@ -68,7 +68,7 @@ public class ConsumerView extends ActiveMQAbstractView<ServerConsumer, ConsumerP
          .add(ConsumerField.ADDRESS.getName(), toString(consumer.getQueueAddress()))
          .add(ConsumerField.LOCAL_ADDRESS.getName(), toString(consumer.getConnectionLocalAddress()))
          .add(ConsumerField.REMOTE_ADDRESS.getName(), toString(consumer.getConnectionRemoteAddress()))
-         .add(ConsumerField.CREATION_TIME.getName(), new Date(consumer.getCreationTime()).toString())
+         .add(ConsumerField.CREATION_TIME.getName(), Instant.ofEpochMilli(consumer.getCreationTime()).toString())
          .add(ConsumerField.MESSAGES_IN_TRANSIT.getName(), toString(consumer.getMessagesInTransit()))
          .add(ConsumerField.MESSAGES_IN_TRANSIT_SIZE.getName(), toString(consumer.getMessagesInTransitSize()))
          .add(ConsumerField.MESSAGES_DELIVERED.getName(), toString(consumer.getMessagesDelivered()))
@@ -105,7 +105,7 @@ public class ConsumerView extends ActiveMQAbstractView<ServerConsumer, ConsumerP
          case FILTER -> consumer.getFilterString();
          case LOCAL_ADDRESS -> consumer.getConnectionLocalAddress();
          case REMOTE_ADDRESS -> consumer.getConnectionRemoteAddress();
-         case CREATION_TIME -> new Date(consumer.getCreationTime());
+         case CREATION_TIME -> Instant.ofEpochMilli(consumer.getCreationTime());
          case MESSAGES_IN_TRANSIT -> consumer.getMessagesInTransit();
          case MESSAGES_IN_TRANSIT_SIZE -> consumer.getMessagesInTransitSize();
          case MESSAGES_DELIVERED -> consumer.getMessagesDelivered();
