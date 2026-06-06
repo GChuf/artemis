@@ -51,7 +51,6 @@ public class ConsumerView extends ActiveMQAbstractView<ServerConsumer, ConsumerP
    @Override
    public JsonObjectBuilder toJson(ServerConsumer consumer) {
       ServerSession session = server.getSessionByID(consumer.getSessionID());
-      ActiveMQServerControlImpl serverControl = server.getActiveMQServerControl();
       //if session is not available then consumer is not in valid state - ignore
       if (session == null) {
          return null;

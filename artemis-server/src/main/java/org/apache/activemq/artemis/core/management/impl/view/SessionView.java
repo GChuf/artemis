@@ -18,6 +18,8 @@ package org.apache.activemq.artemis.core.management.impl.view;
 
 import org.apache.activemq.artemis.core.management.impl.view.predicate.SessionPredicateFilterPart;
 import org.apache.activemq.artemis.json.JsonObjectBuilder;
+
+import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
 
@@ -45,7 +47,7 @@ public class SessionView extends ActiveMQAbstractView<ServerSession, SessionPred
          .add(SessionField.ID.getName(), toString(session.getName()))
          .add(SessionField.USER.getName(), toString(session.getUsername()))
          .add(SessionField.VALIDATED_USER.getName(), toString(session.getValidatedUser()))
-         .add(SessionField.CREATION_TIME.getName(), new Date(session.getCreationTime()).toString())
+         .add(SessionField.CREATION_TIME.getName(), Instant.ofEpochMilli(session.getCreationTime()).toString())
          .add(SessionField.CONSUMER_COUNT.getName(), session.getConsumerCount())
          .add(SessionField.PRODUCER_COUNT.getName(), session.getProducerCount())
          .add(SessionField.CONNECTION_ID.getName(), session.getConnectionID().toString())

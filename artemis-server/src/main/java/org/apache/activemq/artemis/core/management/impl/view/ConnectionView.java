@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -62,7 +63,7 @@ public class ConnectionView extends ActiveMQAbstractView<RemotingConnection, Con
          .add(ConnectionField.CONNECTION_ID.getName(), toString(connection.getID()))
          .add(ConnectionField.REMOTE_ADDRESS.getName(), toString(connection.getRemoteAddress()))
          .add(ConnectionField.USERS.getName(), StringUtil.joinStringList(users, ","))
-         .add(ConnectionField.CREATION_TIME.getName(), new Date(connection.getCreationTime()).toString())
+         .add(ConnectionField.CREATION_TIME.getName(), Instant.ofEpochMilli(connection.getCreationTime()).toString())
          .add(ConnectionField.IMPLEMENTATION.getName(), toString(connection.getClass().getSimpleName()))
          .add(ConnectionField.PROTOCOL.getName(), toString(connection.getProtocolName()))
          .add(ConnectionField.CLIENT_ID.getName(), toString(connection.getClientID()))
