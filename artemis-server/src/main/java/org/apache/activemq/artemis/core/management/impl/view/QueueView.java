@@ -46,7 +46,7 @@ public class QueueView extends ActiveMQAbstractView<QueueControl, QueuePredicate
    public JsonObjectBuilder toJson(QueueControl queue) {
       Queue q = server.locateQueue(SimpleString.of(queue.getName()));
       JsonObjectBuilder obj = JsonLoader.createObjectBuilder()
-         .add(QueueField.ID.getName(), toString(queue.getID()))
+         .add(QueueField.ID.getName(), queue.getID())
          .add(QueueField.NAME.getName(), toString(queue.getName()))
          .add(QueueField.ADDRESS.getName(), toString(queue.getAddress()))
          .add(QueueField.FILTER.getName(), toString(queue.getFilter()))
