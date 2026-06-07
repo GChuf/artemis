@@ -31,6 +31,7 @@ import org.apache.activemq.artemis.cli.Terminal;
 import org.apache.activemq.artemis.cli.commands.ActionContext;
 import org.apache.activemq.artemis.cli.commands.messages.ConnectionAbstract;
 import org.apache.activemq.artemis.json.JsonArray;
+import org.apache.activemq.artemis.json.JsonNumber;
 import org.apache.activemq.artemis.json.JsonObject;
 import org.apache.activemq.artemis.utils.TableOut;
 import picocli.CommandLine.Command;
@@ -413,7 +414,12 @@ public class StatQueue extends ConnectionAbstract {
          if (!jsonObject.containsKey(e.jsonId)) {
             columns[i++] = NOT_APPLICABLE;
          } else {
-            columns[i++] = jsonObject.getString(e.jsonId);
+            Object value = jsonObject.get(e.jsonId);
+            if (value instanceof JsonNumber jsonNumber) {
+               columns[i++] = String.valueOf(jsonNumber);
+            } else {
+               columns[i++] = jsonObject.getString(e.jsonId);
+            }
          }
       }
       tableOut.print(getActionContext().out, columns, center);
