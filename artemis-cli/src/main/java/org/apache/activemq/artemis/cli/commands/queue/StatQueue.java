@@ -209,7 +209,7 @@ public class StatQueue extends ConnectionAbstract {
          return 1;
       }
 
-      singleExeuction(context, filter);
+      singleExecution(context, filter);
 
       // if using the hidden parameter
       if (oldSleep != -1) {
@@ -230,7 +230,7 @@ public class StatQueue extends ConnectionAbstract {
          Thread.sleep(loopSleep);
          getActionContext().out.println(new Date() + ">> Queue stat results for " + getBrokerInstance());
          try {
-            singleExeuction(context, filter);
+            singleExecution(context, filter);
          } catch (Throwable e) {
             e.printStackTrace(getActionContext().err);
          }
@@ -254,7 +254,7 @@ public class StatQueue extends ConnectionAbstract {
       });
    }
 
-   private void singleExeuction(ActionContext context, String filter) throws Exception {
+   private void singleExecution(ActionContext context, String filter) throws Exception {
       try (SimpleManagement simpleManagement = new SimpleManagement(brokerURL, user, password).open()) {
          String nodeID = simpleManagement.getNodeID();
          JsonArray topology = simpleManagement.listNetworkTopology();
