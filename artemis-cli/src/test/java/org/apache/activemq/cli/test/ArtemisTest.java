@@ -1668,7 +1668,7 @@ public class ArtemisTest extends CliTestBase {
          {
             JsonObject json = JsonLoader.readObject(new InputStreamReader(new ByteArrayInputStream(context.getStdoutBytes())));
             JsonArray arrayQueues = json.getJsonArray("data");
-            arrayQueues.stream().filter(jsonValue -> jsonValue.asJsonObject().getString("name").equals("Test20")).forEach(jsonValue -> Assertions.assertEquals(20, Integer.parseInt(jsonValue.asJsonObject().getString("messageCount"))));
+            arrayQueues.stream().filter(jsonValue -> jsonValue.asJsonObject().getString("name").equals("Test20")).forEach(jsonValue -> Assertions.assertEquals(20, jsonValue.asJsonObject().getInt("messageCount")));
          }
 
          //check all queues are displayed when no Filter set
