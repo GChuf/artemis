@@ -364,13 +364,22 @@ public class StatQueue extends ConnectionAbstract {
 
    private void getColumnSizes(JsonObject jsonObject, int[] columnSizes) {
       int i = 0;
+      String value;
       if (!includeManagement && jsonObject.getString("name").startsWith(MANAGEMENT_QUEUE)) {
          return;
       }
       for (FIELD e: FIELD.values()) {
          if (jsonObject.containsKey(e.jsonId)) {
-            if (jsonObject.getString(e.jsonId).length() > columnSizes[i]) {
-               columnSizes[i] = jsonObject.getString(e.jsonId).length();
+            Object jsonValue = jsonObject.get(e.jsonId);
+
+            if (jsonValue instanceof JsonNumber jsonNumber) {
+               value = String.valueOf(jsonNumber);
+            } else {
+               value = jsonObject.getString(e.jsonId);
+            }
+
+            if (value.length() > columnSizes[i]) {
+               columnSizes[i] = value.length();
             }
          } else {
             if (NOT_APPLICABLE.length() > columnSizes[i]) {
