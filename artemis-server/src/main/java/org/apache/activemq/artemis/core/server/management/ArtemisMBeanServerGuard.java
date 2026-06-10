@@ -50,6 +50,18 @@ public class ArtemisMBeanServerGuard implements GuardInvocationHandler {
 
    private final Map<ObjectName, Boolean> bypassRBACCache = new ConcurrentHashMap<>();
 
+   private static final class CachedRolesPrincipal implements Principal {
+      final Set<String> roles;
+
+      CachedRolesPrincipal(Set<String> roles) {
+         this.roles = Collections.unmodifiableSet(roles);
+      }
+
+      @Override public String getName() {
+         return "__cached_roles__";
+      }
+   }
+
    public void init() {
       ArtemisMBeanServerBuilder.setGuard(this);
    }
@@ -240,10 +252,18 @@ public class ArtemisMBeanServerGuard implements GuardInvocationHandler {
          return Collections.emptySet();
       }
 
+      // Check if roles are already cached on the subject
+      Set<CachedRolesPrincipal> cached = subject.getPrincipals(CachedRolesPrincipal.class);
+      if (!cached.isEmpty()) {
+         return cached.iterator().next().roles;
+      }
+
+      // First call for this subject — build and cache
       Set<String> roles = new HashSet<>();
       for (Principal p : subject.getPrincipals()) {
          roles.add(p.getName());
       }
+      subject.getPrincipals().add(new CachedRolesPrincipal(roles));
       return roles;
    }
 
