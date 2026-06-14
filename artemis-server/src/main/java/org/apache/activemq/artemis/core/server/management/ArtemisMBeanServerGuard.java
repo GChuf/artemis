@@ -49,6 +49,7 @@ public class ArtemisMBeanServerGuard implements GuardInvocationHandler {
    private JMXAccessControlList jmxAccessControlList = JMXAccessControlList.createDefaultList();
 
    private final Map<ObjectName, Boolean> bypassRBACCache = new ConcurrentHashMap<>();
+   private final Map<String, ObjectName> objectNameCache = new ConcurrentHashMap<>();
 
    private static final class CachedRolesPrincipal implements Principal {
       final Set<String> roles;
@@ -158,12 +159,16 @@ public class ArtemisMBeanServerGuard implements GuardInvocationHandler {
       if (operationName == null) {
          return true;
       }
+      ObjectName objectName = objectNameCache.computeIfAbsent(object, key -> {
+         try {
+            return ObjectName.getInstance(key);
+         } catch (MalformedObjectNameException e) {
+            logger.debug("can't check invoke rights as object name invalid: {}", key, e);
+            return null;
+         }
+      });
 
-      ObjectName objectName = null;
-      try {
-         objectName = ObjectName.getInstance(object);
-      } catch (MalformedObjectNameException e) {
-         logger.debug("can't check invoke rights as object name invalid: {}", object, e);
+      if (objectName == null) {
          return false;
       }
 
