@@ -128,12 +128,13 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
    }
 
    public Comparator<T> getComparator() {
+      boolean sortOrderDescending = sortOrder.equalsIgnoreCase(DESCENDING);
       return (left, right) -> {
          try {
             Object leftValue = getField(left, sortField);
             Object rightValue = getField(right, sortField);
             if (leftValue instanceof Comparable l && rightValue instanceof Comparable r) {
-               if (sortOrder.equalsIgnoreCase(DESCENDING)) {
+               if (sortOrderDescending) {
                   return r.compareTo(leftValue);
                } else {
                   return l.compareTo(rightValue);
