@@ -23,8 +23,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerBuilder;
@@ -51,7 +51,7 @@ public class ArtemisMBeanServerBuilder extends MBeanServerBuilder {
    private static final class MBeanInvocationHandler implements InvocationHandler {
 
       private final MBeanServer wrapped;
-      private final List<String> guarded = Collections.unmodifiableList(Arrays.asList("invoke", "getAttribute", "getAttributes", "setAttribute", "setAttributes", "queryMBeans"));
+      private final Set<String> guarded = new HashSet<>(Arrays.asList("invoke", "getAttribute", "getAttributes", "setAttribute", "setAttributes", "queryMBeans"));
 
       MBeanInvocationHandler(MBeanServer mbeanServer) {
          wrapped = mbeanServer;
@@ -69,14 +69,15 @@ public class ArtemisMBeanServerBuilder extends MBeanServerBuilder {
             }
             AuditLogger.setRemoteAddress(url);
          }
+         int parameterCount = method.getParameterTypes().length;
          if (guarded.contains(method.getName())) {
             if (ArtemisMBeanServerBuilder.guard == null) {
                throw new IllegalStateException("ArtemisMBeanServerBuilder not initialized");
             }
             guard.invoke(proxy, method, args);
          }
-         if (method.getName().equals("equals")
-               && method.getParameterTypes().length == 1
+         if (parameterCount == 1
+               && method.getName().equals("equals")
                && method.getParameterTypes()[0] == Object.class) {
             Object target = args[0];
             if (target != null && Proxy.isProxyClass(target.getClass())) {
@@ -85,7 +86,7 @@ public class ArtemisMBeanServerBuilder extends MBeanServerBuilder {
                   args[0] = invocationHandler.wrapped;
                }
             }
-         } else if (method.getName().equals("finalize") && method.getParameterTypes().length == 0) {
+         } else if (parameterCount == 0 && method.getName().equals("finalize")) {
             // special case finalize, don't route through to delegate because that will get its own call
             return null;
          }
