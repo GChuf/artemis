@@ -189,7 +189,8 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
          predicates.add(predicate.createFilterPart(json.getString(FILTER_FIELD), json.getString(FILTER_OPERATION), json.getString(FILTER_VALUE)));
       } else {
          for (JsonValue jsonValue : jsonArray) {
-            predicates.add(predicate.createFilterPart(((JsonObject)jsonValue).getString(FILTER_FIELD), ((JsonObject)jsonValue).getString(FILTER_OPERATION), ((JsonObject)jsonValue).getString(FILTER_VALUE)));
+            JsonObject jsonObject = (JsonObject) jsonValue;
+            predicates.add(predicate.createFilterPart(jsonObject.getString(FILTER_FIELD), jsonObject.getString(FILTER_OPERATION), jsonObject.getString(FILTER_VALUE)));
          }
       }
       return predicates;
