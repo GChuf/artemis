@@ -138,14 +138,14 @@ public final class JsonUtil {
    }
 
    public static void addToObject(final String key, final Object param, final JsonObjectBuilder jsonObjectBuilder) {
-      if (param instanceof Integer integer) {
+      if (param instanceof String string) {
+         jsonObjectBuilder.add(key, string);
+      } else if (param instanceof Integer integer) {
          jsonObjectBuilder.add(key, integer);
       } else if (param instanceof Long longValue) {
          jsonObjectBuilder.add(key, longValue);
       } else if (param instanceof Double doubleValue) {
          jsonObjectBuilder.add(key, doubleValue);
-      } else if (param instanceof String string) {
-         jsonObjectBuilder.add(key, string);
       } else if (param instanceof Boolean booleanValue) {
          jsonObjectBuilder.add(key, booleanValue);
       } else if (param instanceof Map map) {
@@ -236,7 +236,7 @@ public final class JsonUtil {
       JsonObjectBuilder jsonObjectBuilder = JsonLoader.createObjectBuilder();
       if (map != null) {
          for (Map.Entry<String, ?> entry : map.entrySet()) {
-            addToObject(String.valueOf(entry.getKey()), entry.getValue(), jsonObjectBuilder);
+            addToObject(entry.getKey(), entry.getValue(), jsonObjectBuilder);
          }
       }
       return jsonObjectBuilder.build();
