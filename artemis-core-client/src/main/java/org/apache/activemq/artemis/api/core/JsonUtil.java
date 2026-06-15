@@ -322,8 +322,8 @@ public final class JsonUtil {
    }
 
    public static String truncateString(final String str, final int valueSizeLimit) {
-      if (valueSizeLimit >= 0 && str.length() > valueSizeLimit) {
-         return new StringBuilder(valueSizeLimit + 32).append(str.substring(0, valueSizeLimit)).append(", + ").append(str.length() - valueSizeLimit).append(" more").toString();
+      if (str.length() > valueSizeLimit) {
+         return new StringBuilder(valueSizeLimit + 32).append(str, 0, valueSizeLimit).append(", + ").append(str.length() - valueSizeLimit).append(" more").toString();
       } else {
          return str;
       }
@@ -333,16 +333,17 @@ public final class JsonUtil {
       if (value == null) {
          return "";
       }
+      final Class<?> valueClass = value.getClass();
       Object result = value;
       if (valueSizeLimit >= 0) {
-         if (String.class.equals(value.getClass())) {
+         if (valueClass == String.class) {
             result = truncateString((String)value, valueSizeLimit);
-         } else if (value.getClass().isArray()) {
-            if (byte[].class.equals(value.getClass())) {
+         } else if (valueClass.isArray()) {
+            if (valueClass == byte[].class) {
                if (((byte[]) value).length > valueSizeLimit) {
                   result = Arrays.copyOfRange((byte[]) value, 0, valueSizeLimit);
                }
-            } else if (char[].class.equals(value.getClass())) {
+            } else if (valueClass == char[].class) {
                if (((char[]) value).length > valueSizeLimit) {
                   result = Arrays.copyOfRange((char[]) value, 0, valueSizeLimit);
                }
