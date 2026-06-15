@@ -930,8 +930,8 @@ public abstract class AMQPMessage extends RefCountMessage implements org.apache.
             if (o instanceof Number) {
                // keep fields like _AMQ_ACTUAL_EXPIRY in their original type
                map.put(extraPropertiesPrefix + s.toString(), o);
-            } else {
-               map.put(extraPropertiesPrefix + s.toString(), JsonUtil.truncate(o != null ? o.toString() : o, valueSizeLimit));
+            } else if (o != null){
+               map.put(extraPropertiesPrefix + s.toString(), JsonUtil.truncateString(o.toString(), valueSizeLimit));
             }
          });
       }
