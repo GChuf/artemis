@@ -43,19 +43,25 @@ import java.util.concurrent.TimeUnit;
  * to measure the improvement per type.
  */
 @State(Scope.Benchmark)
-@Fork(2)
-@Warmup(iterations = 5, time = 1)
-@Measurement(iterations = 8, time = 1)
+@Fork(1)
+@Warmup(iterations = 3, time = 1)
+@Measurement(iterations = 10, time = 1)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 public class JsonUtilPerfTest {
 
    // --- test values, one per supported type ---
-   private static final String  VAL_STRING  = "hello-world";
-   private static final Long    VAL_LONG    = 123456789L;
-   private static final Integer VAL_INT     = 42;
+   private static final String  VAL_STRING1  = "hello-world1";
+   private static final String  VAL_STRING2  = "hello-world2";
+   private static final String  VAL_STRING3  = "hello-world3";
+   private static final String  VAL_STRING4  = "hello-world4";
+   private static final Long    VAL_LONG1    = 123456789L;
+   private static final Integer VAL_INT1     = 42;
+   private static final Long    VAL_LONG2    = 123455789L;
+   private static final Integer VAL_INT2     = 423;
    private static final Double  VAL_DOUBLE  = 3.14159;
    private static final Boolean VAL_BOOL    = Boolean.TRUE;
+   private static final Boolean VAL_BOOL2    = Boolean.FALSE;
    private static final Short   VAL_SHORT   = (short) 7;
    private static final Byte    VAL_BYTE    = (byte) 3;
    private static final byte[]  VAL_BYTES   = new byte[]{1, 2, 3, 4, 5};
@@ -92,21 +98,21 @@ public class JsonUtilPerfTest {
    @Benchmark
    public JsonObjectBuilder testAddToObjectString() {
       JsonObjectBuilder b = JsonLoader.createObjectBuilder();
-      JsonUtil.addToObject("key", VAL_STRING, b);
+      JsonUtil.addToObject("key", VAL_STRING1, b);
       return b;
    }
 
    @Benchmark
    public JsonObjectBuilder testAddToObjectLong() {
       JsonObjectBuilder b = JsonLoader.createObjectBuilder();
-      JsonUtil.addToObject("key", VAL_LONG, b);
+      JsonUtil.addToObject("key", VAL_LONG1, b);
       return b;
    }
 
    @Benchmark
    public JsonObjectBuilder testAddToObjectInteger() {
       JsonObjectBuilder b = JsonLoader.createObjectBuilder();
-      JsonUtil.addToObject("key", VAL_INT, b);
+      JsonUtil.addToObject("key", VAL_INT1, b);
       return b;
    }
 
@@ -175,21 +181,21 @@ public class JsonUtilPerfTest {
    @Benchmark
    public JsonArrayBuilder testAddToArrayString() {
       JsonArrayBuilder b = JsonLoader.createArrayBuilder();
-      JsonUtil.addToArray(VAL_STRING, b);
+      JsonUtil.addToArray(VAL_STRING1, b);
       return b;
    }
 
    @Benchmark
    public JsonArrayBuilder testAddToArrayLong() {
       JsonArrayBuilder b = JsonLoader.createArrayBuilder();
-      JsonUtil.addToArray(VAL_LONG, b);
+      JsonUtil.addToArray(VAL_LONG1, b);
       return b;
    }
 
    @Benchmark
    public JsonArrayBuilder testAddToArrayInteger() {
       JsonArrayBuilder b = JsonLoader.createArrayBuilder();
-      JsonUtil.addToArray(VAL_INT, b);
+      JsonUtil.addToArray(VAL_INT1, b);
       return b;
    }
 
@@ -260,9 +266,14 @@ public class JsonUtilPerfTest {
    @Benchmark
    public JsonArrayBuilder testAddToArrayAllTypes() {
       JsonArrayBuilder b = JsonLoader.createArrayBuilder();
-      JsonUtil.addToArray(VAL_STRING,  b);
-      JsonUtil.addToArray(VAL_LONG,    b);
-      JsonUtil.addToArray(VAL_INT,     b);
+      JsonUtil.addToArray(VAL_STRING1,  b);
+      JsonUtil.addToArray(VAL_STRING2,  b);
+      JsonUtil.addToArray(VAL_STRING3,  b);
+      JsonUtil.addToArray(VAL_STRING4,  b);
+      JsonUtil.addToArray(VAL_LONG1,    b);
+      JsonUtil.addToArray(VAL_LONG2,    b);
+      JsonUtil.addToArray(VAL_INT1,     b);
+      JsonUtil.addToArray(VAL_INT2,     b);
       JsonUtil.addToArray(VAL_DOUBLE,  b);
       JsonUtil.addToArray(VAL_BOOL,    b);
       JsonUtil.addToArray(VAL_SHORT,   b);
@@ -273,4 +284,26 @@ public class JsonUtilPerfTest {
       JsonUtil.addToArray(null,        b);
       return b;
    }
+   
+@Benchmark
+public JsonObjectBuilder testAddToObjectAllTypes() {
+   JsonObjectBuilder b = JsonLoader.createObjectBuilder();
+   JsonUtil.addToObject("k1",  VAL_STRING1,  b);
+   JsonUtil.addToObject("k2",  VAL_STRING2,  b);
+   JsonUtil.addToObject("k3",  VAL_STRING3,  b);
+   JsonUtil.addToObject("k4",  VAL_STRING4,  b);
+   JsonUtil.addToObject("k5",  VAL_LONG1,    b);
+   JsonUtil.addToObject("k6",  VAL_LONG1,    b);
+   JsonUtil.addToObject("k7",  VAL_INT2,     b);
+   JsonUtil.addToObject("k8",  VAL_INT2,     b);
+   JsonUtil.addToObject("k9",  VAL_DOUBLE,  b);
+   JsonUtil.addToObject("k10",  VAL_BOOL,    b);
+   JsonUtil.addToObject("k11",  VAL_SHORT,   b);
+   JsonUtil.addToObject("k12",  VAL_BYTE,    b);
+   JsonUtil.addToObject("k13",  VAL_BYTES,   b);
+   JsonUtil.addToObject("k14",  VAL_ARRAY,   b);
+   JsonUtil.addToObject("k15", VAL_MAP,     b);
+   JsonUtil.addToObject("k16", null,        b);
+   return b;
+}
 }
