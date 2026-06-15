@@ -172,12 +172,11 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
       }
       if (predicate != null) {
          predicate.addFilterParts(createFilterPredicates(json));
-         if ((json.containsKey(SORT_COLUMN) || json.containsKey(SORT_FIELD)) && json.containsKey(SORT_ORDER)) {
-            if (json.containsKey(SORT_COLUMN)) {
-               this.sortField = json.getString(SORT_COLUMN);
-            } else {
-               this.sortField = json.getString(SORT_FIELD);
-            }
+         if ((json.containsKey(SORT_FIELD)) && json.containsKey(SORT_ORDER)) {
+            this.sortField = json.getString(SORT_FIELD);
+            this.sortOrder = json.getString(SORT_ORDER);
+         } else if (json.containsKey(SORT_COLUMN)) {
+            this.sortField = json.getString(SORT_COLUMN);
             this.sortOrder = json.getString(SORT_ORDER);
          }
       }
