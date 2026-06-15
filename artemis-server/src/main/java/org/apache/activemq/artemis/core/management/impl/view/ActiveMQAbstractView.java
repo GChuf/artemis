@@ -129,23 +129,36 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
 
    public Comparator<T> getComparator() {
       boolean sortOrderDescending = sortOrder.equalsIgnoreCase(DESCENDING);
-      return (left, right) -> {
-         try {
-            Object leftValue = getField(left, sortField);
-            Object rightValue = getField(right, sortField);
-            if (leftValue instanceof Comparable l && rightValue instanceof Comparable r) {
-               if (sortOrderDescending) {
+
+      if (sortOrderDescending) {
+         return (left, right) -> {
+            try {
+               Object leftValue = getField(left, sortField);
+               Object rightValue = getField(right, sortField);
+               if (rightValue instanceof Comparable r) {
                   return r.compareTo(leftValue);
-               } else {
+               }
+               return 0;
+            } catch (Exception e) {
+               //LOG.info("Exception sorting destinations", e);
+               return 0;
+            }
+         };
+      } else {
+         return (left, right) -> {
+            try {
+               Object leftValue = getField(left, sortField);
+               Object rightValue = getField(right, sortField);
+               if (leftValue instanceof Comparable l) {
                   return l.compareTo(rightValue);
                }
+               return 0;
+            } catch (Exception e) {
+               //LOG.info("Exception sorting destinations", e);
+               return 0;
             }
-            return 0;
-         } catch (Exception e) {
-            //LOG.info("Exception sorting destinations", e);
-            return 0;
-         }
-      };
+         };
+      }
    }
 
    abstract Object getField(T t, String fieldName);
