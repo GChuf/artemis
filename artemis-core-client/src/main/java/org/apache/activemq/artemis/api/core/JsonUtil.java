@@ -138,90 +138,83 @@ public final class JsonUtil {
    }
 
    public static void addToObject(final String key, final Object param, final JsonObjectBuilder jsonObjectBuilder) {
-      if (param instanceof String string) {
-         jsonObjectBuilder.add(key, string);
-      } else if (param instanceof Integer integer) {
-         jsonObjectBuilder.add(key, integer);
-      } else if (param instanceof Long longValue) {
-         jsonObjectBuilder.add(key, longValue);
-      } else if (param instanceof Double doubleValue) {
-         jsonObjectBuilder.add(key, doubleValue);
-      } else if (param instanceof Boolean booleanValue) {
-         jsonObjectBuilder.add(key, booleanValue);
-      } else if (param instanceof Map map) {
-         jsonObjectBuilder.add(key, toJsonObject(map));
-      } else if (param instanceof Short shortValue) {
-         jsonObjectBuilder.add(key, shortValue);
-      } else if (param instanceof Byte byteValue) {
-         jsonObjectBuilder.add(key, byteValue.shortValue());
-      } else if (param instanceof Number number) {
-         jsonObjectBuilder.add(key, number.doubleValue());
-      } else if (param instanceof SimpleString) {
-         jsonObjectBuilder.add(key, param.toString());
-      } else if (param == null) {
+      if (param == null) {
          jsonObjectBuilder.addNull(key);
-      } else if (param instanceof byte[] bytes) {
-         JsonArrayBuilder byteArrayObject = toJsonArrayBuilder(bytes);
-         jsonObjectBuilder.add(key, byteArrayObject);
-      } else if (param instanceof Object[] objects) {
-         final JsonArrayBuilder objectArrayBuilder = JsonLoader.createArrayBuilder();
-         for (Object parameter : objects) {
-            addToArray(parameter, objectArrayBuilder);
-         }
-         jsonObjectBuilder.add(key, objectArrayBuilder);
-      } else if (param instanceof JsonValue jsonValue) {
-         jsonObjectBuilder.add(key, jsonValue);
       } else {
-         jsonObjectBuilder.add(key, param.toString());
+         Class<?> paramClass = param.getClass();
+         if (paramClass == String.class) {
+            jsonObjectBuilder.add(key, (String) param);
+         } else if (param instanceof Number n) {
+            // all numeric types in one branch
+            if (paramClass == Long.class)    jsonObjectBuilder.add(key, n.longValue());
+            else if (paramClass == Integer.class) jsonObjectBuilder.add(key, n.intValue());
+            else if (paramClass == Double.class)  jsonObjectBuilder.add(key, n.doubleValue());
+            else if (paramClass == Short.class)   jsonObjectBuilder.add(key, n.shortValue());
+            else if (paramClass == Byte.class)    jsonObjectBuilder.add(key, n.shortValue());
+            else                             jsonObjectBuilder.add(key, n.doubleValue());
+         } else if (paramClass == Boolean.class) {
+            jsonObjectBuilder.add(key, (Boolean) param);
+         } else if (param instanceof SimpleString s) {
+            jsonObjectBuilder.add(key, s.toString());
+         } else if (paramClass == byte[].class) {
+            jsonObjectBuilder.add(key, toJsonArrayBuilder((byte[]) param));
+         } else if (param instanceof Map<?,?> m) {
+            jsonObjectBuilder.add(key, toJsonObject((Map<String,?>) m));
+         } else if (param instanceof Object[] objs) {
+            JsonArrayBuilder arr = JsonLoader.createArrayBuilder();
+            for (Object o : objs) addToArray(o, arr);
+            jsonObjectBuilder.add(key, arr);
+         } else if (param instanceof JsonValue jv) {
+            jsonObjectBuilder.add(key, jv);
+         } else {
+            jsonObjectBuilder.add(key, param.toString());
+         }
       }
    }
 
    public static void addToArray(final Object param, final JsonArrayBuilder jsonArrayBuilder) {
-      if (param instanceof Integer integer) {
-         jsonArrayBuilder.add(integer);
-      } else if (param instanceof Long longValue) {
-         jsonArrayBuilder.add(longValue);
-      } else if (param instanceof Double doubleValue) {
-         jsonArrayBuilder.add(doubleValue);
-      } else if (param instanceof String string) {
-         jsonArrayBuilder.add(string);
-      } else if (param instanceof Boolean booleanValue) {
-         jsonArrayBuilder.add(booleanValue);
-      } else if (param instanceof Map map) {
-         jsonArrayBuilder.add(toJsonObject(map));
-      } else if (param instanceof Short shortValue) {
-         jsonArrayBuilder.add(shortValue);
-      } else if (param instanceof Byte byteValue) {
-         jsonArrayBuilder.add(byteValue.shortValue());
-      } else if (param instanceof Number number) {
-         jsonArrayBuilder.add(number.doubleValue());
-      } else if (param == null) {
+      if (param == null) {
          jsonArrayBuilder.addNull();
-      } else if (param instanceof byte[] bytes) {
-         JsonArrayBuilder byteArrayObject = toJsonArrayBuilder(bytes);
-         jsonArrayBuilder.add(byteArrayObject);
-      } else if (param instanceof CompositeData[] compositeData) {
+         return;
+      }
+      Class<?> clazz = param.getClass();
+      if (clazz == String.class) {
+         jsonArrayBuilder.add((String) param);
+      } else if (param instanceof Number) {
+         if (clazz == Long.class)         jsonArrayBuilder.add((Long) param);
+         else if (clazz == Integer.class) jsonArrayBuilder.add((Integer) param);
+         else if (clazz == Double.class)  jsonArrayBuilder.add((Double) param);
+         else if (clazz == Short.class)   jsonArrayBuilder.add((Short) param);
+         else if (clazz == Byte.class)    jsonArrayBuilder.add(((Byte) param).shortValue());
+         else                             jsonArrayBuilder.add(((Number) param).doubleValue());
+      } else if (clazz == Boolean.class) {
+         jsonArrayBuilder.add((Boolean) param);
+      } else if (clazz == byte[].class) {
+         jsonArrayBuilder.add(toJsonArrayBuilder((byte[]) param));
+      } else if (param instanceof CompositeData[]) {
+         CompositeData[] compositeData = (CompositeData[]) param;
          JsonArrayBuilder innerJsonArray = JsonLoader.createArrayBuilder();
          for (Object data : compositeData) {
-            String s = Base64.encodeObject((CompositeDataSupport) data);
-            innerJsonArray.add(s);
+            innerJsonArray.add(Base64.encodeObject((CompositeDataSupport) data));
          }
          JsonObjectBuilder jsonObject = JsonLoader.createObjectBuilder();
          jsonObject.add(CompositeData.class.getName(), innerJsonArray);
          jsonArrayBuilder.add(jsonObject);
-      } else if (param instanceof Object[] objects) {
+      } else if (param instanceof Object[]) {
          JsonArrayBuilder objectArrayBuilder = JsonLoader.createArrayBuilder();
-         for (Object parameter : objects) {
+         for (Object parameter : (Object[]) param) {
             addToArray(parameter, objectArrayBuilder);
          }
          jsonArrayBuilder.add(objectArrayBuilder);
-      } else if (param instanceof JsonValue jsonValue) {
-         jsonArrayBuilder.add(jsonValue);
+      } else if (param instanceof Map) {
+         jsonArrayBuilder.add(toJsonObject((Map<String, ?>) param));
+      } else if (param instanceof JsonValue) {
+         jsonArrayBuilder.add((JsonValue) param);
       } else {
          jsonArrayBuilder.add(param.toString());
       }
    }
-
+   
    public static JsonArray toJsonArray(List<String> strings) {
       JsonArrayBuilder array = JsonLoader.createArrayBuilder();
       if (strings != null) {
