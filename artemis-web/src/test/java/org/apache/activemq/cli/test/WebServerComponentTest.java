@@ -352,15 +352,6 @@ public class WebServerComponentTest extends ArtemisTestCase {
 
    private WebServerComponent startSimpleSecureServer(BindingDTO bindingDTO) throws Exception {
       bindingDTO.setUri("https://localhost:0");
-      if (System.getProperty("java.vendor").contains("IBM")) {
-         //By default on IBM Java 8 JVM, org.eclipse.jetty.util.ssl.SslContextFactory doesn't include TLSv1.2
-         // while it excludes all TLSv1 and TLSv1.1 cipher suites.
-         bindingDTO.setIncludedTLSProtocols("TLSv1.2");
-         // Remove excluded cipher suites matching the prefix `SSL` because the names of the IBM Java 8 JVM cipher suites
-         // have the prefix `SSL` while the `DEFAULT_EXCLUDED_CIPHER_SUITES` of org.eclipse.jetty.util.ssl.SslContextFactory
-         // includes "^SSL_.*$". So all IBM JVM cipher suites are excluded by SslContextFactory using the `DEFAULT_EXCLUDED_CIPHER_SUITES`.
-         bindingDTO.setExcludedCipherSuites(Arrays.stream(new SslContextFactory.Server().getExcludeCipherSuites()).filter(s -> !Pattern.matches(s, "SSL_")).toArray(String[]::new));
-      }
       WebServerDTO webServerDTO = new WebServerDTO();
       webServerDTO.setBindings(Collections.singletonList(bindingDTO));
       webServerDTO.path = "webapps";
@@ -392,11 +383,6 @@ public class WebServerComponentTest extends ArtemisTestCase {
       SSLEngine engine = context.createSSLEngine();
       engine.setUseClientMode(true);
       engine.setWantClientAuth(true);
-      if (System.getProperty("java.vendor").contains("IBM")) {
-         //By default on IBM Java 8 JVM, SSLEngine doesn't enable TLSv1.2 while
-         // org.eclipse.jetty.util.ssl.SslContextFactory excludes all TLSv1 and TLSv1.1 cipher suites.
-         engine.setEnabledProtocols(new String[] {"TLSv1.2"});
-      }
       final SslHandler sslHandler = new SslHandler(engine);
 
       CountDownLatch latch = new CountDownLatch(1);
@@ -767,15 +753,6 @@ public class WebServerComponentTest extends ArtemisTestCase {
       bindingDTO.setClientAuth(true);
       bindingDTO.setTrustStorePath(KEY_STORE_PATH);
       bindingDTO.setTrustStorePassword(KEY_STORE_PASSWORD);
-      if (System.getProperty("java.vendor").contains("IBM")) {
-         //By default on IBM Java 8 JVM, org.eclipse.jetty.util.ssl.SslContextFactory doesn't include TLSv1.2
-         // while it excludes all TLSv1 and TLSv1.1 cipher suites.
-         bindingDTO.setIncludedTLSProtocols("TLSv1.2");
-         // Remove excluded cipher suites matching the prefix `SSL` because the names of the IBM Java 8 JVM cipher suites
-         // have the prefix `SSL` while the `DEFAULT_EXCLUDED_CIPHER_SUITES` of org.eclipse.jetty.util.ssl.SslContextFactory
-         // includes "^SSL_.*$". So all IBM JVM cipher suites are excluded by SslContextFactory using the `DEFAULT_EXCLUDED_CIPHER_SUITES`.
-         bindingDTO.setExcludedCipherSuites(Arrays.stream(new SslContextFactory.Server().getExcludeCipherSuites()).filter(s -> !Pattern.matches(s, "SSL_")).toArray(String[]::new));
-      }
       WebServerDTO webServerDTO = new WebServerDTO();
       webServerDTO.setBindings(Collections.singletonList(bindingDTO));
       webServerDTO.path = "webapps";
@@ -799,11 +776,6 @@ public class WebServerComponentTest extends ArtemisTestCase {
       SSLEngine engine = context.createSSLEngine();
       engine.setUseClientMode(true);
       engine.setWantClientAuth(true);
-      if (System.getProperty("java.vendor").contains("IBM")) {
-         //By default on IBM Java 8 JVM, SSLEngine doesn't enable TLSv1.2 while
-         // org.eclipse.jetty.util.ssl.SslContextFactory excludes all TLSv1 and TLSv1.1 cipher suites.
-         engine.setEnabledProtocols(new String[] {"TLSv1.2"});
-      }
       final SslHandler sslHandler = new SslHandler(engine);
 
       CountDownLatch latch = new CountDownLatch(1);
