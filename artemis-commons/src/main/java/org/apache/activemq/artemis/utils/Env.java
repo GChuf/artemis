@@ -101,6 +101,7 @@ public final class Env {
          HotSpotDiagnosticMXBean hsBean = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean.class);
 
          // Query the VM option value directly
+         // This returns huge page size in bytes even if there are no large pages configured/available on the system
          String largePageSize = hsBean.getVMOption("LargePageSizeInBytes").getValue();
          return Integer.parseInt(largePageSize); // Returns exact bytes (e.g., 2097152)
       } catch (Throwable t) {

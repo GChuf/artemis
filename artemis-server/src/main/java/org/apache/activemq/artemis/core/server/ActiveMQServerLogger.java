@@ -84,8 +84,9 @@ public interface ActiveMQServerLogger {
    @LogMessage(id = 221006, value = "Waiting to obtain primary lock", level = LogMessage.Level.INFO)
    void awaitingPrimaryLock();
 
-   @LogMessage(id = 228017, value = "Server is now active, size: {}", level = LogMessage.Level.INFO)
-   void serverIsActive(int size);
+   @LogMessage(id = 228017, value = "Server is now active, pagesize: {}, hugepagesize: {}", level = LogMessage.Level.INFO)
+   void serverIsActive(int size, int hugePageSize);
+   //[0.003s][warning][pagesize] UseLargePages disabled, no large pages configured and available on the system.
 
    @LogMessage(id = 221007, value = "Server is now active", level = LogMessage.Level.INFO)
    void serverIsActive();

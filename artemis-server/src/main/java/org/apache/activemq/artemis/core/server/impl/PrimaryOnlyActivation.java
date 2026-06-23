@@ -91,8 +91,7 @@ public class PrimaryOnlyActivation extends Activation {
          if (activeMQServer.getIdentity() != null) {
             ActiveMQServerLogger.LOGGER.serverIsActive(activeMQServer.getIdentity());
          } else {
-            int size = Env.getJvmLargePageSize();
-            ActiveMQServerLogger.LOGGER.serverIsActive(size);
+            ActiveMQServerLogger.LOGGER.serverIsActive(Env.osPageSize(), Env.getJvmLargePageSize());
          }
       } catch (Exception e) {
          ActiveMQServerLogger.LOGGER.initializationError(e);
