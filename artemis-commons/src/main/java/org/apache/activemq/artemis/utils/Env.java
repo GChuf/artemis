@@ -17,6 +17,7 @@
 package org.apache.activemq.artemis.utils;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
+import com.sun.management.VMOption;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -48,6 +49,13 @@ public final class Env {
       }
       if (instance != null) {
          osPageSize = instance.pageSize();
+      }
+
+
+      int largePageSize = getJvmLargePageSize();
+      if (largePageSize > 0) {
+         //ActiveMQServerLogger.LOGGER.largePageSizeDetected(largePageSize);
+         osPageSize = largePageSize;
       }
       OS_PAGE_SIZE = osPageSize;
    }
@@ -100,10 +108,21 @@ public final class Env {
          // Access the internal HotSpot Diagnostic Bean
          HotSpotDiagnosticMXBean hsBean = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean.class);
 
-         // Query the VM option value directly
-         // This returns huge page size in bytes even if there are no large pages configured/available on the system
-         String largePageSize = hsBean.getVMOption("LargePageSizeInBytes").getValue();
-         return Integer.parseInt(largePageSize); // Returns exact bytes (e.g., 2097152)
+         // check is large pages are enabled in VM options
+         VMOption option = hsBean.getVMOption("UseLargePages");
+         boolean largePagesVMEnabled = Boolean.parseBoolean(option.getValue());
+
+         // check if large pages are enabled on OS level
+         boolean largePagesOSEnabled = true;
+
+         if (largePagesVMEnabled && largePagesOSEnabled) {
+            // Query the VM option value directly
+            // This returns huge page size in bytes even if there are no large pages configured/available on the system
+            String largePageSize = hsBean.getVMOption("LargePageSizeInBytes").getValue();
+            return Integer.parseInt(largePageSize); // Returns exact bytes (e.g., 2097152)
+         } else {
+            return 0; // Large pages not enabled
+         }
       } catch (Throwable t) {
          return 0; // Large pages not explicitly configured or supported on this JVM instance
       }
