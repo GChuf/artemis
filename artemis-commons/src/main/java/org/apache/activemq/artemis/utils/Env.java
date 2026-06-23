@@ -104,6 +104,7 @@ public final class Env {
    }
 
    public static int getJvmLargePageSize() {
+      // this returns 0 when hugepages are not enabled for VM, or when there are none available (at all, or for user running the JVM)
       try {
          // Access the internal HotSpot Diagnostic Bean
          HotSpotDiagnosticMXBean hsBean = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean.class);
@@ -121,7 +122,7 @@ public final class Env {
             String largePageSize = hsBean.getVMOption("LargePageSizeInBytes").getValue();
             return Integer.parseInt(largePageSize); // Returns exact bytes (e.g., 2097152)
          } else {
-            return 0; // Large pages not enabled
+            return 0; // Large pages not enabled or not available for user
          }
       } catch (Throwable t) {
          return 0; // Large pages not explicitly configured or supported on this JVM instance
