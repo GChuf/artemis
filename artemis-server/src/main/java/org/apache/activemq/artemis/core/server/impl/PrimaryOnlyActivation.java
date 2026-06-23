@@ -38,9 +38,12 @@ import org.apache.activemq.artemis.core.server.cluster.ActiveMQServerSideProtoco
 import org.apache.activemq.artemis.core.server.cluster.ha.PrimaryOnlyPolicy;
 import org.apache.activemq.artemis.core.server.cluster.ha.ScaleDownPolicy;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
+import org.apache.activemq.artemis.utils.Env;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.lang.invoke.MethodHandles;
+
 
 public class PrimaryOnlyActivation extends Activation {
 
@@ -88,7 +91,8 @@ public class PrimaryOnlyActivation extends Activation {
          if (activeMQServer.getIdentity() != null) {
             ActiveMQServerLogger.LOGGER.serverIsActive(activeMQServer.getIdentity());
          } else {
-            ActiveMQServerLogger.LOGGER.serverIsActive();
+            int size = Env.getJvmLargePageSize();
+            ActiveMQServerLogger.LOGGER.serverIsActive(size);
          }
       } catch (Exception e) {
          ActiveMQServerLogger.LOGGER.initializationError(e);

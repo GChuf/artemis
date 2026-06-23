@@ -39,6 +39,7 @@ final class MappedFile implements AutoCloseable {
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
    private static final int OS_PAGE_SIZE = Env.osPageSize();
+   private static final int OS_HUGE_PAGE_SIZE = Env.getJvmLargePageSize();
    private final MappedByteBuffer buffer;
    private final FileChannel channel;
    private final long address;
@@ -69,6 +70,7 @@ final class MappedFile implements AutoCloseable {
          capacity = length;
       }
       buffer = channel.map(FileChannel.MapMode.READ_WRITE, position, capacity);
+      logger.warn("os huge page size is {}", OS_HUGE_PAGE_SIZE);
       return new MappedFile(channel, buffer, 0, length);
    }
 
@@ -89,6 +91,7 @@ final class MappedFile implements AutoCloseable {
    }
 
    private void checkCapacity(int requiredCapacity) {
+      logger.warn("os huge page size is {}", OS_HUGE_PAGE_SIZE);
       if (requiredCapacity < 0 || requiredCapacity > buffer.capacity()) {
          throw new IllegalStateException("requiredCapacity must be >0 and <= " + buffer.capacity());
       }
@@ -114,6 +117,7 @@ final class MappedFile implements AutoCloseable {
       final int remaining = this.length - this.position;
       final int read = Math.min(remaining, dstLength);
       final long srcAddress = this.address + this.position;
+      logger.warn("os huge page size is {}", OS_HUGE_PAGE_SIZE);
       if (dst.isDirect()) {
          final long dstAddress = PlatformDependent.directBufferAddress(dst) + dstStart;
          PlatformDependent.copyMemory(srcAddress, dstAddress, read);
@@ -131,6 +135,7 @@ final class MappedFile implements AutoCloseable {
     * Bytes are written starting at this file's current position,
     */
    public void write(EncodingSupport encodingSupport) throws IOException {
+      logger.warn("os huge page size is {}", OS_HUGE_PAGE_SIZE);
       final int encodedSize = encodingSupport.getEncodeSize();
       final int nextPosition = this.position + encodedSize;
       checkCapacity(nextPosition);
@@ -146,6 +151,7 @@ final class MappedFile implements AutoCloseable {
     * Bytes are written starting at this file's current position,
     */
    public void write(ByteBuf src, int srcStart, int srcLength) throws IOException {
+      logger.warn("os huge page size is {}", OS_HUGE_PAGE_SIZE);
       final int nextPosition = this.position + srcLength;
       checkCapacity(nextPosition);
       final long destAddress = this.address + this.position;
@@ -167,6 +173,7 @@ final class MappedFile implements AutoCloseable {
     * Bytes are written starting at this file's current position,
     */
    public void write(ByteBuffer src, int srcStart, int srcLength) throws IOException {
+      logger.warn("os huge page size is {}", OS_HUGE_PAGE_SIZE);
       final int nextPosition = this.position + srcLength;
       checkCapacity(nextPosition);
       final long destAddress = this.address + this.position;
@@ -186,6 +193,7 @@ final class MappedFile implements AutoCloseable {
     * Bytes are written starting at this file's current position,
     */
    public void zeros(int position, final int count) throws IOException {
+      logger.warn("os huge page size is {}", OS_HUGE_PAGE_SIZE);
       checkCapacity(position + count);
       //zeroes memory in reverse direction in OS_PAGE_SIZE batches
       //to gain sympathy by the page cache LRU policy

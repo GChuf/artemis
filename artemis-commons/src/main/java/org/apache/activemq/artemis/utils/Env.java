@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.artemis.utils;
 
+import com.sun.management.HotSpotDiagnosticMXBean;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
@@ -92,4 +94,18 @@ public final class Env {
    public static boolean isWindowsOs() {
       return IS_WINDOWS == true;
    }
+
+   public static int getJvmLargePageSize() {
+      try {
+         // Access the internal HotSpot Diagnostic Bean
+         HotSpotDiagnosticMXBean hsBean = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean.class);
+
+         // Query the VM option value directly
+         String largePageSize = hsBean.getVMOption("LargePageSizeInBytes").getValue();
+         return Integer.parseInt(largePageSize); // Returns exact bytes (e.g., 2097152)
+      } catch (Throwable t) {
+         return 0; // Large pages not explicitly configured or supported on this JVM instance
+      }
+   }
+
 }
