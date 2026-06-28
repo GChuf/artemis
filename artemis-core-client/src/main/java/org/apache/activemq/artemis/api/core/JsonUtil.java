@@ -326,9 +326,9 @@ public final class JsonUtil {
       if (value == null) {
          return "";
       }
-      final Class<?> valueClass = value.getClass();
       Object result = value;
       if (valueSizeLimit >= 0) {
+      final Class<?> valueClass = value.getClass();
          if (valueClass == String.class) {
             result = truncateString((String)value, valueSizeLimit);
          } else if (valueClass.isArray()) {
