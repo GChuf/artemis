@@ -30,6 +30,8 @@ public final class Env {
 
    private static final int OS_PAGE_SIZE;
 
+   private static final int HUGE_PAGE_SIZE;
+
    static {
       //most common OS page size value
       int osPageSize = 4096;
@@ -50,14 +52,40 @@ public final class Env {
       if (instance != null) {
          osPageSize = instance.pageSize();
       }
-
-
-      int largePageSize = getJvmLargePageSize();
-      if (largePageSize > 0) {
-         //ActiveMQServerLogger.LOGGER.largePageSizeDetected(largePageSize);
-         osPageSize = largePageSize;
-      }
       OS_PAGE_SIZE = osPageSize;
+
+
+
+
+   }
+
+   static {
+      //most common OS page size value
+      int osPageSize = 4096;
+
+      int hugePageSize = 0;
+      sun.misc.Unsafe instance;
+      try {
+         Field field = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+         field.setAccessible(true);
+         instance = (sun.misc.Unsafe) field.get(null);
+      } catch (Throwable t) {
+         try {
+            Constructor<sun.misc.Unsafe> c = sun.misc.Unsafe.class.getDeclaredConstructor(new Class[0]);
+            c.setAccessible(true);
+            instance = c.newInstance(new Object[0]);
+         } catch (Throwable t1) {
+            instance = null;
+         }
+      }
+      if (instance != null) {
+         osPageSize = instance.pageSize();
+      }
+
+      int hugePageSize = getJvmLargePageSize();
+      
+      OS_PAGE_SIZE = osPageSize;
+      HUGE_PAGE_SIZE = hugePageSize;
    }
 
    /**
@@ -79,8 +107,16 @@ public final class Env {
    /**
     * Return the size in bytes of a OS memory page. This value will always be a power of two.
     */
+      //base hardware page size of the operating system's virtual memory management unit (MMU)
    public static int osPageSize() {
       return OS_PAGE_SIZE;
+   }
+
+   /**
+    * Return the size in bytes of a huge memory page, if enabled on both the OS and the JVM.
+    */
+   public static int hugePageSize() {
+      return HUGE_PAGE_SIZE;
    }
 
    public static boolean isTestEnv() {

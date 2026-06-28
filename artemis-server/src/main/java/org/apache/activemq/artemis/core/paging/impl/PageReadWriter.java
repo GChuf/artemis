@@ -51,7 +51,8 @@ public class PageReadWriter {
    //sizeOf(START_BYTE) + sizeOf(MESSAGE LENGTH) + sizeOf(END_BYTE)
    private static final int HEADER_AND_TRAILER_SIZE = DataConstants.SIZE_INT + 2;
    private static final int MINIMUM_MSG_PERSISTENT_SIZE = HEADER_AND_TRAILER_SIZE;
-   private static final int MIN_CHUNK_SIZE = Env.osPageSize();
+   int chunkSize = fileFactory.isMapped() ? 2097152 : 4096; // 2MB vs 4KB?????????????????
+   private static final int MIN_CHUNK_SIZE = Env.hugePageSize();
 
    public interface SuspectFileCallback {
       void onSuspect(String fileName, int position, int msgNumber);
