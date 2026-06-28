@@ -21,6 +21,7 @@ import org.apache.activemq.artemis.core.management.impl.view.predicate.Predicate
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -114,7 +115,7 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
       return obj.build().toString();
    }
 
-   public List<T> getPagedResult(int page, int pageSize) {
+   public List<T> getPagedResultOld(int page, int pageSize) {
       if (page == -1 || pageSize == -1) {
          return collection.stream().sorted(getComparator()).collect(Collectors.toUnmodifiableList());
       } else {
@@ -123,11 +124,51 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
       }
    }
 
+   public List<T> getPagedResult(int page, int pageSize) {
+      // 1. Pre-calculate and cache the sort fields exactly ONCE per item
+      // IdentityHashMap is fastest here because we use object references as keys
+      Map<T, Object> sortKeyCache = new IdentityHashMap<>(collection.size());
+      for (T item : collection) {
+         sortKeyCache.put(item, getField(item, sortField));
+      }
+
+      // 2. Create an ultra-fast, in-memory comparator using the cache
+      boolean sortOrderDescending = sortOrder.equalsIgnoreCase(DESCENDING);
+      Comparator<T> fastComparator = (left, right) -> {
+         try {
+            Object leftValue = sortKeyCache.get(left);
+            Object rightValue = sortKeyCache.get(right);
+            
+            if (sortOrderDescending) {
+               return (rightValue instanceof Comparable r) ? r.compareTo(leftValue) : 0;
+            } else {
+               return (leftValue instanceof Comparable l) ? l.compareTo(rightValue) : 0;
+            }
+         } catch (Exception e) {
+            return 0;
+         }
+      };
+
+      // 3. Process the stream with the fast comparator
+      if (page == -1 || pageSize == -1) {
+         return collection.stream()
+                        .sorted(fastComparator)
+                        .collect(Collectors.toUnmodifiableList());
+      } else {
+         int start = (page - 1) * pageSize;
+         return collection.stream()
+                        .sorted(fastComparator)
+                        .skip(start)
+                        .limit(pageSize)
+                        .collect(Collectors.toUnmodifiableList());
+      }
+   }
+
    public Predicate<T> getPredicate() {
       return predicate;
    }
 
-   public Comparator<T> getComparator() {
+   public Comparator<T> getComparatorMine() {
       boolean sortOrderDescending = sortOrder.equalsIgnoreCase(DESCENDING);
 
       if (sortOrderDescending) {
@@ -159,6 +200,30 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
             }
          };
       }
+   }
+
+   public Comparator<T> getComparator() {
+      // 1. Create a baseline comparator that fetches the field and compares it safely
+      Comparator<T> baseComparator = (left, right) -> {
+         try {
+            Object leftValue = getField(left, sortField);
+            Object rightValue = getField(right, sortField);
+            
+            if (leftValue instanceof Comparable l) {
+               return l.compareTo(rightValue);
+            }
+            return 0;
+         } catch (Exception e) {
+            return 0;
+         }
+      };
+
+      // 2. If descending, simply reverse the base comparator
+      if (sortOrder.equalsIgnoreCase(DESCENDING)) {
+         return baseComparator.reversed();
+      }
+      
+      return baseComparator;
    }
 
    abstract Object getField(T t, String fieldName);
