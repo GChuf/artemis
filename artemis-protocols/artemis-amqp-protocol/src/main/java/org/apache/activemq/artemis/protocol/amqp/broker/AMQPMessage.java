@@ -921,7 +921,13 @@ public abstract class AMQPMessage extends RefCountMessage implements org.apache.
          if (value instanceof Binary binary) {
             value = binary.getArray();
          }
-         map.put(applicationPropertiesPrefix + name, JsonUtil.truncate(value, valueSizeLimit));
+         if (value instanceof String str) {
+            map.put(applicationPropertiesPrefix + name, JsonUtil.truncateString(str, valueSizeLimit));
+         } else if (value == null) {
+            map.put(applicationPropertiesPrefix + name, "");
+         } else {
+            map.put(applicationPropertiesPrefix + name, JsonUtil.truncate(value, valueSizeLimit));
+         }
       }
 
       TypedProperties extraProperties = getExtraProperties();
