@@ -62,9 +62,15 @@ public class JsonUtilPerfTest {
    private static final Double  VAL_DOUBLE  = 3.14159;
    private static final Boolean VAL_BOOL    = Boolean.TRUE;
    private static final Boolean VAL_BOOL2    = Boolean.FALSE;
+   private static final Boolean VAL_BOOL3    = Boolean.TRUE;
+   private static final Boolean VAL_BOOL4    = Boolean.FALSE;
    private static final Short   VAL_SHORT   = (short) 7;
    private static final Byte    VAL_BYTE    = (byte) 3;
+   private static final Byte    VAL_BYTE2    = (byte) 3;
+   private static final Byte    VAL_BYTE3    = (byte) 2;
+   private static final Byte    VAL_BYTE4    = (byte) 1;
    private static final byte[]  VAL_BYTES   = new byte[]{1, 2, 3, 4, 5};
+   private static final byte[]  VAL_BYTES2   = new byte[]{1, 2, 3, 4, 5};
    private static final Object[] VAL_ARRAY  = new Object[]{"a", 1L, true};
    private static final Map<String, Object> VAL_MAP;
 
@@ -276,9 +282,16 @@ public class JsonUtilPerfTest {
       JsonUtil.addToArray(VAL_INT2,     b);
       JsonUtil.addToArray(VAL_DOUBLE,  b);
       JsonUtil.addToArray(VAL_BOOL,    b);
+      JsonUtil.addToArray(VAL_BOOL2,    b);
+      JsonUtil.addToArray(VAL_BOOL3,    b);
+      JsonUtil.addToArray(VAL_BOOL4,    b);
       JsonUtil.addToArray(VAL_SHORT,   b);
       JsonUtil.addToArray(VAL_BYTE,    b);
+      JsonUtil.addToArray(VAL_BYTE2,    b);
+      JsonUtil.addToArray(VAL_BYTE3,    b);
+      JsonUtil.addToArray(VAL_BYTE4,    b);
       JsonUtil.addToArray(VAL_BYTES,   b);
+      JsonUtil.addToArray(VAL_BYTES2,   b);
       JsonUtil.addToArray(VAL_ARRAY,   b);
       JsonUtil.addToArray(VAL_MAP,     b);
       JsonUtil.addToArray(null,        b);
@@ -298,12 +311,19 @@ public JsonObjectBuilder testAddToObjectAllTypes() {
    JsonUtil.addToObject("k8",  VAL_INT2,     b);
    JsonUtil.addToObject("k9",  VAL_DOUBLE,  b);
    JsonUtil.addToObject("k10",  VAL_BOOL,    b);
-   JsonUtil.addToObject("k11",  VAL_SHORT,   b);
-   JsonUtil.addToObject("k12",  VAL_BYTE,    b);
-   JsonUtil.addToObject("k13",  VAL_BYTES,   b);
-   JsonUtil.addToObject("k14",  VAL_ARRAY,   b);
-   JsonUtil.addToObject("k15", VAL_MAP,     b);
-   JsonUtil.addToObject("k16", null,        b);
+   JsonUtil.addToObject("k11", VAL_BOOL2,    b);
+   JsonUtil.addToObject("k12", VAL_BOOL3,    b);
+   JsonUtil.addToObject("k13", VAL_BOOL4,    b);
+   JsonUtil.addToObject("k14",  VAL_SHORT,   b);
+   JsonUtil.addToObject("k15",  VAL_BYTE,    b);
+   JsonUtil.addToObject("k16", VAL_BYTE2,    b);
+   JsonUtil.addToObject("k17", VAL_BYTE3,    b);
+   JsonUtil.addToObject("k18", VAL_BYTE4,    b);
+   JsonUtil.addToObject("k19",  VAL_BYTES,   b);
+   JsonUtil.addToObject("k20", VAL_BYTES2,   b);
+   JsonUtil.addToObject("k21",  VAL_ARRAY,   b);
+   JsonUtil.addToObject("k22", VAL_MAP,     b);
+   JsonUtil.addToObject("k23", null,        b);
    return b;
 }
 }
