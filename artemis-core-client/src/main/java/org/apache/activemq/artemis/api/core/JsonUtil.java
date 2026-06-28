@@ -326,24 +326,23 @@ public final class JsonUtil {
       if (value == null) {
          return "";
       }
-      Object result = value;
       if (valueSizeLimit >= 0) {
       final Class<?> valueClass = value.getClass();
          if (valueClass == String.class) {
-            result = truncateString((String)value, valueSizeLimit);
+            return truncateString((String)value, valueSizeLimit);
          } else if (valueClass.isArray()) {
             if (valueClass == byte[].class) {
                if (((byte[]) value).length > valueSizeLimit) {
-                  result = Arrays.copyOfRange((byte[]) value, 0, valueSizeLimit);
+                  return Arrays.copyOfRange((byte[]) value, 0, valueSizeLimit);
                }
             } else if (valueClass == char[].class) {
                if (((char[]) value).length > valueSizeLimit) {
-                  result = Arrays.copyOfRange((char[]) value, 0, valueSizeLimit);
+                  return Arrays.copyOfRange((char[]) value, 0, valueSizeLimit);
                }
             }
          }
       }
-      return result;
+      return value;
    }
 
    public static JsonObject mergeAndUpdate(JsonObject source, JsonObject update) {
