@@ -923,8 +923,6 @@ public abstract class AMQPMessage extends RefCountMessage implements org.apache.
          }
          if (value instanceof String str) {
             map.put(applicationPropertiesPrefix + name, JsonUtil.truncateString(str, valueSizeLimit));
-         } else if (value == null) {
-            map.put(applicationPropertiesPrefix + name, "");
          } else {
             map.put(applicationPropertiesPrefix + name, JsonUtil.truncate(value, valueSizeLimit));
          }
