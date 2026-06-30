@@ -18,7 +18,6 @@ package org.apache.activemq.artemis.core.management.impl.view;
 
 import java.util.Date;
 
-import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ConsumerPredicateFilterPart;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ConsumerFilterPredicate;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
