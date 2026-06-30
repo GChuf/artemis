@@ -100,6 +100,7 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
       return obj.build().toString();
    }
 
+
    public String AsJson(int page, int pageSize) {
       JsonObjectBuilder obj = JsonLoader.createObjectBuilder();
       JsonArrayBuilder array = JsonLoader.createArrayBuilder();
@@ -197,7 +198,46 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
 
    public abstract Class getClassT();
 
-   public abstract JsonObjectBuilder toJson(T obj);
+/**
+    * Concrete views implement this to expose their field mapping configuration names 
+    * directly out of their underlying Enum definitions (e.g. return AddressField.values()).
+    */
+   protected abstract Enum<?>[] getFields();
+
+   /**
+    * Core unified serialization implementation. Uses type pattern matching to preserve
+    * numeric and boolean types natively in the generated JSON structure without quotes.
+    */
+   public JsonObjectBuilder toJson(T obj) {
+      if (obj == null) {
+         return null;
+      }
+
+      JsonObjectBuilder builder = JsonLoader.createObjectBuilder();
+
+      for (Enum<?> field : getFields()) {
+         String fieldName = field.name(); // Falls back to standard string-mapping matches
+         Object val = getField(obj, fieldName);
+
+         if (val == null) {
+            builder.addNull(fieldName);
+         } else {
+            if (val instanceof String s) {
+               builder.add(fieldName, s);
+            } else if (val instanceof Long l) {
+               builder.add(fieldName, l.longValue());
+            } else if (val instanceof Integer i) {
+               builder.add(fieldName, i.intValue());
+            } else if (val instanceof Boolean b) {
+               builder.add(fieldName, b.booleanValue());
+            } else {
+               builder.add(fieldName, val.toString());
+            }
+         }
+      }
+
+      return builder;
+   }
 
    public abstract String getDefaultOrderColumn();
 
