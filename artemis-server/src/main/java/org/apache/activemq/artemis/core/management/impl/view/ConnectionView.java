@@ -60,16 +60,16 @@ public class ConnectionView extends ActiveMQAbstractView<RemotingConnection, Con
 
       return JsonLoader.createObjectBuilder()
          .add(ConnectionField.CONNECTION_ID.getName(), toString(connection.getID()))
-         .add(ConnectionField.REMOTE_ADDRESS.getName(), toString(connection.getRemoteAddress()))
+         .add(ConnectionField.REMOTE_ADDRESS.getName(), connection.getRemoteAddress())
          .add(ConnectionField.USERS.getName(), StringUtil.joinStringList(users, ","))
          .add(ConnectionField.CREATION_TIME.getName(), new Date(connection.getCreationTime()).toString())
-         .add(ConnectionField.IMPLEMENTATION.getName(), toString(connection.getClass().getSimpleName()))
-         .add(ConnectionField.PROTOCOL.getName(), toString(connection.getProtocolName()))
-         .add(ConnectionField.CLIENT_ID.getName(), toString(connection.getClientID()))
-         .add(ConnectionField.LOCAL_ADDRESS.getName(), toString(connection.getTransportLocalAddress()))
+         .add(ConnectionField.IMPLEMENTATION.getName(), connection.getClass().getSimpleName())
+         .add(ConnectionField.PROTOCOL.getName(), connection.getProtocolName())
+         .add(ConnectionField.CLIENT_ID.getName(), connection.getClientID())
+         .add(ConnectionField.LOCAL_ADDRESS.getName(), connection.getTransportLocalAddress())
          .add(ConnectionField.SESSION_COUNT.getName(), sessions.size())
-         .add(ConnectionField.PROXY_ADDRESS.getName(), toString(NettyServerConnection.getProxyAddress(connection.getTransportConnection())))
-         .add(ConnectionField.PROXY_PROTOCOL_VERSION.getName(), toString(NettyServerConnection.getProxyProtocolVersion(connection.getTransportConnection())));
+         .add(ConnectionField.PROXY_ADDRESS.getName(), NettyServerConnection.getProxyAddress(connection.getTransportConnection()))
+         .add(ConnectionField.PROXY_PROTOCOL_VERSION.getName(), NettyServerConnection.getProxyProtocolVersion(connection.getTransportConnection()));
    }
 
    @Override

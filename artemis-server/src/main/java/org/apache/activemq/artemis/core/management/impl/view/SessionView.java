@@ -42,9 +42,9 @@ public class SessionView extends ActiveMQAbstractView<ServerSession, SessionPred
    @Override
    public JsonObjectBuilder toJson(ServerSession session) {
       JsonObjectBuilder obj = JsonLoader.createObjectBuilder()
-         .add(SessionField.ID.getName(), toString(session.getName()))
-         .add(SessionField.USER.getName(), toString(session.getUsername()))
-         .add(SessionField.VALIDATED_USER.getName(), toString(session.getValidatedUser()))
+         .add(SessionField.ID.getName(), session.getName())
+         .add(SessionField.USER.getName(), session.getUsername())
+         .add(SessionField.VALIDATED_USER.getName(), session.getValidatedUser())
          .add(SessionField.CREATION_TIME.getName(), new Date(session.getCreationTime()).toString())
          .add(SessionField.CONSUMER_COUNT.getName(), session.getConsumerCount())
          .add(SessionField.PRODUCER_COUNT.getName(), session.getProducerCount())

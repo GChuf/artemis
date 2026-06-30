@@ -48,8 +48,8 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
 
       JsonObjectBuilder obj = JsonLoader.createObjectBuilder()
          .add(AddressField.ID.getName(), toString(address.getId()))
-         .add(AddressField.NAME.getName(), toString(address.getAddress()))
-         .add(AddressField.ROUTING_TYPES.getName(), toString(address.getRoutingTypesAsJSON()))
+         .add(AddressField.NAME.getName(), address.getAddress())
+         .add(AddressField.ROUTING_TYPES.getName(), address.getRoutingTypesAsJSON())
          .add(AddressField.QUEUE_COUNT.getName(), toString(address.getQueueCount()))
          .add(AddressField.INTERNAL.getName(), toString(address.isInternal()))
          .add(AddressField.TEMPORARY.getName(), toString(address.isTemporary()))
