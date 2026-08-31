@@ -29,7 +29,6 @@ import javax.management.ObjectName;
 import javax.security.auth.Subject;
 import java.lang.reflect.Method;
 import java.security.Principal;
-import java.util.List;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -117,7 +116,7 @@ public class ArtemisMBeanServerGuard extends AbstractGuardInvocationHandler {
       if (canBypassRBAC(objectName)) {
          return;
       }
-      List<String> requiredRoles = getRequiredRoles(objectName, operationName);
+      Set<String> requiredRoles = getRequiredRoles(objectName, operationName);
       for (String role : requiredRoles) {
          if (currentUserHasRole(role)) {
             return;
@@ -129,7 +128,7 @@ public class ArtemisMBeanServerGuard extends AbstractGuardInvocationHandler {
       throw new SecurityException("User not authorized to access operation: " + operationName);
    }
 
-   List<String> getRequiredRoles(ObjectName objectName, String methodName) {
+   Set<String> getRequiredRoles(ObjectName objectName, String methodName) {
       return jmxAccessControlList.getRolesForObject(objectName, methodName);
    }
 
