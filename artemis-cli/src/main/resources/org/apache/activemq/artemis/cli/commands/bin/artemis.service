@@ -1,0 +1,24 @@
+[Unit]
+Description=Apache Artemis Service
+After=network.target
+
+[Service]
+Type=exec
+#User=amq
+#Nice=-10
+
+#Environment="ARTEMIS_INSTANCE=/opt/apache-artemis/articuno"
+#ExecStart=/opt/apache-artemis/articuno/bin/artemis run
+
+Environment=${environment}
+ExecStart=${exec-start}
+
+ExecStop=/bin/kill -TERM $MAINPID
+TimeoutStopSec=30s
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+
+[Install]
+Alias=artemis.service
+WantedBy=multi-user.target
