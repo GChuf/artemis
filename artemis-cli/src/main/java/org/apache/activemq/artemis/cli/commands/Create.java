@@ -339,7 +339,7 @@ public class Create extends InstallAbstract {
    @Option(names = "--jdbc-lock-expiration", description = "Lock expiration (in milliseconds).")
    long jdbcLockExpiration = ActiveMQDefaultConfiguration.getDefaultJdbcLockExpirationMillis();
 
-   @Option(names = "--systemd-service", description = "Install systemd service. Default is false.")
+   @Option(names = "--install-systemd-service", description = "Install systemd service. Default is false.")
    Boolean systemdService = null;
 
    private boolean isAutoCreate() {
@@ -577,7 +577,7 @@ public class Create extends InstallAbstract {
 
    public boolean getSystemdServiceInstall() {
       if (systemdService == null) {
-         systemdService = inputBoolean("--systemdService", "Install systemd service?", false);
+         systemdService = inputBoolean("--install-systemd-service", "Install systemd service?", false);
       }
       return systemdService;
    }
@@ -595,15 +595,13 @@ public class Create extends InstallAbstract {
 
       write(BIN_ARTEMIS_SERVICE_SYSTEMD, serviceFilters, true);
 
-      File systemdService = new File(etcFolder, BIN_ARTEMIS_SERVICE_SYSTEMD);
-
       getActionContext().out.println();
       getActionContext().out.println("Generated a systemd unit file at:");
-      getActionContext().out.println("   " + path(systemdService));
+      getActionContext().out.println(String.format("   \"%s\"", path(new File(directory, "bin/artemis.service"))));
       getActionContext().out.println();
-      getActionContext().out.println("To install and it, run as root:");
-      getActionContext().out.println(String.format("   cp \"%s\" /etc/systemd/system/%s.service", path(systemdService), name));
-      getActionContext().out.println(String.format("   systemctl daemon-reload && systemctl enable %s", name));
+      getActionContext().out.println("To install it, run as root:");
+      getActionContext().out.println(String.format("   cp \"%s\" /etc/systemd/system/artemis.service", path(new File(directory, "bin/artemis.service"))));
+      getActionContext().out.println(String.format("   systemctl daemon-reload && systemctl enable artemis.service"));
 
    }
 
