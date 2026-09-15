@@ -339,7 +339,7 @@ public class Create extends InstallAbstract {
    long jdbcLockExpiration = ActiveMQDefaultConfiguration.getDefaultJdbcLockExpirationMillis();
 
    @Option(names = "--systemd-service", description = "Install systemd service. Default is false.")
-   Boolean systemdService = false;
+   Boolean systemdService = null;
 
    private boolean isAutoCreate() {
       if (autoCreate == null) {
