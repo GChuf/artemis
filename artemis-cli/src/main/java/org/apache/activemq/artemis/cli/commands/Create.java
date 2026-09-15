@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -80,6 +81,7 @@ public class Create extends InstallAbstract {
    public static final String BIN_ARTEMIS = "bin/" + ARTEMIS;
    public static final String ARTEMIS_SERVICE = "artemis-service";
    public static final String BIN_ARTEMIS_SERVICE = "bin/" + ARTEMIS_SERVICE;
+   public static final String ARTEMIS_SERVICE_SYSTEMD = "artemis.service";
    public static final String ETC_ARTEMIS_PROFILE = "artemis.profile";
    public static final String ETC_ARTEMIS_UTILITY_PROFILE = "artemis-utility.profile";
    public static final String ETC_LOG4J2_PROPERTIES = "log4j2.properties";
@@ -336,6 +338,9 @@ public class Create extends InstallAbstract {
    @Option(names = "--jdbc-lock-expiration", description = "Lock expiration (in milliseconds).")
    long jdbcLockExpiration = ActiveMQDefaultConfiguration.getDefaultJdbcLockExpirationMillis();
 
+   @Option(names = "--systemd-service", description = "Install systemd service. Default is false.")
+   Boolean systemdService = false;
+
    private boolean isAutoCreate() {
       if (autoCreate == null) {
          if (noAutoCreate != null) {
@@ -567,6 +572,38 @@ public class Create extends InstallAbstract {
 
    private boolean isDisablePersistence() {
       return disablePersistence;
+   }
+
+   public boolean getSystemdServiceInstall() {
+      if (systemdService == null) {
+         systemdService = inputBoolean("--systemdService", "Install systemd service?", false);
+      }
+      return systemdService;
+   }
+
+   public void setSystemdServiceInstall(boolean systemdService) {
+      this.systemdService = systemdService;
+   }
+
+
+   public void installSystemdService(File etcFolder) throws Exception {
+      Map<String, String> serviceFilters = new LinkedHashMap<>();
+
+      serviceFilters.put("${environment}", "ARTEMIS_INSTANCE=" + path(directory));
+      serviceFilters.put("${exec-start}", path(directory) + "/bin/artemis run");
+
+      writeEtc(ARTEMIS_SERVICE_SYSTEMD, etcFolder, serviceFilters, true);
+
+      File systemdService = new File(etcFolder, ARTEMIS_SERVICE_SYSTEMD);
+
+      getActionContext().out.println();
+      getActionContext().out.println("Generated a systemd unit file at:");
+      getActionContext().out.println("   " + path(systemdService));
+      getActionContext().out.println();
+      getActionContext().out.println("To install and it, run as root:");
+      getActionContext().out.println(String.format("   cp \"%s\" /etc/systemd/system/%s.service", path(systemdService), name));
+      getActionContext().out.println(String.format("   systemctl daemon-reload && systemctl enable %s", name));
+
    }
 
    @Override
@@ -926,6 +963,12 @@ public class Create extends InstallAbstract {
          context.out.println("");
          context.out.println(String.format("   \"%s\" start", path(service)));
          context.out.println("");
+
+
+         if (getSystemdServiceInstall()) {
+            installSystemdService(etcFolder);
+         }
+
       }
 
       if (IS_WINDOWS) {
@@ -941,6 +984,8 @@ public class Create extends InstallAbstract {
          context.out.println("   To uninstall the windows service");
          context.out.println(String.format("      \"%s\" uninstall", path(service)));
       }
+
+
 
       return null;
    }
