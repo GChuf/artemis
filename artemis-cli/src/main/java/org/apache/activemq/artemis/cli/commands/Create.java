@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -82,7 +81,7 @@ public class Create extends InstallAbstract {
    public static final String ARTEMIS_SERVICE = "artemis-service";
    public static final String BIN_ARTEMIS_SERVICE = "bin/" + ARTEMIS_SERVICE;
    public static final String ARTEMIS_SERVICE_SYSTEMD = "artemis.service";
-   public static final String BIN_ARTEMIS_SERVICE_SYSTEMD = "bin/" + ARTEMIS_SERVICE_SYSTEMD;
+   public static final String ETC_ARTEMIS_SERVICE_SYSTEMD = "etc/" + ARTEMIS_SERVICE_SYSTEMD;
    public static final String ETC_ARTEMIS_PROFILE = "artemis.profile";
    public static final String ETC_ARTEMIS_UTILITY_PROFILE = "artemis-utility.profile";
    public static final String ETC_LOG4J2_PROPERTIES = "log4j2.properties";
@@ -586,21 +585,20 @@ public class Create extends InstallAbstract {
       this.systemdService = systemdService;
    }
 
-
    public void installSystemdService(File etcFolder) throws Exception {
       Map<String, String> serviceFilters = new LinkedHashMap<>();
       serviceFilters.put("${environment}", "ARTEMIS_INSTANCE=" + path(directory));
       serviceFilters.put("${exec-start}", path(directory) + "/bin/artemis run");
-      write(BIN_ARTEMIS_SERVICE_SYSTEMD, serviceFilters, true);
+      write(ETC_ARTEMIS_SERVICE_SYSTEMD, serviceFilters, true);
    }
 
    public void printSystemdServiceInfo() throws Exception {
       getActionContext().out.println();
       getActionContext().out.println("Systemd unit file was generated at:");
-      getActionContext().out.println(String.format("   \"%s\"", path(new File(directory, "bin/artemis.service"))));
+      getActionContext().out.println(String.format("   \"%s\"", path(new File(directory, "etc/artemis.service"))));
       getActionContext().out.println();
       getActionContext().out.println("To install it, run this with sudo privileges:");
-      getActionContext().out.println(String.format("   cp \"%s\" /etc/systemd/system/artemis.service", path(new File(directory, "bin/artemis.service"))));
+      getActionContext().out.println(String.format("   cp \"%s\" /etc/systemd/system/artemis.service", path(new File(directory, "etc/artemis.service"))));
       getActionContext().out.println(String.format("   systemctl daemon-reload && systemctl enable artemis.service"));
    }
 
