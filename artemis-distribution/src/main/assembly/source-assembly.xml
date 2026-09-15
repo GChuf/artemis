@@ -40,6 +40,7 @@
             <exclude>artemis-distribution/src/main/resources/bin/artemis</exclude>
             <exclude>artemis-cli/src/main/resources/org/apache/activemq/artemis/cli/commands/bin/artemis</exclude>
             <exclude>artemis-cli/src/main/resources/org/apache/activemq/artemis/cli/commands/bin/artemis-service</exclude>
+            <exclude>artemis-cli/src/main/resources/org/apache/activemq/artemis/cli/commands/bin/artemis.service</exclude>
             <exclude>scripts/*.sh</exclude>
             <exclude>**/**/*.sh</exclude>
 
@@ -140,6 +141,7 @@
             <include>artemis-distribution/src/main/resources/bin/artemis</include>
             <include>artemis-cli/src/main/resources/org/apache/activemq/artemis/cli/commands/bin/artemis</include>
             <include>artemis-cli/src/main/resources/org/apache/activemq/artemis/cli/commands/bin/artemis-service</include>
+            <include>artemis-cli/src/main/resources/org/apache/activemq/artemis/cli/commands/bin/artemis.service</include>
             <include>scripts/*.sh</include>
             <include>**/**/*.sh</include>
          </includes>
