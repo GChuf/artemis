@@ -82,6 +82,7 @@ public class Create extends InstallAbstract {
    public static final String ARTEMIS_SERVICE = "artemis-service";
    public static final String BIN_ARTEMIS_SERVICE = "bin/" + ARTEMIS_SERVICE;
    public static final String ARTEMIS_SERVICE_SYSTEMD = "artemis.service";
+   public static final String BIN_ARTEMIS_SERVICE_SYSTEMD = "bin/" + ARTEMIS_SERVICE_SYSTEMD;
    public static final String ETC_ARTEMIS_PROFILE = "artemis.profile";
    public static final String ETC_ARTEMIS_UTILITY_PROFILE = "artemis-utility.profile";
    public static final String ETC_LOG4J2_PROPERTIES = "log4j2.properties";
@@ -592,9 +593,9 @@ public class Create extends InstallAbstract {
       serviceFilters.put("${environment}", "ARTEMIS_INSTANCE=" + path(directory));
       serviceFilters.put("${exec-start}", path(directory) + "/bin/artemis run");
 
-      writeEtc(ARTEMIS_SERVICE_SYSTEMD, etcFolder, serviceFilters, true);
+      writeEtc(BIN_ARTEMIS_SERVICE_SYSTEMD, etcFolder, serviceFilters, true);
 
-      File systemdService = new File(etcFolder, ARTEMIS_SERVICE_SYSTEMD);
+      File systemdService = new File(etcFolder, BIN_ARTEMIS_SERVICE_SYSTEMD);
 
       getActionContext().out.println();
       getActionContext().out.println("Generated a systemd unit file at:");
