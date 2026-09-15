@@ -589,12 +589,12 @@ public class Create extends InstallAbstract {
 
    public void installSystemdService(File etcFolder) throws Exception {
       Map<String, String> serviceFilters = new LinkedHashMap<>();
-
       serviceFilters.put("${environment}", "ARTEMIS_INSTANCE=" + path(directory));
       serviceFilters.put("${exec-start}", path(directory) + "/bin/artemis run");
-
       write(BIN_ARTEMIS_SERVICE_SYSTEMD, serviceFilters, true);
+   }
 
+   public void printSystemdServiceInfo() throws Exception {
       getActionContext().out.println();
       getActionContext().out.println("Generated a systemd unit file at:");
       getActionContext().out.println(String.format("   \"%s\"", path(new File(directory, "bin/artemis.service"))));
@@ -816,6 +816,10 @@ public class Create extends InstallAbstract {
 
       addScriptFilters(filters, getHome(), getInstance(), etcFolder, dataFolder, oomeDumpFile, javaMemory, processedJavaOptions, processedJavaUtilityOptions, role);
 
+      if (getSystemdServiceInstall()) {
+         installSystemdService(etcFolder);
+      }
+
       boolean allowAnonymous = isAllowAnonymous();
 
 
@@ -962,12 +966,9 @@ public class Create extends InstallAbstract {
          context.out.println("");
          context.out.println(String.format("   \"%s\" start", path(service)));
          context.out.println("");
-
-
-         if (getSystemdServiceInstall()) {
-            installSystemdService(etcFolder);
+         if (systemdService) {
+            printSystemdServiceInfo();
          }
-
       }
 
       if (IS_WINDOWS) {
