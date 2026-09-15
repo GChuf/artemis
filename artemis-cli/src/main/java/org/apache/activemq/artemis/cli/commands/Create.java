@@ -596,13 +596,12 @@ public class Create extends InstallAbstract {
 
    public void printSystemdServiceInfo() throws Exception {
       getActionContext().out.println();
-      getActionContext().out.println("Generated a systemd unit file at:");
+      getActionContext().out.println("Systemd unit file was generated at:");
       getActionContext().out.println(String.format("   \"%s\"", path(new File(directory, "bin/artemis.service"))));
       getActionContext().out.println();
-      getActionContext().out.println("To install it, run as root:");
+      getActionContext().out.println("To install it, run this with sudo privileges:");
       getActionContext().out.println(String.format("   cp \"%s\" /etc/systemd/system/artemis.service", path(new File(directory, "bin/artemis.service"))));
       getActionContext().out.println(String.format("   systemctl daemon-reload && systemctl enable artemis.service"));
-
    }
 
    @Override
@@ -816,12 +815,11 @@ public class Create extends InstallAbstract {
 
       addScriptFilters(filters, getHome(), getInstance(), etcFolder, dataFolder, oomeDumpFile, javaMemory, processedJavaOptions, processedJavaUtilityOptions, role);
 
+      boolean allowAnonymous = isAllowAnonymous();
+
       if (getSystemdServiceInstall()) {
          installSystemdService(etcFolder);
       }
-
-      boolean allowAnonymous = isAllowAnonymous();
-
 
       String retentionTag;
       if (retentionDays > 0) {
