@@ -593,7 +593,7 @@ public class Create extends InstallAbstract {
       serviceFilters.put("${environment}", "ARTEMIS_INSTANCE=" + path(directory));
       serviceFilters.put("${exec-start}", path(directory) + "/bin/artemis run");
 
-      writeEtc(BIN_ARTEMIS_SERVICE_SYSTEMD, etcFolder, serviceFilters, true);
+      write(BIN_ARTEMIS_SERVICE_SYSTEMD, serviceFilters, true);
 
       File systemdService = new File(etcFolder, BIN_ARTEMIS_SERVICE_SYSTEMD);
 
