@@ -139,7 +139,7 @@ Each file is introduced with its filename and size, followed by a table of its r
 
 [,text]
 ----
-#JournalFileImpl: (activemq-bindings-1.bindings id = 1, recordID = 1) (size=1048576)
+#JournalFileImpl: (artemis-bindings-1.bindings id = 1, recordID = 1) (size=1048576)
 ---------------------------------------------------------------------------------------------
 |Operation |ID      |Record Type            |TX        |Compact |Decoded
 ---------------------------------------------------------------------------------------------
