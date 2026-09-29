@@ -25,8 +25,17 @@ ExecStart=/pathToBrokerInstance/bin/artemis run
 TimeoutStopSec=60s
 SuccessExitStatus=143
 KillMode=mixed
+LimitMEMLOCK=infinity
+LimitNOFILE=524288
+LimitNPROC=31438
+LimitAS=infinity
+LimitFSIZE=infinity
+SendSIGKILL=no
+NotifyAccess=all
 Restart=always
 RestartSec=10
+#User=artemis
+#Group=artemis
 
 [Install]
 WantedBy=multi-user.target
@@ -34,7 +43,7 @@ WantedBy=multi-user.target
 
 You might want to tweak or add additional configuration inside the service file, for example:
 
-* add `User` with which to run the service, to avoid running as root
+* uncomment and/or change `User` with which to run the service, to avoid running as root
 * add `Nice` to tweak niceness of the java process
 * add `Alias`
 * increase or decrease `TimeoutStopSec` and `RestartSec`

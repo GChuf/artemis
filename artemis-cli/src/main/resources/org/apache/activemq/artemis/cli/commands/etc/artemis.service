@@ -17,7 +17,7 @@
 
 [Unit]
 Description=Apache Artemis Service
-After=network.target network-online.target
+After=network-online.target
 Wants=network-online.target
 
 [Service]
@@ -28,8 +28,17 @@ ExecStart=${exec-start}
 TimeoutStopSec=60s
 SuccessExitStatus=143
 KillMode=mixed
+LimitMEMLOCK=infinity
+LimitNOFILE=524288
+LimitNPROC=31438
+LimitAS=infinity
+LimitFSIZE=infinity
+SendSIGKILL=no
+NotifyAccess=all
 Restart=always
 RestartSec=10
+#User=artemis
+#Group=artemis
 
 [Install]
 WantedBy=multi-user.target
