@@ -200,6 +200,7 @@ public class PageCounterRebuildManager implements Runnable {
 
       if (!paging) {
          logger.trace("Ignoring call to rebuild pgStore {}", pgStore.getAddress());
+         return;
       }
 
       logger.debug("Rebuilding page counter for address {}", pgStore.getAddress());

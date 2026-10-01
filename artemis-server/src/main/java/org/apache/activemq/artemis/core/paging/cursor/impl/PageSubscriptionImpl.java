@@ -270,9 +270,12 @@ public final class PageSubscriptionImpl implements PageSubscription {
 
    @Override
    public void onPageModeCleared(Transaction tx) throws Exception {
-      // this could be null on testcases
-      counter.delete(tx);
-      this.empty = true;
+   if (!this.empty) {
+         this.empty = true;
+         if (counter != null) {
+            counter.delete(tx);
+         }
+      }
    }
 
    /**
@@ -421,9 +424,10 @@ public final class PageSubscriptionImpl implements PageSubscription {
       //pre-calculate persistentSize
       final long persistentSize = getPersistentSize(reference);
 
-      confirmPosition(tx, reference.getPagedMessage().newPositionObject(), true);
-
+      // keep counter before confirmPosition
       counter.increment(tx, -1, -persistentSize);
+
+      confirmPosition(tx, reference.getPagedMessage().newPositionObject(), true);
 
       PageTransactionInfo txInfo = getPageTransaction(reference);
       if (txInfo != null) {

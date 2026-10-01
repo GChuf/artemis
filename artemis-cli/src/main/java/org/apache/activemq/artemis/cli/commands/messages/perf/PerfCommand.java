@@ -76,16 +76,21 @@ public abstract class PerfCommand extends ConnectionAbstract {
          context.out.println("--tx-size is deprecated, please use --commit-interval");
          commitInterval = txSize;
       }
+
+      final Thread mainThread = Thread.currentThread();
+
       try (ConnectionFactoryClosable factory = createConnectionFactory(brokerURL, user, password, null, protocol)) {
          final Destination[] jmsDestinations = lookupDestinations(factory, destinations, numDestinations);
+
          Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             onInterruptBenchmark();
+            mainThread.interrupt(); // Force interrupt on the main thread running the benchmark loop
             try {
-               completed.await();
+               completed.await(3, TimeUnit.SECONDS);
             } catch (InterruptedException ignored) {
-
             }
          }));
+
          try {
             onExecuteBenchmark(factory, jmsDestinations, context);
          } finally {
@@ -107,7 +112,7 @@ public abstract class PerfCommand extends ConnectionAbstract {
                                                             final long endWarmup,
                                                             final long end,
                                                             final BenchmarkService benchmark) throws IOException {
-      while (benchmark.isRunning()) {
+      while (benchmark.isRunning() && !Thread.currentThread().isInterrupted()) {
          if (end != 0) {
             final long tick = System.currentTimeMillis();
             if (tick - end >= 0) {
@@ -126,6 +131,7 @@ public abstract class PerfCommand extends ConnectionAbstract {
          if (!isSilentInput()) {
             getActionContext().out.println(skratchBuffer);
          }
+
          LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
       }
       return warmingUp;
