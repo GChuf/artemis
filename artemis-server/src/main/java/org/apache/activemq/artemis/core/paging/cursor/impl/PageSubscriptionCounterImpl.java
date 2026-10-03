@@ -40,6 +40,8 @@ import java.lang.invoke.MethodHandles;
  */
 public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
+
+   private volatile long lastDeleteTime = 0;
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
    private final long subscriptionID;
@@ -185,6 +187,13 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
          logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
       }
       long value = valueUpdater.addAndGet(this, add);
+
+      if (value < 0 && value - add >= 0) {
+         logger.warn("counter went negative: sub={} queue={} value={} add={} msSinceLastDelete={}",
+                     subscriptionID,
+                     subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
+                     value, add, System.currentTimeMillis() - lastDeleteTime, new Exception("stack"));
+      }
       persistentSizeUpdater.addAndGet(this, size);
       if (add > 0) {
          addedUpdater.addAndGet(this, add);
@@ -254,6 +263,12 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
             } else {
                recordID = -1;
             }
+
+            long valueBefore = valueUpdater.get(this);
+            if (valueBefore != 0) {
+               logger.warn("counter delete NONZERO: sub={} keepZero={} valueBefore={} added={}", subscriptionID, keepZero, valueBefore, addedUpdater.get(this), new Exception("stack"));
+            }
+            lastDeleteTime = System.currentTimeMillis();
 
             valueUpdater.set(this, 0);
             persistentSizeUpdater.set(this, 0);
