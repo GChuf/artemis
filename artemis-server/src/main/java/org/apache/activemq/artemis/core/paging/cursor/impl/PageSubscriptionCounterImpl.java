@@ -189,7 +189,7 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       }
       long value = valueUpdater.addAndGet(this, add);
 
-      if (value < 0 && value - add >= 0) {
+      if (value < 0 && value - add >= 0 && !negativeLogged) {
          negativeLogged = true;
          logger.warn("counter went negative: sub={} queue={} value={} add={} msSinceLastDelete={}",
                      subscriptionID,
