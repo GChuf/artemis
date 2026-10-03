@@ -18,6 +18,7 @@ package org.apache.activemq.artemis.core.paging.cursor.impl;
 
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 import org.apache.activemq.artemis.core.paging.PagingStore;
@@ -44,7 +45,10 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    private volatile long lastDeleteTime = 0;
    private volatile boolean negativeLogged = false;
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
+private final AtomicLong addsRequested = new AtomicLong();
+private final AtomicLong addsApplied = new AtomicLong();
+private final AtomicLong acksRequested = new AtomicLong();
+private final AtomicLong acksApplied = new AtomicLong();
    private final long subscriptionID;
 
    // the journal record id that is holding the current value
@@ -153,7 +157,15 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    }
 
    @Override
+
+   
    public void increment(Transaction tx, int add, long size) throws Exception {
+if (add > 0) {
+   addsRequested.addAndGet(add);
+} else if (add < 0) {
+   acksRequested.addAndGet(-add);
+}
+
       if (tx == null) {
          process(add, size);
       } else {
@@ -188,13 +200,17 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
          logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
       }
       long value = valueUpdater.addAndGet(this, add);
-
+if (add > 0) {
+   addsApplied.addAndGet(add);
+} else if (add < 0) {
+   acksApplied.addAndGet(-add);
+}
       if (value < 0 && value - add >= 0 && !negativeLogged) {
          negativeLogged = true;
-         logger.warn("counter went negative: sub={} queue={} value={} add={} msSinceLastDelete={}",
+         logger.warn("counter went negative: sub={} queue={} value={} add={} msSinceLastDelete={} pendingAdds={} pendingAcks={}",
                      subscriptionID,
                      subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
-                     value, add, System.currentTimeMillis() - lastDeleteTime, new Exception("stack"));
+                     value, add, System.currentTimeMillis() - lastDeleteTime, addsRequested.get() - addsApplied.get(), acksRequested.get() - acksApplied.get());
       }
       persistentSizeUpdater.addAndGet(this, size);
       if (add > 0) {
@@ -266,9 +282,20 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
                recordID = -1;
             }
 
-            long valueBefore = valueUpdater.get(this);
+long valueBefore = valueUpdater.get(this);
+long pendingAdds = addsRequested.get() - addsApplied.get();
+long pendingAcks = acksRequested.get() - acksApplied.get();
             if (valueBefore != 0) {
-               logger.warn("counter delete NONZERO: sub={} keepZero={} valueBefore={} added={}", subscriptionID, keepZero, valueBefore, addedUpdater.get(this), new Exception("stack"));
+
+if (valueBefore != 0 || pendingAdds != 0 || pendingAcks != 0) {
+   logger.warn("counter delete: sub={} keepZero={} valueBefore={} added={} addsRequested={} addsApplied={} acksRequested={} acksApplied={}",
+               subscriptionID, keepZero, valueBefore, addedUpdater.get(this),
+               addsRequested.get(), addsApplied.get(), acksRequested.get(), acksApplied.get());
+}
+addsRequested.set(0);
+addsApplied.set(0);
+acksRequested.set(0);
+acksApplied.set(0);
             }
             lastDeleteTime = System.currentTimeMillis();
             negativeLogged = false;
