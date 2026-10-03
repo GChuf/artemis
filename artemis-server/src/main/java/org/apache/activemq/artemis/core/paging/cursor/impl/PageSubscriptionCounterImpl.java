@@ -42,6 +42,7 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
 
    private volatile long lastDeleteTime = 0;
+   private volatile boolean negativeLogged = false;
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
    private final long subscriptionID;
@@ -189,6 +190,7 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       long value = valueUpdater.addAndGet(this, add);
 
       if (value < 0 && value - add >= 0) {
+         negativeLogged = true;
          logger.warn("counter went negative: sub={} queue={} value={} add={} msSinceLastDelete={}",
                      subscriptionID,
                      subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
@@ -269,7 +271,7 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
                logger.warn("counter delete NONZERO: sub={} keepZero={} valueBefore={} added={}", subscriptionID, keepZero, valueBefore, addedUpdater.get(this), new Exception("stack"));
             }
             lastDeleteTime = System.currentTimeMillis();
-
+            negativeLogged = false;
             valueUpdater.set(this, 0);
             persistentSizeUpdater.set(this, 0);
          }

@@ -270,12 +270,9 @@ public final class PageSubscriptionImpl implements PageSubscription {
 
    @Override
    public void onPageModeCleared(Transaction tx) throws Exception {
-   if (!this.empty) {
-         this.empty = true;
-         if (counter != null) {
-            counter.delete(tx);
-         }
-      }
+      // this could be null on testcases
+      counter.delete(tx);
+      this.empty = true;
    }
 
    /**
@@ -421,13 +418,20 @@ public final class PageSubscriptionImpl implements PageSubscription {
 
    @Override
    public void ackTx(final Transaction tx, final PagedReference reference, boolean fromDelivery) throws Exception {
+      // DEBUG ONLY: detect a second ack request on the same paged position (remove after the investigation)
+      final PagedMessage pm = reference.getPagedMessage();
+      final Throwable previousAck = getPageInfo(pm.getPageNumber()).markAckRequested(pm.getMessageNumber(), new Exception("first ack"));
+      if (previousAck != null) {
+         logger.warn("DOUBLE ACK requested: page={} msg={} queue={}", pm.getPageNumber(), pm.getMessageNumber(), queue.getName(), new Exception("second ack"));
+         logger.warn("...first ack was:", previousAck);
+      }
+
       //pre-calculate persistentSize
       final long persistentSize = getPersistentSize(reference);
 
-      // keep counter before confirmPosition
-      counter.increment(tx, -1, -persistentSize);
-
       confirmPosition(tx, reference.getPagedMessage().newPositionObject(), true);
+
+      counter.increment(tx, -1, -persistentSize);
 
       PageTransactionInfo txInfo = getPageTransaction(reference);
       if (txInfo != null) {
@@ -906,6 +910,9 @@ public final class PageSubscriptionImpl implements PageSubscription {
       // This will take DUMMY elements. This is used like a HashSet of Int
       private IntObjectHashMap<Object> removedReferences = new IntObjectHashMap<>();
 
+      // DEBUG ONLY: stack of the first ack requested per message number (grows until the page info is released)
+      private IntObjectHashMap<Throwable> ackRequested;
+
       // There's a pending TX to add elements on this page
       // also can be used to prevent the page from being deleted too soon.
       private final AtomicInteger pendingTX = new AtomicInteger(0);
@@ -1053,6 +1060,17 @@ public final class PageSubscriptionImpl implements PageSubscription {
          }
       }
 
+      /**
+       * DEBUG ONLY: records who requested the ack for a message number and returns the previous requester's stack, or
+       * null if this is the first request.
+       */
+      synchronized Throwable markAckRequested(final int messageNr, final Throwable who) {
+         if (ackRequested == null) {
+            ackRequested = new IntObjectHashMap<>();
+         }
+         return ackRequested.put(messageNr, who);
+      }
+
       public void addACK(final PagePosition posACK) {
 
          if (logger.isTraceEnabled()) {
@@ -1065,6 +1083,11 @@ public final class PageSubscriptionImpl implements PageSubscription {
          }
 
          boolean added = internalAddACK(posACK);
+
+         // DEBUG ONLY: a second commit of the same position
+         if (!added && posACK.getMessageNr() >= 0 && acks != null) {
+            logger.warn("DOUBLE ACK committed: page={} msg={} queue={}", pageId, posACK.getMessageNr(), queue.getName(), new Exception("stack"));
+         }
 
          // Negative could mean a bookmark on the first element for the page (example -1)
          if (added && posACK.getMessageNr() >= 0) {
