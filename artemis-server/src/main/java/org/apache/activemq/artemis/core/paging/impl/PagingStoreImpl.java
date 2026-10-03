@@ -892,12 +892,22 @@ public class PagingStoreImpl implements PagingStore {
    }
 
    private String getPageInfo() {
-      return String.format("size=%d bytes (%d messages); maxSize=%d bytes (%d messages); globalSize=%d bytes (%d messages); globalMaxSize=%d bytes (%d messages);", size.getSize(), size.getElements(), maxSize, maxMessages, pagingManager.getGlobalSize(), pagingManager.getGlobalMessages(), pagingManager.getMaxSize(), pagingManager.getMaxMessages());
+      return new StringBuilder(220)
+         .append("size=").append(size.getSize())
+         .append(" bytes (").append(size.getElements())
+         .append(" messages); maxSize=").append(maxSize)
+         .append(" bytes (").append(maxMessages)
+         .append(" messages); globalSize=").append(pagingManager.getGlobalSize())
+         .append(" bytes (").append(pagingManager.getGlobalMessages())
+         .append(" messages); globalMaxSize=").append(pagingManager.getMaxSize())
+         .append(" bytes (").append(pagingManager.getMaxMessages())
+         .append(" messages);")
+         .toString();
    }
 
    @Override
    public boolean startPaging() {
-      if (!running) {
+      if (!running || paging) {
          return false;
       }
 
