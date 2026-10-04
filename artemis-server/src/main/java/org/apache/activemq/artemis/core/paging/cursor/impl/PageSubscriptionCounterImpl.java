@@ -160,25 +160,34 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       return persistentSizeUpdater.get(this);
    }
 
-   @Override
-   public void increment(Transaction tx, int add, long size) throws Exception {
-      if (add > 0) {
-         addsRequested.addAndGet(add);
-      } else if (add < 0) {
-         acksRequested.addAndGet(-add);
-      }
 
-      // Ignore late ACK decrements post-delete/purge
-      if (isDeleted && add < 0) {
-         return;
-      }
-
-      if (tx == null) {
-         process(add, size);
-      } else {
-         applyIncrementOnTX(tx, add, size);
-      }
+@Override
+public void increment(Transaction tx, int add, long size) throws Exception {
+   if (add > 0) {
+      addsRequested.addAndGet(add);
+   } else if (add < 0) {
+      acksRequested.addAndGet(-add);
    }
+
+   // Ignore late ACK decrements post-delete/purge
+   if (isDeleted && add < 0) {
+      return;
+   }
+
+   // --- GUARD: Drop negative increments when counter is already 0 and no additions are pending ---
+   if (add < 0 && getValue() <= 0 && (addsRequested.get() - addsApplied.get()) <= 0) {
+      if (logger.isTraceEnabled()) {
+         logger.trace("Ignoring ACK increment on 0-value counter for sub={}", subscriptionID);
+      }
+      return;
+   }
+
+   if (tx == null) {
+      process(add, size);
+   } else {
+      applyIncrementOnTX(tx, add, size);
+   }
+}
 
    /**
     * This method will install the TXs
@@ -204,66 +213,54 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    }
 
 private void process(final int add, final long size) {
-      // 1. Ignore ALL decrements if the counter has been deleted
-      if (isDeleted && add < 0) {
-         return;
-      }
+   if (isDeleted && add < 0) {
+      return;
+   }
 
-      if (logger.isTraceEnabled()) {
-         logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
-      }
+   if (logger.isTraceEnabled()) {
+      logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
+   }
 
-      // 2. Floor guard for ACKs/Decrements: Do not allow value or size to drop below 0
-      if (add < 0) {
-         while (true) {
-            long currentVal = valueUpdater.get(this);
-            if (currentVal <= 0) {
-               // Counter is already at 0 or below; ignore further decrements
-               if (!negativeLogged) {
-                  negativeLogged = true;
-                  logger.warn("Ignoring ACK decrement at zero: sub={} queue={} currentVal={} add={} msSinceLastDelete={} pendingAdds={} pendingAcks={}",
-                              subscriptionID,
-                              subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
-                              currentVal, add, System.currentTimeMillis() - lastDeleteTime, addsRequested.get() - addsApplied.get(), acksRequested.get() - acksApplied.get());
-               }
-               acksApplied.addAndGet(-add);
-               return;
-            }
+   // Atomic CAS loop to enforce zero-floor on decrements
+   if (add < 0) {
+      while (true) {
+         long currentVal = valueUpdater.get(this);
+         if (currentVal <= 0) {
+            // Already 0 or negative; do not decrement further
+            acksApplied.addAndGet(-add);
+            return;
+         }
 
-            long newVal = currentVal + add; // add is negative
-            if (newVal < 0) {
-               // Clamp decrement so value doesn't drop below 0
-               newVal = 0;
-            }
+         long newVal = Math.max(0, currentVal + add); // add is negative
 
-            if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
-               acksApplied.addAndGet(-add);
-               
-               // Clamp persistent size as well
-               long currentSize = persistentSizeUpdater.get(this);
-               long newSize = Math.max(0, currentSize + size);
-               persistentSizeUpdater.set(this, newSize);
-               return;
-            }
+         if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
+            acksApplied.addAndGet(-add);
+            
+            // Keep persistent size clamped >= 0
+            long currentSize = persistentSizeUpdater.get(this);
+            long newSize = Math.max(0, currentSize + size);
+            persistentSizeUpdater.set(this, newSize);
+            return;
          }
       }
-
-      // 3. Process increments (add > 0)
-      long value = valueUpdater.addAndGet(this, add);
-      addsApplied.addAndGet(add);
-      persistentSizeUpdater.addAndGet(this, size);
-      addedUpdater.addAndGet(this, add);
-      addedPersistentSizeUpdater.addAndGet(this, size);
-
-      if (pagingStore != null && pagingStore.getPageFullMessagePolicy() != null && !pagingStore.isPageFull()) {
-         checkAdd(value);
-      }
-
-      if (isRebuilding()) {
-         recordedValueUpdater.addAndGet(this, add);
-         recordedSizeUpdater.addAndGet(this, size);
-      }
    }
+
+   // Process positive additions (add > 0)
+   long value = valueUpdater.addAndGet(this, add);
+   addsApplied.addAndGet(add);
+   persistentSizeUpdater.addAndGet(this, size);
+   addedUpdater.addAndGet(this, add);
+   addedPersistentSizeUpdater.addAndGet(this, size);
+
+   if (pagingStore != null && pagingStore.getPageFullMessagePolicy() != null && !pagingStore.isPageFull()) {
+      checkAdd(value);
+   }
+
+   if (isRebuilding()) {
+      recordedValueUpdater.addAndGet(this, add);
+      recordedSizeUpdater.addAndGet(this, size);
+   }
+}
 
    private void checkAdd(long numberOfMessages) {
       Long pageLimitMessages = pagingStore.getPageLimitMessages();
