@@ -213,6 +213,7 @@ public void increment(Transaction tx, int add, long size) throws Exception {
    }
 
 private void process(final int add, final long size) {
+   // 1. Ignore late decrements if deleted
    if (isDeleted && add < 0) {
       return;
    }
@@ -221,31 +222,34 @@ private void process(final int add, final long size) {
       logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
    }
 
-   // Atomic CAS loop to enforce zero-floor on decrements
+   // 2. Decrements (add < 0): Atomic CAS clamp to enforce zero-floor
    if (add < 0) {
       while (true) {
          long currentVal = valueUpdater.get(this);
+         
          if (currentVal <= 0) {
-            // Already 0 or negative; do not decrement further
+            // Counter is already at 0; record applied ACK and drop further subtraction
             acksApplied.addAndGet(-add);
             return;
          }
 
-         long newVal = Math.max(0, currentVal + add); // add is negative
+         long newVal = Math.max(0, currentVal + add); // add is negative (e.g. currentVal=1, add=-1 => newVal=0)
 
          if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
             acksApplied.addAndGet(-add);
             
-            // Keep persistent size clamped >= 0
+            // Keep persistent size clamped >= 0 as well
             long currentSize = persistentSizeUpdater.get(this);
-            long newSize = Math.max(0, currentSize + size);
-            persistentSizeUpdater.set(this, newSize);
-            return;
+            if (currentSize > 0) {
+               long newSize = Math.max(0, currentSize + size);
+               persistentSizeUpdater.set(this, newSize);
+            }
+            return; // <--- CRITICAL: Exit immediately so addAndGet() is NEVER called below
          }
       }
    }
 
-   // Process positive additions (add > 0)
+   // 3. Increments (add > 0): Normal addition path
    long value = valueUpdater.addAndGet(this, add);
    addsApplied.addAndGet(add);
    persistentSizeUpdater.addAndGet(this, size);
