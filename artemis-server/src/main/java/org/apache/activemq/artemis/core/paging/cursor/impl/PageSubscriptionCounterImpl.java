@@ -203,58 +203,60 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       this.isDeleted = false;
    }
 
-   private void process(final int add, final long size) {
+private void process(final int add, final long size) {
+      // 1. Ignore ALL decrements if the counter has been deleted
       if (isDeleted && add < 0) {
          return;
-      }
-
-      // Guard against decrements driving current value below zero when queue is active
-      if (add < 0) {
-         long currentVal = valueUpdater.get(this);
-         if (currentVal <= 0) {
-            if (!negativeLogged) {
-               negativeLogged = true;
-               logger.warn("Ignoring ACK decrement causing negative value: sub={} queue={} currentVal={} add={} msSinceLastDelete={} pendingAdds={} pendingAcks={}",
-                           subscriptionID,
-                           subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
-                           currentVal, add, System.currentTimeMillis() - lastDeleteTime, addsRequested.get() - addsApplied.get(), acksRequested.get() - acksApplied.get());
-            }
-            return;
-         }
       }
 
       if (logger.isTraceEnabled()) {
          logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
       }
 
+      // 2. Floor guard for ACKs/Decrements: Do not allow value or size to drop below 0
+      if (add < 0) {
+         while (true) {
+            long currentVal = valueUpdater.get(this);
+            if (currentVal <= 0) {
+               // Counter is already at 0 or below; ignore further decrements
+               if (!negativeLogged) {
+                  negativeLogged = true;
+                  logger.warn("Ignoring ACK decrement at zero: sub={} queue={} currentVal={} add={} msSinceLastDelete={} pendingAdds={} pendingAcks={}",
+                              subscriptionID,
+                              subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
+                              currentVal, add, System.currentTimeMillis() - lastDeleteTime, addsRequested.get() - addsApplied.get(), acksRequested.get() - acksApplied.get());
+               }
+               acksApplied.addAndGet(-add);
+               return;
+            }
+
+            long newVal = currentVal + add; // add is negative
+            if (newVal < 0) {
+               // Clamp decrement so value doesn't drop below 0
+               newVal = 0;
+            }
+
+            if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
+               acksApplied.addAndGet(-add);
+               
+               // Clamp persistent size as well
+               long currentSize = persistentSizeUpdater.get(this);
+               long newSize = Math.max(0, currentSize + size);
+               persistentSizeUpdater.set(this, newSize);
+               return;
+            }
+         }
+      }
+
+      // 3. Process increments (add > 0)
       long value = valueUpdater.addAndGet(this, add);
-
-      if (add > 0) {
-         addsApplied.addAndGet(add);
-         // Reset isDeleted explicitly when an addition is committed
-         if (isDeleted) {
-            isDeleted = false;
-         }
-      } else if (add < 0) {
-         acksApplied.addAndGet(-add);
-      }
-
-      if (value < 0 && value - add >= 0 && !negativeLogged) {
-         negativeLogged = true;
-         logger.warn("counter went negative: sub={} queue={} value={} add={} msSinceLastDelete={} pendingAdds={} pendingAcks={}",
-                     subscriptionID,
-                     subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
-                     value, add, System.currentTimeMillis() - lastDeleteTime, addsRequested.get() - addsApplied.get(), acksRequested.get() - acksApplied.get());
-      }
-
+      addsApplied.addAndGet(add);
       persistentSizeUpdater.addAndGet(this, size);
-      if (add > 0) {
-         addedUpdater.addAndGet(this, add);
-         addedPersistentSizeUpdater.addAndGet(this, size);
+      addedUpdater.addAndGet(this, add);
+      addedPersistentSizeUpdater.addAndGet(this, size);
 
-         if (pagingStore != null && pagingStore.getPageFullMessagePolicy() != null && !pagingStore.isPageFull()) {
-            checkAdd(value);
-         }
+      if (pagingStore != null && pagingStore.getPageFullMessagePolicy() != null && !pagingStore.isPageFull()) {
+         checkAdd(value);
       }
 
       if (isRebuilding()) {
