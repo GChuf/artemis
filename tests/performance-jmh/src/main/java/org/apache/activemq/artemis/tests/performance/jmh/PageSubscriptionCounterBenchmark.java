@@ -31,13 +31,12 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Fork(1)
 public class PageSubscriptionCounterBenchmark {
 
-   private static final int[] THREAD_COUNTS = {1, 4, 16};
-
    private PageSubscriptionCounterImpl counter;
    private Transaction mockTx;
 
    @Setup(Level.Trial)
    public void setup() throws Exception {
+      // Dynamic proxy stub for StorageManager requiring zero external classes
       StorageManager storageManager = (StorageManager) Proxy.newProxyInstance(
             StorageManager.class.getClassLoader(),
             new Class<?>[]{StorageManager.class},
@@ -45,8 +44,7 @@ public class PageSubscriptionCounterBenchmark {
                if ("closeableReadLock".equals(method.getName())) {
                   return (ArtemisCloseable) () -> {};
                }
-               if ("storePageCounter".equals(method.getName()) ||
-                     "generateID".equals(method.getName())) {
+               if ("storePageCounter".equals(method.getName()) || "generateID".equals(method.getName())) {
                   return 1L;
                }
                if ("isStarted".equals(method.getName())) {
@@ -59,6 +57,7 @@ public class PageSubscriptionCounterBenchmark {
             }
       );
 
+      // Dynamic proxy stub for Transaction
       mockTx = (Transaction) Proxy.newProxyInstance(
             Transaction.class.getClassLoader(),
             new Class<?>[]{Transaction.class},
@@ -73,19 +72,29 @@ public class PageSubscriptionCounterBenchmark {
 
       counter = new PageSubscriptionCounterImpl(storageManager, 1L);
 
+      // Pre-fill counter value for ACK benchmarks
       counter.loadValue(1L, 100_000_000L, 100_000_000_000L);
    }
 
+   /**
+    * Benchmarks addition path (add > 0)
+    */
    @Benchmark
    public void benchmarkProcessAdd() throws Exception {
       counter.increment(null, 1, 1024L);
    }
 
+   /**
+    * Benchmarks ACK path (add < 0) - tests CAS zero-floor contention
+    */
    @Benchmark
    public void benchmarkProcessAck() throws Exception {
       counter.increment(null, -1, -1024L);
    }
 
+   /**
+    * Benchmarks mixed Producer/Consumer workload (50% ADD, 50% ACK)
+    */
    @Benchmark
    public void benchmarkProcessMixed(ThreadState state) throws Exception {
       if (state.toggle) {
@@ -93,10 +102,12 @@ public class PageSubscriptionCounterBenchmark {
       } else {
          counter.increment(null, -1, -1024L);
       }
-
       state.toggle = !state.toggle;
    }
 
+   /**
+    * Benchmarks delete / purge performance
+    */
    @Benchmark
    public void benchmarkDelete() throws Exception {
       counter.delete(mockTx);
@@ -108,15 +119,14 @@ public class PageSubscriptionCounterBenchmark {
    }
 
    public static void main(String[] args) throws RunnerException {
-      for (int threadCount : THREAD_COUNTS) {
-         Options opt = new OptionsBuilder()
-               .include(PageSubscriptionCounterBenchmark.class.getSimpleName())
-               .threads(threadCount)
-               .forks(1)
-               .build();
+      Options opt = new OptionsBuilder()
+            .include(PageSubscriptionCounterBenchmark.class.getSimpleName())
+            .threads(1)
+            .threads(4)
+            .threads(16)
+            .forks(1)
+            .build();
 
-         new Runner(opt).run();
-      }
+      new Runner(opt).run();
    }
 }
-
