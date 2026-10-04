@@ -119,6 +119,7 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       snapshot();
       addedUpdater.set(this, valueUpdater.get(this));
       addedPersistentSizeUpdater.set(this, persistentSizeUpdater.get(this));
+      this.isDeleted = false;
    }
 
    @Override
@@ -163,7 +164,6 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    public void increment(Transaction tx, int add, long size) throws Exception {
       if (add > 0) {
          addsRequested.addAndGet(add);
-         isDeleted = false;
       } else if (add < 0) {
          acksRequested.addAndGet(-add);
       }
@@ -200,12 +200,27 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       valueUpdater.set(this, value);
       persistentSizeUpdater.set(this, size);
       addedUpdater.set(this, value);
-      isDeleted = false;
+      this.isDeleted = false;
    }
 
    private void process(final int add, final long size) {
       if (isDeleted && add < 0) {
          return;
+      }
+
+      // Guard against decrements driving current value below zero when queue is active
+      if (add < 0) {
+         long currentVal = valueUpdater.get(this);
+         if (currentVal <= 0) {
+            if (!negativeLogged) {
+               negativeLogged = true;
+               logger.warn("Ignoring ACK decrement causing negative value: sub={} queue={} currentVal={} add={} msSinceLastDelete={} pendingAdds={} pendingAcks={}",
+                           subscriptionID,
+                           subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
+                           currentVal, add, System.currentTimeMillis() - lastDeleteTime, addsRequested.get() - addsApplied.get(), acksRequested.get() - acksApplied.get());
+            }
+            return;
+         }
       }
 
       if (logger.isTraceEnabled()) {
@@ -216,6 +231,10 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
       if (add > 0) {
          addsApplied.addAndGet(add);
+         // Reset isDeleted explicitly when an addition is committed
+         if (isDeleted) {
+            isDeleted = false;
+         }
       } else if (add < 0) {
          acksApplied.addAndGet(-add);
       }
