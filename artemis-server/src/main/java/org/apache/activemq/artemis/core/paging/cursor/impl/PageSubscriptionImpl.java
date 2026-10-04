@@ -426,12 +426,12 @@ public final class PageSubscriptionImpl implements PageSubscription {
          logger.warn("...first ack was:", previousAck);
       }
 
-      //pre-calculate persistentSize
-      final long persistentSize = getPersistentSize(reference);
-
       confirmPosition(tx, reference.getPagedMessage().newPositionObject(), true);
 
-      counter.increment(tx, -1, -persistentSize);
+      if (!this.empty) {
+         counter.increment(tx, -1, -getPersistentSize(reference));
+      }
+
 
       PageTransactionInfo txInfo = getPageTransaction(reference);
       if (txInfo != null) {
