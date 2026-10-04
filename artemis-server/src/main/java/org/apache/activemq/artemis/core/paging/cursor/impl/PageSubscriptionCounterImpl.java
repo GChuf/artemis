@@ -19,8 +19,8 @@ package org.apache.activemq.artemis.core.paging.cursor.impl;
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.activemq.artemis.core.paging.PagingStore;
 import org.apache.activemq.artemis.core.paging.cursor.PageSubscription;
@@ -47,10 +47,10 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    private volatile boolean negativeLogged = false;
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-   private final AtomicLong addsRequested = new AtomicLong();
-   private final AtomicLong addsApplied = new AtomicLong();
-   private final AtomicLong acksRequested = new AtomicLong();
-   private final AtomicLong acksApplied = new AtomicLong();
+   private final LongAdder addsRequested = new LongAdder();
+   private final LongAdder addsApplied = new LongAdder();
+   private final LongAdder acksRequested = new LongAdder();
+   private final LongAdder acksApplied = new LongAdder();
 
    private final long subscriptionID;
 
@@ -80,12 +80,6 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
    private volatile long persistentSize;
    private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> persistentSizeUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "persistentSize");
-
-   private volatile long added;
-   private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> addedUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "added");
-
-   private volatile long addedPersistentSize;
-   private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> addedPersistentSizeUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "addedPersistentSize");
 
    private LinkedList<PendingCounter> loadList;
 
@@ -117,21 +111,19 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
          logger.debug("Subscription {} finished rebuilding", subscriptionID);
       }
       snapshot();
-      addedUpdater.set(this, valueUpdater.get(this));
-      addedPersistentSizeUpdater.set(this, persistentSizeUpdater.get(this));
       this.isDeleted = false;
    }
 
    @Override
    public long getValueAdded() {
-      return addedUpdater.get(this);
+      return addsApplied.sum();
    }
 
    @Override
    public long getValue() {
       if (isRebuilding()) {
          if (logger.isTraceEnabled()) {
-            logger.trace("returning getValue from isPending on subscription {}, recordedValue={}, addedUpdater={}", subscriptionID, recordedValueUpdater.get(this), addedUpdater.get(this));
+            logger.trace("returning getValue from isPending on subscription {}, recordedValue={}", subscriptionID, recordedValueUpdater.get(this));
          }
          return recordedValueUpdater.get(this);
       }
@@ -143,14 +135,14 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
    @Override
    public long getPersistentSizeAdded() {
-      return addedPersistentSizeUpdater.get(this);
+      return persistentSizeUpdater.get(this);
    }
 
    @Override
    public long getPersistentSize() {
       if (isRebuilding()) {
          if (logger.isTraceEnabled()) {
-            logger.trace("returning getPersistentSize from isPending on subscription {}, recordedSize={}. addedSize={}", subscriptionID, recordedSizeUpdater.get(this), addedPersistentSizeUpdater.get(this));
+            logger.trace("returning getPersistentSize from isPending on subscription {}, recordedSize={}", subscriptionID, recordedSizeUpdater.get(this));
          }
          return recordedSizeUpdater.get(this);
       }
@@ -160,34 +152,25 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       return persistentSizeUpdater.get(this);
    }
 
-
-@Override
-public void increment(Transaction tx, int add, long size) throws Exception {
-   if (add > 0) {
-      addsRequested.addAndGet(add);
-   } else if (add < 0) {
-      acksRequested.addAndGet(-add);
-   }
-
-   // Ignore late ACK decrements post-delete/purge
-   if (isDeleted && add < 0) {
-      return;
-   }
-
-   // --- GUARD: Drop negative increments when counter is already 0 and no additions are pending ---
-   if (add < 0 && getValue() <= 0 && (addsRequested.get() - addsApplied.get()) <= 0) {
-      if (logger.isTraceEnabled()) {
-         logger.trace("Ignoring ACK increment on 0-value counter for sub={}", subscriptionID);
+   @Override
+   public void increment(Transaction tx, int add, long size) throws Exception {
+      if (add > 0) {
+         addsRequested.add(add);
+      } else if (add < 0) {
+         acksRequested.add(-add);
       }
-      return;
-   }
 
-   if (tx == null) {
-      process(add, size);
-   } else {
-      applyIncrementOnTX(tx, add, size);
+      // Ignore late ACK decrements post-delete/purge
+      if (isDeleted && add < 0) {
+         return;
+      }
+
+      if (tx == null) {
+         process(add, size);
+      } else {
+         applyIncrementOnTX(tx, add, size);
+      }
    }
-}
 
    /**
     * This method will install the TXs
@@ -208,70 +191,64 @@ public void increment(Transaction tx, int add, long size) throws Exception {
       recordedSizeUpdater.set(this, size);
       valueUpdater.set(this, value);
       persistentSizeUpdater.set(this, size);
-      addedUpdater.set(this, value);
       this.isDeleted = false;
    }
 
-private void process(final int add, final long size) {
-   // 1. Ignore late decrements if deleted
-   if (isDeleted && add < 0) {
-      return;
-   }
+   private void process(final int add, final long size) {
+      if (isDeleted && add < 0) {
+         return;
+      }
 
-   if (logger.isTraceEnabled()) {
-      logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
-   }
+      if (logger.isTraceEnabled()) {
+         logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
+      }
 
-   // 2. Decrements (add < 0): Atomic CAS clamp to enforce zero-floor
-   if (add < 0) {
-      while (true) {
-         long currentVal = valueUpdater.get(this);
-         
-         if (currentVal <= 0) {
-            // Counter is already at 0; record applied ACK and drop further subtraction
-            acksApplied.addAndGet(-add);
-            return;
-         }
+      // Decrements (add < 0): Atomic CAS clamp to enforce zero-floor
+      if (add < 0) {
+         while (true) {
+            long currentVal = valueUpdater.get(this);
 
-         long newVal = Math.max(0, currentVal + add); // add is negative (e.g. currentVal=1, add=-1 => newVal=0)
-
-         if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
-            acksApplied.addAndGet(-add);
-            
-            // Keep persistent size clamped >= 0 as well
-            long currentSize = persistentSizeUpdater.get(this);
-            if (currentSize > 0) {
-               long newSize = Math.max(0, currentSize + size);
-               persistentSizeUpdater.set(this, newSize);
+            if (currentVal <= 0) {
+               // Counter is already at 0; record applied ACK and drop further subtraction
+               acksApplied.add(-add);
+               return;
             }
-            return; // <--- CRITICAL: Exit immediately so addAndGet() is NEVER called below
+
+            long newVal = Math.max(0, currentVal + add); // add is negative
+
+            if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
+               acksApplied.add(-add);
+
+               // Keep persistent size clamped >= 0
+               long currentSize = persistentSizeUpdater.get(this);
+               if (currentSize > 0) {
+                  long newSize = Math.max(0, currentSize + size);
+                  persistentSizeUpdater.set(this, newSize);
+               }
+               return;
+            }
          }
+      }
+
+      // Increments (add > 0): Normal addition path
+      long value = valueUpdater.addAndGet(this, add);
+      addsApplied.add(add);
+      persistentSizeUpdater.addAndGet(this, size);
+
+      if (pagingStore != null && pagingStore.getPageLimitMessages() != null) {
+         checkAdd(value);
+      }
+
+      if (isRebuilding()) {
+         recordedValueUpdater.addAndGet(this, add);
+         recordedSizeUpdater.addAndGet(this, size);
       }
    }
 
-   // 3. Increments (add > 0): Normal addition path
-   long value = valueUpdater.addAndGet(this, add);
-   addsApplied.addAndGet(add);
-   persistentSizeUpdater.addAndGet(this, size);
-   addedUpdater.addAndGet(this, add);
-   addedPersistentSizeUpdater.addAndGet(this, size);
-
-   if (pagingStore != null && pagingStore.getPageFullMessagePolicy() != null && !pagingStore.isPageFull()) {
-      checkAdd(value);
-   }
-
-   if (isRebuilding()) {
-      recordedValueUpdater.addAndGet(this, add);
-      recordedSizeUpdater.addAndGet(this, size);
-   }
-}
-
    private void checkAdd(long numberOfMessages) {
       Long pageLimitMessages = pagingStore.getPageLimitMessages();
-      if (pageLimitMessages != null) {
-         if (numberOfMessages >= pageLimitMessages.longValue()) {
-            pagingStore.pageFull(this.subscription);
-         }
+      if (pageLimitMessages != null && numberOfMessages >= pageLimitMessages) {
+         pagingStore.pageFull(this.subscription);
       }
    }
 
@@ -319,19 +296,19 @@ private void process(final int add, final long size) {
             }
 
             long valueBefore = valueUpdater.get(this);
-            long pendingAdds = addsRequested.get() - addsApplied.get();
-            long pendingAcks = acksRequested.get() - acksApplied.get();
+            long pendingAdds = addsRequested.sum() - addsApplied.sum();
+            long pendingAcks = acksRequested.sum() - acksApplied.sum();
 
             if (valueBefore != 0 || pendingAdds != 0 || pendingAcks != 0) {
                logger.warn("counter delete: sub={} keepZero={} valueBefore={} added={} addsRequested={} addsApplied={} acksRequested={} acksApplied={}",
-                           subscriptionID, keepZero, valueBefore, addedUpdater.get(this),
-                           addsRequested.get(), addsApplied.get(), acksRequested.get(), acksApplied.get());
+                           subscriptionID, keepZero, valueBefore, addsApplied.sum(),
+                           addsRequested.sum(), addsApplied.sum(), acksRequested.sum(), acksApplied.sum());
             }
 
-            addsRequested.set(0);
-            addsApplied.set(0);
-            acksRequested.set(0);
-            acksApplied.set(0);
+            addsRequested.reset();
+            addsApplied.reset();
+            acksRequested.reset();
+            acksApplied.reset();
 
             lastDeleteTime = System.currentTimeMillis();
             negativeLogged = false;
