@@ -219,18 +219,22 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
             if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
                acksApplied.add(-add);
 
-               // Keep persistent size clamped >= 0
-               long currentSize = persistentSizeUpdater.get(this);
-               if (currentSize > 0) {
-                  long newSize = Math.max(0, currentSize + size);
-                  persistentSizeUpdater.set(this, newSize);
+               // Thread-safe CAS clamp for persistentSize
+               while (true) {
+                  long currentSize = persistentSizeUpdater.get(this);
+                  if (currentSize <= 0) break;
+                  long newSize = Math.max(0, currentSize + size); // size is negative
+                  if (persistentSizeUpdater.compareAndSet(this, currentSize, newSize)) {
+                     break;
+                  }
                }
                return;
             }
          }
       }
 
-      // Increments (add > 0): Normal addition path
+      // Increments (add > 0): Re-activate counter and increment
+      this.isDeleted = false;
       long value = valueUpdater.addAndGet(this, add);
       addsApplied.add(add);
       persistentSizeUpdater.addAndGet(this, size);
@@ -271,13 +275,15 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    }
 
    private void delete(Transaction tx, boolean keepZero) throws Exception {
-      this.isDeleted = true;
+      // Only permanently mark deleted if NOT keeping zero (keepZero == false)
+      if (!keepZero) {
+         this.isDeleted = true;
+      }
 
       if (logger.isDebugEnabled()) {
          logger.debug("Subscription {} delete, keepZero={}", subscriptionID, keepZero);
       }
 
-      // always lock the StorageManager first.
       try (ArtemisCloseable lock = storage.closeableReadLock()) {
          synchronized (this) {
             if (recordID >= 0) {
