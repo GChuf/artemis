@@ -157,15 +157,18 @@ public long getValueSize() {
 
    @Override
    public void increment(Transaction tx, int add, long addedSize) throws Exception {
-      // Fast-path: Decoupled atomic hardware additions (1 instruction each on x86)
-      long newCount = value_updater.addAndGet(this, add);
-      long newSize = size_updater.addAndGet(this, addedSize);
-
-      if (newCount < 0 && value_updater.get(this) < 0) {
-         value_updater.compareAndSet(this, newCount, 0);
+      if (add != 0) {
+         long newCount = value_updater.addAndGet(this, add);
+         if (newCount < 0) {
+            value_updater.compareAndSet(this, newCount, 0);
+         }
       }
-      if (newSize < 0 && size_updater.get(this) < 0) {
-         size_updater.compareAndSet(this, newSize, 0);
+
+      if (addedSize != 0) {
+         long newSize = size_updater.addAndGet(this, addedSize);
+         if (newSize < 0) {
+            size_updater.compareAndSet(this, newSize, 0);
+         }
       }
 
       if (tx != null) {
