@@ -429,7 +429,8 @@ public final class PageSubscriptionImpl implements PageSubscription {
       confirmPosition(tx, reference.getPagedMessage().newPositionObject(), true);
 
       if (!this.empty) {
-         counter.increment(tx, -1, -getPersistentSize(reference));
+         // DIAGNOSTIC: packed page (high 32 bits) and message (low 32 bits) id, see PageSubscriptionCounterImpl
+         counter.increment(tx, -1, -getPersistentSize(reference), ((long) pm.getPageNumber() << 32) | (pm.getMessageNumber() & 0xFFFFFFFFL));
       }
 
 

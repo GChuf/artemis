@@ -31,6 +31,14 @@ public interface PageSubscriptionCounter {
 
    void increment(Transaction tx, int add, long persistentSize) throws Exception;
 
+   /**
+    * DIAGNOSTIC (negative counter investigation): same as {@link #increment(Transaction, int, long)}, but carries a packed
+    * page/message id so a negative counter can be traced to the ACK that caused it. Remove after the investigation.
+    */
+   default void increment(Transaction tx, int add, long persistentSize, long diagnosticId) throws Exception {
+      increment(tx, add, persistentSize);
+   }
+
    void loadValue(long recordValueID, long value, long persistentSize);
 
    void loadInc(long recordInd, int add, long persistentSize);
