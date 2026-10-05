@@ -229,6 +229,9 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
 
    private final AtomicLong diagnosticDuplicateAcks = new AtomicLong();
 
+   // DIAGNOSTIC: ACKs whose reference had no consumer and a delivery count of 0
+   private final AtomicLong diagnosticAnomalousAcks = new AtomicLong();
+
    private static long diagnosticCount(final ConcurrentHashMap<Long, BitSet> map) {
       long total = 0;
       for (BitSet bits : map.values()) {
@@ -250,6 +253,14 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
    public void diagnosticNoteAck(final long diagnosticId, final long consumerId, final int deliveryCount) {
       long pageId = diagnosticId >>> 32;
       int messageNumber = (int) diagnosticId;
+
+      // anomalous: an ACK for a reference that was never delivered to a consumer
+      if (consumerId == -1L && deliveryCount == 0) {
+         long anomalies = diagnosticAnomalousAcks.incrementAndGet();
+         if (anomalies <= 5) {
+            logger.warn("counter diagnostic: anomalous ACK #{} sub={} page={} msg={} (no consumer, deliveryCount=0)", anomalies, subscriptionID, pageId, messageNumber, new Exception("anomalous ack"));
+         }
+      }
       BitSet bits = diagnosticAckedIds.computeIfAbsent(pageId, k -> new BitSet());
       synchronized (bits) {
          if (bits.get(messageNumber)) {
@@ -444,8 +455,8 @@ private void process(final int add, final long size, final long diagnosticId, fi
             }
 
             // DIAGNOSTIC: distinct recorded adds vs distinct ack ids, and ack ids seen more than once
-            logger.warn("counter diagnostic: sub={} keepZero={} recordedAdds={} distinctAckIds={} duplicateAckIds={}",
-                        subscriptionID, keepZero, diagnosticCount(diagnosticCountedAdds), diagnosticCount(diagnosticAckedIds), diagnosticDuplicateAcks.get());
+            logger.warn("counter diagnostic: sub={} keepZero={} recordedAdds={} distinctAckIds={} duplicateAckIds={} anomalousAcks={}",
+                        subscriptionID, keepZero, diagnosticCount(diagnosticCountedAdds), diagnosticCount(diagnosticAckedIds), diagnosticDuplicateAcks.get(), diagnosticAnomalousAcks.get());
 
             addsRequested.set(0);
             addsApplied.set(0);
