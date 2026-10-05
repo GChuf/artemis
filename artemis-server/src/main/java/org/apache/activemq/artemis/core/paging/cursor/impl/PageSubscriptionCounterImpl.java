@@ -250,7 +250,7 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
          if (bits.get(messageNumber)) {
             long duplicates = diagnosticDuplicateAcks.incrementAndGet();
             if (duplicates == 1) {
-               logger.warn("counter diagnostic: first duplicate ACK on sub={} page={} msg={}", subscriptionID, pageId, messageNumber);
+               logger.warn("counter diagnostic: first duplicate ACK on sub={} page={} msg={}", subscriptionID, pageId, messageNumber, new Exception("duplicate ack"));
             }
          } else {
             bits.set(messageNumber);
