@@ -17,7 +17,9 @@
 package org.apache.activemq.artemis.core.paging.cursor.impl;
 
 import java.lang.invoke.MethodHandles;
+import java.util.BitSet;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
@@ -207,13 +209,37 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
    private void logWouldGoNegative(final long currentVal, final int add, final long size, final long diagnosticId, final long requestEpoch) {
       if (!negativeLogged) {
          negativeLogged = true;
-         logger.warn("counter went negative: sub={} queue={} value={} add={} size={} ackPage={} ackMsg={} ackEpoch={} currentEpoch={}",
+         logger.warn("counter went negative: sub={} queue={} value={} add={} size={} ackPage={} ackMsg={} ackEpoch={} currentEpoch={} ackAddWasCounted={}",
                      subscriptionID,
                      subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
                      currentVal, add, size,
                      diagnosticId == NO_DIAGNOSTIC_ID ? "-" : diagnosticId >>> 32,
                      diagnosticId == NO_DIAGNOSTIC_ID ? "-" : (int) diagnosticId,
-                     requestEpoch, epoch, new Exception("stack"));
+                     requestEpoch, epoch,
+                     diagnosticId == NO_DIAGNOSTIC_ID ? "-" : diagnosticIsCounted(diagnosticId >>> 32, (int) diagnosticId),
+                     new Exception("stack"));
+      }
+   }
+
+   // DIAGNOSTIC (negative counter investigation): page id -> bit set of message numbers whose add was counted for this queue
+   private final ConcurrentHashMap<Long, BitSet> diagnosticCountedAdds = new ConcurrentHashMap<>();
+
+   @Override
+   public void diagnosticCounted(final long pageId, final int messageNumber) {
+      BitSet bits = diagnosticCountedAdds.computeIfAbsent(pageId, k -> new BitSet());
+      synchronized (bits) {
+         bits.set(messageNumber);
+      }
+   }
+
+   @Override
+   public boolean diagnosticIsCounted(final long pageId, final int messageNumber) {
+      BitSet bits = diagnosticCountedAdds.get(pageId);
+      if (bits == null) {
+         return false;
+      }
+      synchronized (bits) {
+         return bits.get(messageNumber);
       }
    }
 

@@ -1605,8 +1605,23 @@ public class PagingStoreImpl implements PagingStore {
 
       page.write(pagedMessage, lineUp, originalReplicated);
 
+      diagnosticRecordCounted(pagedMessage);
+
       if (logger.isTraceEnabled()) {
          logger.trace("Paging message {} on pageStore {} pageNr={}", pagedMessage, getStoreName(), page.getPageId());
+      }
+   }
+
+   /**
+    * DIAGNOSTIC (negative counter investigation): records, per routed queue, which page and message were counted as an add.
+    * Remove after the investigation.
+    */
+   private void diagnosticRecordCounted(final PagedMessage pagedMessage) {
+      for (long queueID : pagedMessage.getQueueIDs()) {
+         PageSubscription subscription = cursorProvider.getSubscription(queueID);
+         if (subscription != null) {
+            subscription.getCounter().diagnosticCounted(pagedMessage.getPageNumber(), pagedMessage.getMessageNumber());
+         }
       }
    }
 

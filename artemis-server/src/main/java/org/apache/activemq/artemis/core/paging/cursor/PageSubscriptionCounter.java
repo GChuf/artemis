@@ -39,6 +39,19 @@ public interface PageSubscriptionCounter {
       increment(tx, add, persistentSize);
    }
 
+   /**
+    * DIAGNOSTIC (negative counter investigation): records that the add for this page/message was counted. Remove after the investigation.
+    */
+   default void diagnosticCounted(long pageId, int messageNumber) {
+   }
+
+   /**
+    * DIAGNOSTIC (negative counter investigation): whether the add for this page/message was counted. Remove after the investigation.
+    */
+   default boolean diagnosticIsCounted(long pageId, int messageNumber) {
+      return false;
+   }
+
    void loadValue(long recordValueID, long value, long persistentSize);
 
    void loadInc(long recordInd, int add, long persistentSize);
