@@ -156,17 +156,16 @@ public long getValueSize() {
    }
 
    @Override
-public void increment(Transaction tx, int add, long addedSize) throws Exception {
+   public void increment(Transaction tx, int add, long addedSize) throws Exception {
       // Fast-path: Decoupled atomic hardware additions (1 instruction each on x86)
       long newCount = value_updater.addAndGet(this, add);
       long newSize = size_updater.addAndGet(this, addedSize);
 
-      // Branch-predicted slow path: ONLY trigger CAS loop if underflow occurred
-      if (newCount < 0) {
-         clampToZero(value_updater, newCount);
+      if (newCount < 0 && value_updater.get(this) < 0) {
+         value_updater.compareAndSet(this, newCount, 0);
       }
-      if (newSize < 0) {
-         clampToZero(size_updater, newSize);
+      if (newSize < 0 && size_updater.get(this) < 0) {
+         size_updater.compareAndSet(this, newSize, 0);
       }
 
       if (tx != null) {
@@ -273,15 +272,6 @@ public void delete(Transaction tx) throws Exception {
          // StorageManager delete record logic
       }
    }
-
-   private void clampToZero(AtomicLongFieldUpdater<PageSubscriptionCounterImpl> updater, long expected) {
-         while (expected < 0) {
-            if (updater.compareAndSet(this, expected, 0)) {
-               break;
-            }
-            expected = updater.get(this);
-         }
-      }
 
 
    @Override
