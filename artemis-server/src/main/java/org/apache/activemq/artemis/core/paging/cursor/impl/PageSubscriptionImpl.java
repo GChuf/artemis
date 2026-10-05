@@ -430,7 +430,9 @@ public final class PageSubscriptionImpl implements PageSubscription {
 
       if (!this.empty) {
          // DIAGNOSTIC: packed page (high 32 bits) and message (low 32 bits) id, see PageSubscriptionCounterImpl
-         counter.increment(tx, -1, -getPersistentSize(reference), ((long) pm.getPageNumber() << 32) | (pm.getMessageNumber() & 0xFFFFFFFFL));
+         long diagnosticId = ((long) pm.getPageNumber() << 32) | (pm.getMessageNumber() & 0xFFFFFFFFL);
+         counter.diagnosticNoteAck(diagnosticId, reference.hasConsumerId() ? reference.getConsumerId() : -1L, reference.getDeliveryCount());
+         counter.increment(tx, -1, -getPersistentSize(reference), diagnosticId);
       }
 
 

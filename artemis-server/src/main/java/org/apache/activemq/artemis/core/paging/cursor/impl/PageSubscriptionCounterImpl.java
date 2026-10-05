@@ -176,9 +176,6 @@ public void increment(Transaction tx, int add, long size) throws Exception {
 @Override
 public void increment(Transaction tx, int add, long size, long diagnosticId) throws Exception {
    final long requestEpoch = epoch;
-   if (add < 0 && diagnosticId != NO_DIAGNOSTIC_ID) {
-      diagnosticRecordAck(diagnosticId);
-   }
    if (add > 0) {
       addsRequested.addAndGet(add);
    } else if (add < 0) {
@@ -242,18 +239,31 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
       return total;
    }
 
-   private void diagnosticRecordAck(final long diagnosticId) {
+   // DIAGNOSTIC: who acked each message first, packed as consumerId and deliveryCount
+   private final ConcurrentHashMap<Long, Long> diagnosticFirstAck = new ConcurrentHashMap<>();
+
+   private static long diagnosticPack(final long consumerId, final int deliveryCount) {
+      return (consumerId << 16) | (deliveryCount & 0xFFFFL);
+   }
+
+   @Override
+   public void diagnosticNoteAck(final long diagnosticId, final long consumerId, final int deliveryCount) {
       long pageId = diagnosticId >>> 32;
       int messageNumber = (int) diagnosticId;
       BitSet bits = diagnosticAckedIds.computeIfAbsent(pageId, k -> new BitSet());
       synchronized (bits) {
          if (bits.get(messageNumber)) {
             long duplicates = diagnosticDuplicateAcks.incrementAndGet();
-            if (duplicates == 1) {
-               logger.warn("counter diagnostic: first duplicate ACK on sub={} page={} msg={}", subscriptionID, pageId, messageNumber, new Exception("duplicate ack"));
+            if (duplicates <= 5) {
+               Long first = diagnosticFirstAck.get(diagnosticId);
+               logger.warn("counter diagnostic: duplicate ACK #{} on sub={} page={} msg={} firstConsumer={} firstDelivery={} secondConsumer={} secondDelivery={}",
+                           duplicates, subscriptionID, pageId, messageNumber,
+                           first == null ? "?" : first >>> 16, first == null ? "?" : first & 0xFFFF,
+                           consumerId, deliveryCount & 0xFFFF, new Exception("duplicate ack"));
             }
          } else {
             bits.set(messageNumber);
+            diagnosticFirstAck.put(diagnosticId, diagnosticPack(consumerId, deliveryCount));
          }
       }
    }
