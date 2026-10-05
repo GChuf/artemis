@@ -72,6 +72,9 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    private volatile long persistentSize;
    private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> persistentSizeUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "persistentSize");
 
+   // only log the first time the value goes negative, so a bad counter doesn't flood the log
+   private volatile boolean negativeLogged = false;
+
    // these are only ever added to on the add path, so LongAdder keeps them off a single contended cache line
    private final LongAdder addsApplied = new LongAdder();
    private final LongAdder persistentSizeAdded = new LongAdder();
@@ -194,6 +197,15 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       }
 
       long value = valueUpdater.addAndGet(this, add);
+
+      if (value < 0 && value - add >= 0 && !negativeLogged) {
+         negativeLogged = true;
+         logger.warn("counter went negative: sub={} queue={} value={} add={} size={}",
+                     subscriptionID,
+                     subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
+                     value, add, size, new Exception("stack"));
+      }
+
       persistentSizeUpdater.addAndGet(this, size);
 
       if (add > 0) {
