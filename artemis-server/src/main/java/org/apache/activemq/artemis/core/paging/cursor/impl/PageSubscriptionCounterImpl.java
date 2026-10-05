@@ -19,8 +19,8 @@ package org.apache.activemq.artemis.core.paging.cursor.impl;
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
-import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.activemq.artemis.core.paging.PagingStore;
 import org.apache.activemq.artemis.core.paging.cursor.PageSubscription;
@@ -41,7 +41,16 @@ import org.slf4j.LoggerFactory;
  */
 public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
+   private volatile boolean isDeleted = false;
+
+   private volatile long lastDeleteTime = 0;
+   private volatile boolean negativeLogged = false;
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+   private final AtomicLong addsRequested = new AtomicLong();
+   private final AtomicLong addsApplied = new AtomicLong();
+   private final AtomicLong acksRequested = new AtomicLong();
+   private final AtomicLong acksApplied = new AtomicLong();
 
    private final long subscriptionID;
 
@@ -72,16 +81,11 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    private volatile long persistentSize;
    private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> persistentSizeUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "persistentSize");
 
-   // only log the first time the value goes negative, so a bad counter doesn't flood the log
-   private volatile boolean negativeLogged = false;
+   private volatile long added;
+   private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> addedUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "added");
 
-   // set when the counter is deleted (page mode cleared). ACKs committed after that point refer to
-   // messages that were already zeroed out, so they must not decrement again
-   private volatile boolean isDeleted = false;
-
-   // these are only ever added to on the add path, so LongAdder keeps them off a single contended cache line
-   private final LongAdder addsApplied = new LongAdder();
-   private final LongAdder persistentSizeAdded = new LongAdder();
+   private volatile long addedPersistentSize;
+   private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> addedPersistentSizeUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "addedPersistentSize");
 
    private LinkedList<PendingCounter> loadList;
 
@@ -113,29 +117,21 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
          logger.debug("Subscription {} finished rebuilding", subscriptionID);
       }
       snapshot();
-      resetAdded(valueUpdater.get(this), persistentSizeUpdater.get(this));
-   }
-
-   /**
-    * Re-seeds the "added" counters with a known baseline (the loaded or rebuilt value).
-    */
-   private void resetAdded(long count, long size) {
-      addsApplied.reset();
-      addsApplied.add(count);
-      persistentSizeAdded.reset();
-      persistentSizeAdded.add(size);
+      addedUpdater.set(this, valueUpdater.get(this));
+      addedPersistentSizeUpdater.set(this, persistentSizeUpdater.get(this));
+      this.isDeleted = false;
    }
 
    @Override
    public long getValueAdded() {
-      return addsApplied.sum();
+      return addedUpdater.get(this);
    }
 
    @Override
    public long getValue() {
       if (isRebuilding()) {
          if (logger.isTraceEnabled()) {
-            logger.trace("returning getValue from isPending on subscription {}, recordedValue={}", subscriptionID, recordedValueUpdater.get(this));
+            logger.trace("returning getValue from isPending on subscription {}, recordedValue={}, addedUpdater={}", subscriptionID, recordedValueUpdater.get(this), addedUpdater.get(this));
          }
          return recordedValueUpdater.get(this);
       }
@@ -147,14 +143,14 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
    @Override
    public long getPersistentSizeAdded() {
-      return persistentSizeAdded.sum();
+      return addedPersistentSizeUpdater.get(this);
    }
 
    @Override
    public long getPersistentSize() {
       if (isRebuilding()) {
          if (logger.isTraceEnabled()) {
-            logger.trace("returning getPersistentSize from isPending on subscription {}, recordedSize={}", subscriptionID, recordedSizeUpdater.get(this));
+            logger.trace("returning getPersistentSize from isPending on subscription {}, recordedSize={}. addedSize={}", subscriptionID, recordedSizeUpdater.get(this), addedPersistentSizeUpdater.get(this));
          }
          return recordedSizeUpdater.get(this);
       }
@@ -164,12 +160,46 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       return persistentSizeUpdater.get(this);
    }
 
-   @Override
-   public void increment(Transaction tx, int add, long size) throws Exception {
-      if (tx == null) {
-         process(add, size);
-      } else {
-         applyIncrementOnTX(tx, add, size);
+
+@Override
+public void increment(Transaction tx, int add, long size) throws Exception {
+   if (add > 0) {
+      addsRequested.addAndGet(add);
+   } else if (add < 0) {
+      acksRequested.addAndGet(-add);
+   }
+
+   // Ignore late ACK decrements post-delete/purge
+   if (isDeleted && add < 0) {
+      return;
+   }
+
+   // --- GUARD: Drop negative increments when counter is already 0 and no additions are pending ---
+   if (add < 0 && getValue() <= 0 && (addsRequested.get() - addsApplied.get()) <= 0) {
+      logWouldGoNegative(getValue(), add, size);
+      if (logger.isTraceEnabled()) {
+         logger.trace("Ignoring ACK increment on 0-value counter for sub={}", subscriptionID);
+      }
+      return;
+   }
+
+   if (tx == null) {
+      process(add, size);
+   } else {
+      applyIncrementOnTX(tx, add, size);
+   }
+}
+
+   /**
+    * The zero-floor clamp hides negative values, so this logs the first decrement that would have gone below zero.
+    */
+   private void logWouldGoNegative(final long currentVal, final int add, final long size) {
+      if (!negativeLogged) {
+         negativeLogged = true;
+         logger.warn("counter went negative: sub={} queue={} value={} add={} size={}",
+                     subscriptionID,
+                     subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
+                     currentVal, add, size, new Exception("stack"));
       }
    }
 
@@ -192,47 +222,64 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       recordedSizeUpdater.set(this, size);
       valueUpdater.set(this, value);
       persistentSizeUpdater.set(this, size);
-      resetAdded(value, size);
-      isDeleted = false;
+      addedUpdater.set(this, value);
+      this.isDeleted = false;
    }
 
-   private void process(final int add, final long size) {
-      if (isDeleted && add < 0) {
-         return;
-      }
+private void process(final int add, final long size) {
+   if (isDeleted && add < 0) {
+      return;
+   }
 
-      if (logger.isTraceEnabled()) {
-         logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
-      }
+   if (logger.isTraceEnabled()) {
+      logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
+   }
 
-      long value = valueUpdater.addAndGet(this, add);
+   // Atomic CAS loop to enforce zero-floor on decrements
+   if (add < 0) {
+      while (true) {
+         long currentVal = valueUpdater.get(this);
+         if (currentVal <= 0) {
+            // Already 0 or negative; do not decrement further
+            logWouldGoNegative(currentVal, add, size);
+            acksApplied.addAndGet(-add);
+            return;
+         }
 
-      if (value < 0 && value - add >= 0 && !negativeLogged) {
-         negativeLogged = true;
-         logger.warn("counter went negative: sub={} queue={} value={} add={} size={}",
-                     subscriptionID,
-                     subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
-                     value, add, size, new Exception("stack"));
-      }
+         if (currentVal + add < 0) {
+            logWouldGoNegative(currentVal, add, size);
+         }
 
-      persistentSizeUpdater.addAndGet(this, size);
+         long newVal = Math.max(0, currentVal + add); // add is negative
 
-      if (add > 0) {
-         isDeleted = false;
-         addsApplied.add(add);
-         persistentSizeAdded.add(size);
-
-         /// we could have pagingStore null on tests, so we need to validate if pagingStore != null before anything...
-         if (pagingStore != null && pagingStore.getPageFullMessagePolicy() != null && !pagingStore.isPageFull()) {
-            checkAdd(value);
+         if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
+            acksApplied.addAndGet(-add);
+            
+            // Keep persistent size clamped >= 0
+            long currentSize = persistentSizeUpdater.get(this);
+            long newSize = Math.max(0, currentSize + size);
+            persistentSizeUpdater.set(this, newSize);
+            return;
          }
       }
-
-      if (isRebuilding()) {
-         recordedValueUpdater.addAndGet(this, add);
-         recordedSizeUpdater.addAndGet(this, size);
-      }
    }
+
+   // Process positive additions (add > 0)
+   long value = valueUpdater.addAndGet(this, add);
+   addsApplied.addAndGet(add);
+   persistentSizeUpdater.addAndGet(this, size);
+   addedUpdater.addAndGet(this, add);
+   addedPersistentSizeUpdater.addAndGet(this, size);
+
+   if (pagingStore != null && pagingStore.getPageFullMessagePolicy() != null && !pagingStore.isPageFull()) {
+      checkAdd(value);
+   }
+
+   if (isRebuilding()) {
+      recordedValueUpdater.addAndGet(this, add);
+      recordedSizeUpdater.addAndGet(this, size);
+   }
+}
 
    private void checkAdd(long numberOfMessages) {
       Long pageLimitMessages = pagingStore.getPageLimitMessages();
@@ -246,30 +293,28 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    @Override
    public void delete() throws Exception {
       Transaction tx = new TransactionImpl(storage);
-
       delete(tx);
-
       tx.commit();
    }
 
    void reset() throws Exception {
       Transaction tx = new TransactionImpl(storage);
-
       delete(tx, true);
-
       tx.commit();
    }
 
    @Override
    public void delete(Transaction tx) throws Exception {
-      isDeleted = true;
       delete(tx, false);
    }
 
    private void delete(Transaction tx, boolean keepZero) throws Exception {
+      this.isDeleted = true;
+
       if (logger.isDebugEnabled()) {
          logger.debug("Subscription {} delete, keepZero={}", subscriptionID, keepZero);
       }
+
       // always lock the StorageManager first.
       try (ArtemisCloseable lock = storage.closeableReadLock()) {
          synchronized (this) {
@@ -288,6 +333,23 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
                recordID = -1;
             }
 
+            long valueBefore = valueUpdater.get(this);
+            long pendingAdds = addsRequested.get() - addsApplied.get();
+            long pendingAcks = acksRequested.get() - acksApplied.get();
+
+            if (valueBefore != 0 || pendingAdds != 0 || pendingAcks != 0) {
+               logger.warn("counter delete: sub={} keepZero={} valueBefore={} added={} addsRequested={} addsApplied={} acksRequested={} acksApplied={}",
+                           subscriptionID, keepZero, valueBefore, addedUpdater.get(this),
+                           addsRequested.get(), addsApplied.get(), acksRequested.get(), acksApplied.get());
+            }
+
+            addsRequested.set(0);
+            addsApplied.set(0);
+            acksRequested.set(0);
+            acksApplied.set(0);
+
+            lastDeleteTime = System.currentTimeMillis();
+            negativeLogged = false;
             valueUpdater.set(this, 0);
             persistentSizeUpdater.set(this, 0);
          }
