@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Collections;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
@@ -2018,6 +2019,23 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
       return iterQueue("deleteMatchingReferences", flushLimit, filter1, createDeleteMatchingAction(ackReason));
    }
 
+   // DIAGNOSTIC (negative counter investigation): packed page/message ids of paged references currently held by consumers. Remove after the investigation.
+   private Set<Long> diagnosticDeliveringPositions() {
+      Set<Long> held = new HashSet<>();
+      for (ConsumerHolder<? extends Consumer> holder : consumers) {
+         for (MessageReference ref : holder.consumer().getDeliveringMessages()) {
+            if (ref instanceof PagedReference) {
+               held.add(diagnosticPositionKey((PagedReference) ref));
+            }
+         }
+      }
+      return held;
+   }
+
+   private static long diagnosticPositionKey(final PagedReference reference) {
+      return (reference.getPagedMessage().getPageNumber() << 32) | (reference.getPagedMessage().getMessageNumber() & 0xFFFFFFFFL);
+   }
+
    QueueIterateAction createDeleteMatchingAction(AckReason ackReason) {
       return new QueueIterateAction() {
          @Override
@@ -2129,11 +2147,19 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
                theIterator = pageIterator;
             }
 
+            // DIAGNOSTIC (negative counter investigation): positions consumers hold while a separate page pass runs. Remove after the investigation.
+            final Set<Long> diagnosticHeld = separatePageIterator ? diagnosticDeliveringPositions() : Collections.emptySet();
+
             try {
                while (theIterator.hasNext() && !messageAction.expectedHitsReached(count)) {
                   PagedReference reference = theIterator.next();
                   boolean matched = messageAction.match(reference);
                   boolean acted = false;
+
+                  if (matched && separatePageIterator && diagnosticHeld.contains(diagnosticPositionKey(reference))) {
+                     logger.warn("DIAGNOSTIC {} acting on a position held by a consumer: queue={} page={} msg={}", operationName, getName(),
+                                 reference.getPagedMessage().getPageNumber(), reference.getPagedMessage().getMessageNumber(), new Exception("purge overlap"));
+                  }
 
                   if (matched) {
                      acted = messageAction.actMessage(tx, reference);
