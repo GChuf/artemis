@@ -176,7 +176,6 @@ public void increment(Transaction tx, int add, long size) throws Exception {
 
    // --- GUARD: Drop negative increments when counter is already 0 and no additions are pending ---
    if (add < 0 && getValue() <= 0 && (addsRequested.get() - addsApplied.get()) <= 0) {
-      logWouldGoNegative(getValue(), add, size);
       if (logger.isTraceEnabled()) {
          logger.trace("Ignoring ACK increment on 0-value counter for sub={}", subscriptionID);
       }
@@ -189,19 +188,6 @@ public void increment(Transaction tx, int add, long size) throws Exception {
       applyIncrementOnTX(tx, add, size);
    }
 }
-
-   /**
-    * The zero-floor clamp hides negative values, so this logs the first decrement that would have gone below zero.
-    */
-   private void logWouldGoNegative(final long currentVal, final int add, final long size) {
-      if (!negativeLogged) {
-         negativeLogged = true;
-         logger.warn("counter went negative: sub={} queue={} value={} add={} size={}",
-                     subscriptionID,
-                     subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
-                     currentVal, add, size, new Exception("stack"));
-      }
-   }
 
    /**
     * This method will install the TXs
@@ -227,6 +213,7 @@ public void increment(Transaction tx, int add, long size) throws Exception {
    }
 
 private void process(final int add, final long size) {
+   // 1. Ignore late decrements if deleted
    if (isDeleted && add < 0) {
       return;
    }
@@ -235,36 +222,38 @@ private void process(final int add, final long size) {
       logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
    }
 
-   // Atomic CAS loop to enforce zero-floor on decrements
+   // 2. Decrements (add < 0): Atomic CAS clamp to enforce zero-floor
    if (add < 0) {
       while (true) {
          long currentVal = valueUpdater.get(this);
+         
          if (currentVal <= 0) {
-            // Already 0 or negative; do not decrement further
-            logWouldGoNegative(currentVal, add, size);
+            // Counter is already at 0; record applied ACK and drop further subtraction
             acksApplied.addAndGet(-add);
             return;
          }
 
-         if (currentVal + add < 0) {
-            logWouldGoNegative(currentVal, add, size);
-         }
-
-         long newVal = Math.max(0, currentVal + add); // add is negative
+         long newVal = Math.max(0, currentVal + add); // add is negative (e.g. currentVal=1, add=-1 => newVal=0)
 
          if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
             acksApplied.addAndGet(-add);
             
-            // Keep persistent size clamped >= 0
-            long currentSize = persistentSizeUpdater.get(this);
-            long newSize = Math.max(0, currentSize + size);
-            persistentSizeUpdater.set(this, newSize);
-            return;
+            // Thread-safe CAS clamp for persistentSize
+            while (true) {
+               long currentSize = persistentSizeUpdater.get(this);
+               if (currentSize <= 0) break;
+               long newSize = Math.max(0, currentSize + size); // size is negative
+               if (persistentSizeUpdater.compareAndSet(this, currentSize, newSize)) {
+                  break;
+               }
+            }
+            return; // <--- CRITICAL: Exit immediately so addAndGet() is NEVER called below
          }
       }
    }
 
-   // Process positive additions (add > 0)
+   // 3. Increments (add > 0): Re-activate counter and increment
+   this.isDeleted = false;
    long value = valueUpdater.addAndGet(this, add);
    addsApplied.addAndGet(add);
    persistentSizeUpdater.addAndGet(this, size);
@@ -309,7 +298,10 @@ private void process(final int add, final long size) {
    }
 
    private void delete(Transaction tx, boolean keepZero) throws Exception {
-      this.isDeleted = true;
+      // Only permanently mark deleted if NOT keeping zero (keepZero == false)
+      if (!keepZero) {
+         this.isDeleted = true;
+      }
 
       if (logger.isDebugEnabled()) {
          logger.debug("Subscription {} delete, keepZero={}", subscriptionID, keepZero);
