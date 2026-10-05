@@ -48,7 +48,8 @@ public interface PageSubscriptionCounter {
    /**
     * DIAGNOSTIC (negative counter investigation): records an ACK of a page/message with the consumer and delivery count that acked it. Remove after the investigation.
     */
-   default void diagnosticNoteAck(long diagnosticId, long consumerId, int deliveryCount) {
+   default boolean diagnosticNoteAck(long diagnosticId, long consumerId, int deliveryCount) {
+      return false;
    }
 
    /**

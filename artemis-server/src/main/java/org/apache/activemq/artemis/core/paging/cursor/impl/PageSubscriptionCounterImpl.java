@@ -250,9 +250,10 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
    }
 
    @Override
-   public void diagnosticNoteAck(final long diagnosticId, final long consumerId, final int deliveryCount) {
+   public boolean diagnosticNoteAck(final long diagnosticId, final long consumerId, final int deliveryCount) {
       long pageId = diagnosticId >>> 32;
       int messageNumber = (int) diagnosticId;
+      boolean duplicate = false;
 
       // anomalous: an ACK for a reference that was never delivered to a consumer
       if (consumerId == -1L && deliveryCount == 0) {
@@ -264,6 +265,7 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
       BitSet bits = diagnosticAckedIds.computeIfAbsent(pageId, k -> new BitSet());
       synchronized (bits) {
          if (bits.get(messageNumber)) {
+            duplicate = true;
             long duplicates = diagnosticDuplicateAcks.incrementAndGet();
             if (duplicates <= 5) {
                Long first = diagnosticFirstAck.get(diagnosticId);
@@ -277,6 +279,7 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
             diagnosticFirstAck.put(diagnosticId, diagnosticPack(consumerId, deliveryCount));
          }
       }
+      return duplicate;
    }
 
    @Override

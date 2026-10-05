@@ -431,8 +431,14 @@ public final class PageSubscriptionImpl implements PageSubscription {
       if (!this.empty) {
          // DIAGNOSTIC: packed page (high 32 bits) and message (low 32 bits) id, see PageSubscriptionCounterImpl
          long diagnosticId = ((long) pm.getPageNumber() << 32) | (pm.getMessageNumber() & 0xFFFFFFFFL);
-         counter.diagnosticNoteAck(diagnosticId, reference.hasConsumerId() ? reference.getConsumerId() : -1L, reference.getDeliveryCount());
-         counter.increment(tx, -1, -getPersistentSize(reference), diagnosticId);
+         long consumerId = reference.hasConsumerId() ? reference.getConsumerId() : -1L;
+         boolean duplicate = counter.diagnosticNoteAck(diagnosticId, consumerId, reference.getDeliveryCount());
+         // DIAGNOSTIC EXPERIMENT: a repeated ACK for a message that was already acked is not applied to the counter
+         if (duplicate) {
+            logger.debug("DIAGNOSTIC EXPERIMENT: not applying duplicate ACK page={} msg={}", pm.getPageNumber(), pm.getMessageNumber());
+         } else {
+            counter.increment(tx, -1, -getPersistentSize(reference), diagnosticId);
+         }
       }
 
 
