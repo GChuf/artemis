@@ -41,8 +41,13 @@ import org.slf4j.LoggerFactory;
  * This class will encapsulate the persistent counters for the PagingSubscription
  */
 public class PageSubscriptionCounterImpl extends BasePagingCounter {
-   private final AtomicLong value = new AtomicLong(0);
-   private final AtomicLong size = new AtomicLong(0);
+
+private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> value_updater =
+         AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "value");
+   private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> size_updater =
+         AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "size");
+private volatile long value;
+   private volatile long size;
 
    private volatile boolean isDeleted = false;
 
@@ -124,11 +129,11 @@ public PageSubscriptionCounterImpl(StorageManager storageManager, long subscript
 
    @Override
 public long getValue() {
-      return Math.max(0L, this.value.get());
+      return Math.max(0L, value_updater.get(this));
    }
 
 public long getValueSize() {
-      return Math.max(0L, this.size.get());
+      return Math.max(0L, size_updater.get(this));
    }
 
    @Override
@@ -153,15 +158,15 @@ public long getValueSize() {
    @Override
 public void increment(Transaction tx, int add, long addedSize) throws Exception {
       // Fast-path: Decoupled atomic hardware additions (1 instruction each on x86)
-      long newCount = this.value.addAndGet(add);
-      long newSize = this.size.addAndGet(addedSize);
+      long newCount = value_updater.addAndGet(this, add);
+      long newSize = size_updater.addAndGet(this, addedSize);
 
       // Branch-predicted slow path: ONLY trigger CAS loop if underflow occurred
       if (newCount < 0) {
-         clampToZero(this.value, newCount);
+         clampToZero(value_updater, newCount);
       }
       if (newSize < 0) {
-         clampToZero(this.size, newSize);
+         clampToZero(size_updater, newSize);
       }
 
       if (tx != null) {
@@ -180,8 +185,8 @@ public void increment(Transaction tx, int add, long addedSize) throws Exception 
 
    @Override
 public void loadValue(long recordID, long value, long size) {
-      this.value.set(value);
-      this.size.set(size);
+      value_updater.set(this, value);
+      size_updater.set(this, size);
    }
 
    private void process(final int add, final long size) {
@@ -254,29 +259,29 @@ public void loadValue(long recordID, long value, long size) {
    }
 
 public void reset() {
-      this.value.set(0);
-      this.size.set(0);
+      value_updater.set(this, 0);
+      size_updater.set(this, 0);
    }
 
    @Override
 public void delete(Transaction tx) throws Exception {
       // Direct volatile store eliminates CAS loop overhead entirely
-      this.value.set(0);
-      this.size.set(0);
+      value_updater.set(this, 0);
+      size_updater.set(this, 0);
 
       if (tx != null) {
          // StorageManager delete record logic
       }
    }
 
-private static void clampToZero(AtomicLong target, long expected) {
-      while (expected < 0) {
-         if (target.compareAndSet(expected, 0)) {
-            break;
+   private void clampToZero(AtomicLongFieldUpdater<PageSubscriptionCounterImpl> updater, long expected) {
+         while (expected < 0) {
+            if (updater.compareAndSet(this, expected, 0)) {
+               break;
+            }
+            expected = updater.get(this);
          }
-         expected = target.get();
       }
-   }
 
 
    @Override
