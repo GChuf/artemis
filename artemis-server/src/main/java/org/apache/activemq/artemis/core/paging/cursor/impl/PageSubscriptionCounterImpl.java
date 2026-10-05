@@ -45,6 +45,10 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
    private volatile long lastDeleteTime = 0;
    private volatile boolean negativeLogged = false;
+
+   // DIAGNOSTIC: advances on each page-mode clear (delete without keepZero). ACKs record the epoch they were requested in
+   private static final long NO_DIAGNOSTIC_ID = -1L;
+   private volatile long epoch = 0;
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
    private final AtomicLong addsRequested = new AtomicLong();
@@ -163,6 +167,13 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
 @Override
 public void increment(Transaction tx, int add, long size) throws Exception {
+   increment(tx, add, size, NO_DIAGNOSTIC_ID);
+}
+
+// DIAGNOSTIC (negative counter investigation): diagnosticId packs page number (high 32 bits) and message number (low 32 bits) for ACKs
+@Override
+public void increment(Transaction tx, int add, long size, long diagnosticId) throws Exception {
+   final long requestEpoch = epoch;
    if (add > 0) {
       addsRequested.addAndGet(add);
    } else if (add < 0) {
@@ -176,7 +187,7 @@ public void increment(Transaction tx, int add, long size) throws Exception {
 
    // --- GUARD: Drop negative increments when counter is already 0 and no additions are pending ---
    if (add < 0 && getValue() <= 0 && (addsRequested.get() - addsApplied.get()) <= 0) {
-      logWouldGoNegative(getValue(), add, size);
+      logWouldGoNegative(getValue(), add, size, diagnosticId, requestEpoch);
       if (logger.isTraceEnabled()) {
          logger.trace("Ignoring ACK increment on 0-value counter for sub={}", subscriptionID);
       }
@@ -184,22 +195,25 @@ public void increment(Transaction tx, int add, long size) throws Exception {
    }
 
    if (tx == null) {
-      process(add, size);
+      process(add, size, diagnosticId, requestEpoch);
    } else {
-      applyIncrementOnTX(tx, add, size);
+      applyIncrementOnTX(tx, add, size, diagnosticId, requestEpoch);
    }
 }
 
    /**
     * The zero-floor clamp hides negative values, so this logs the first decrement that would have gone below zero.
     */
-   private void logWouldGoNegative(final long currentVal, final int add, final long size) {
+   private void logWouldGoNegative(final long currentVal, final int add, final long size, final long diagnosticId, final long requestEpoch) {
       if (!negativeLogged) {
          negativeLogged = true;
-         logger.warn("counter went negative: sub={} queue={} value={} add={} size={}",
+         logger.warn("counter went negative: sub={} queue={} value={} add={} size={} ackPage={} ackMsg={} ackEpoch={} currentEpoch={}",
                      subscriptionID,
                      subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
-                     currentVal, add, size, new Exception("stack"));
+                     currentVal, add, size,
+                     diagnosticId == NO_DIAGNOSTIC_ID ? "-" : diagnosticId >>> 32,
+                     diagnosticId == NO_DIAGNOSTIC_ID ? "-" : (int) diagnosticId,
+                     requestEpoch, epoch, new Exception("stack"));
       }
    }
 
@@ -208,8 +222,12 @@ public void increment(Transaction tx, int add, long size) throws Exception {
     */
    @Override
    public void applyIncrementOnTX(Transaction tx, int add, long size) {
+      applyIncrementOnTX(tx, add, size, NO_DIAGNOSTIC_ID, epoch);
+   }
+
+   private void applyIncrementOnTX(Transaction tx, int add, long size, long diagnosticId, long requestEpoch) {
       CounterOperations oper = tx.getOrCreateOperation(TransactionPropertyIndexes.PAGE_COUNT_INC, CounterOperations::new);
-      oper.operations.add(new ItemOper(this, add, size));
+      oper.operations.add(new ItemOper(this, add, size, diagnosticId, requestEpoch));
    }
 
    @Override
@@ -226,7 +244,7 @@ public void increment(Transaction tx, int add, long size) throws Exception {
       this.isDeleted = false;
    }
 
-private void process(final int add, final long size) {
+private void process(final int add, final long size, final long diagnosticId, final long requestEpoch) {
    // 1. Ignore late decrements if deleted
    if (isDeleted && add < 0) {
       return;
@@ -243,13 +261,13 @@ private void process(final int add, final long size) {
          
          if (currentVal <= 0) {
             // Counter is already at 0; record applied ACK and drop further subtraction
-            logWouldGoNegative(currentVal, add, size);
+            logWouldGoNegative(currentVal, add, size, diagnosticId, requestEpoch);
             acksApplied.addAndGet(-add);
             return;
          }
 
          if (currentVal + add < 0) {
-            logWouldGoNegative(currentVal, add, size);
+            logWouldGoNegative(currentVal, add, size, diagnosticId, requestEpoch);
          }
 
          long newVal = Math.max(0, currentVal + add); // add is negative (e.g. currentVal=1, add=-1 => newVal=0)
@@ -320,6 +338,7 @@ private void process(final int add, final long size) {
       // Only permanently mark deleted if NOT keeping zero (keepZero == false)
       if (!keepZero) {
          this.isDeleted = true;
+         this.epoch++;
       }
 
       if (logger.isDebugEnabled()) {
@@ -466,10 +485,12 @@ private void process(final int add, final long size) {
 
    private static class ItemOper {
 
-      private ItemOper(PageSubscriptionCounterImpl counter, int add, long persistentSize) {
+      private ItemOper(PageSubscriptionCounterImpl counter, int add, long persistentSize, long diagnosticId, long requestEpoch) {
          this.counter = counter;
          this.amount = add;
          this.persistentSize = persistentSize;
+         this.diagnosticId = diagnosticId;
+         this.requestEpoch = requestEpoch;
       }
 
       PageSubscriptionCounterImpl counter;
@@ -477,6 +498,11 @@ private void process(final int add, final long size) {
       int amount;
 
       long persistentSize;
+
+      // DIAGNOSTIC: see increment(tx, add, size, diagnosticId)
+      long diagnosticId;
+
+      long requestEpoch;
    }
 
    private static class CounterOperations extends TransactionOperationAbstract implements TransactionOperation {
@@ -486,7 +512,7 @@ private void process(final int add, final long size) {
       @Override
       public void afterCommit(Transaction tx) {
          for (ItemOper oper : operations) {
-            oper.counter.process(oper.amount, oper.persistentSize);
+            oper.counter.process(oper.amount, oper.persistentSize, oper.diagnosticId, oper.requestEpoch);
          }
       }
    }
