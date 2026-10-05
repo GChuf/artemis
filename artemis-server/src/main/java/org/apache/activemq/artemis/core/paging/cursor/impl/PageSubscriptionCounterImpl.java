@@ -176,6 +176,7 @@ public void increment(Transaction tx, int add, long size) throws Exception {
 
    // --- GUARD: Drop negative increments when counter is already 0 and no additions are pending ---
    if (add < 0 && getValue() <= 0 && (addsRequested.get() - addsApplied.get()) <= 0) {
+      logWouldGoNegative(getValue(), add, size);
       if (logger.isTraceEnabled()) {
          logger.trace("Ignoring ACK increment on 0-value counter for sub={}", subscriptionID);
       }
@@ -188,6 +189,19 @@ public void increment(Transaction tx, int add, long size) throws Exception {
       applyIncrementOnTX(tx, add, size);
    }
 }
+
+   /**
+    * The zero-floor clamp hides negative values, so this logs the first decrement that would have gone below zero.
+    */
+   private void logWouldGoNegative(final long currentVal, final int add, final long size) {
+      if (!negativeLogged) {
+         negativeLogged = true;
+         logger.warn("counter went negative: sub={} queue={} value={} add={} size={}",
+                     subscriptionID,
+                     subscription != null && subscription.getQueue() != null ? subscription.getQueue().getName() : "?",
+                     currentVal, add, size, new Exception("stack"));
+      }
+   }
 
    /**
     * This method will install the TXs
@@ -229,8 +243,13 @@ private void process(final int add, final long size) {
          
          if (currentVal <= 0) {
             // Counter is already at 0; record applied ACK and drop further subtraction
+            logWouldGoNegative(currentVal, add, size);
             acksApplied.addAndGet(-add);
             return;
+         }
+
+         if (currentVal + add < 0) {
+            logWouldGoNegative(currentVal, add, size);
          }
 
          long newVal = Math.max(0, currentVal + add); // add is negative (e.g. currentVal=1, add=-1 => newVal=0)
