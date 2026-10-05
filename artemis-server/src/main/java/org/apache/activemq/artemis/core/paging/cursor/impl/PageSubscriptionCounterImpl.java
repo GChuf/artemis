@@ -176,6 +176,9 @@ public void increment(Transaction tx, int add, long size) throws Exception {
 @Override
 public void increment(Transaction tx, int add, long size, long diagnosticId) throws Exception {
    final long requestEpoch = epoch;
+   if (add < 0 && diagnosticId != NO_DIAGNOSTIC_ID) {
+      diagnosticRecordAck(diagnosticId);
+   }
    if (add > 0) {
       addsRequested.addAndGet(add);
    } else if (add < 0) {
@@ -223,6 +226,37 @@ public void increment(Transaction tx, int add, long size, long diagnosticId) thr
 
    // DIAGNOSTIC (negative counter investigation): page id -> bit set of message numbers whose add was counted for this queue
    private final ConcurrentHashMap<Long, BitSet> diagnosticCountedAdds = new ConcurrentHashMap<>();
+
+   // DIAGNOSTIC: same layout as diagnosticCountedAdds, but for ACKs that reached this counter
+   private final ConcurrentHashMap<Long, BitSet> diagnosticAckedIds = new ConcurrentHashMap<>();
+
+   private final AtomicLong diagnosticDuplicateAcks = new AtomicLong();
+
+   private static long diagnosticCount(final ConcurrentHashMap<Long, BitSet> map) {
+      long total = 0;
+      for (BitSet bits : map.values()) {
+         synchronized (bits) {
+            total += bits.cardinality();
+         }
+      }
+      return total;
+   }
+
+   private void diagnosticRecordAck(final long diagnosticId) {
+      long pageId = diagnosticId >>> 32;
+      int messageNumber = (int) diagnosticId;
+      BitSet bits = diagnosticAckedIds.computeIfAbsent(pageId, k -> new BitSet());
+      synchronized (bits) {
+         if (bits.get(messageNumber)) {
+            long duplicates = diagnosticDuplicateAcks.incrementAndGet();
+            if (duplicates == 1) {
+               logger.warn("counter diagnostic: first duplicate ACK on sub={} page={} msg={}", subscriptionID, pageId, messageNumber);
+            }
+         } else {
+            bits.set(messageNumber);
+         }
+      }
+   }
 
    @Override
    public void diagnosticCounted(final long pageId, final int messageNumber) {
@@ -398,6 +432,10 @@ private void process(final int add, final long size, final long diagnosticId, fi
                            subscriptionID, keepZero, valueBefore, addedUpdater.get(this),
                            addsRequested.get(), addsApplied.get(), acksRequested.get(), acksApplied.get());
             }
+
+            // DIAGNOSTIC: distinct recorded adds vs distinct ack ids, and ack ids seen more than once
+            logger.warn("counter diagnostic: sub={} keepZero={} recordedAdds={} distinctAckIds={} duplicateAckIds={}",
+                        subscriptionID, keepZero, diagnosticCount(diagnosticCountedAdds), diagnosticCount(diagnosticAckedIds), diagnosticDuplicateAcks.get());
 
             addsRequested.set(0);
             addsApplied.set(0);
