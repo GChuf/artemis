@@ -75,6 +75,10 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
    // only log the first time the value goes negative, so a bad counter doesn't flood the log
    private volatile boolean negativeLogged = false;
 
+   // set when the counter is deleted (page mode cleared). ACKs committed after that point refer to
+   // messages that were already zeroed out, so they must not decrement again
+   private volatile boolean isDeleted = false;
+
    // these are only ever added to on the add path, so LongAdder keeps them off a single contended cache line
    private final LongAdder addsApplied = new LongAdder();
    private final LongAdder persistentSizeAdded = new LongAdder();
@@ -189,9 +193,14 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       valueUpdater.set(this, value);
       persistentSizeUpdater.set(this, size);
       resetAdded(value, size);
+      isDeleted = false;
    }
 
    private void process(final int add, final long size) {
+      if (isDeleted && add < 0) {
+         return;
+      }
+
       if (logger.isTraceEnabled()) {
          logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
       }
@@ -209,6 +218,7 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       persistentSizeUpdater.addAndGet(this, size);
 
       if (add > 0) {
+         isDeleted = false;
          addsApplied.add(add);
          persistentSizeAdded.add(size);
 
@@ -252,6 +262,7 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
    @Override
    public void delete(Transaction tx) throws Exception {
+      isDeleted = true;
       delete(tx, false);
    }
 
