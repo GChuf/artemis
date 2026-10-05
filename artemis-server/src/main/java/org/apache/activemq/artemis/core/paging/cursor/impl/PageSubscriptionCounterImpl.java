@@ -176,6 +176,7 @@ public void increment(Transaction tx, int add, long size) throws Exception {
 
    // --- GUARD: Drop negative increments when counter is already 0 and no additions are pending ---
    if (add < 0 && getValue() <= 0 && (addsRequested.get() - addsApplied.get()) <= 0) {
+      logger.warn("neg");
       if (logger.isTraceEnabled()) {
          logger.trace("Ignoring ACK increment on 0-value counter for sub={}", subscriptionID);
       }
