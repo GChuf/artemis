@@ -19,7 +19,6 @@ package org.apache.activemq.artemis.core.paging.cursor.impl;
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -42,23 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PageSubscriptionCounterImpl extends BasePagingCounter {
 
-private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> value_updater =
-         AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "value");
-   private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> size_updater =
-         AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "size");
-private volatile long value;
-   private volatile long size;
-
-   private volatile boolean isDeleted = false;
-
-   private volatile long lastDeleteTime = 0;
-   private volatile boolean negativeLogged = false;
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-   private final LongAdder addsRequested = new LongAdder();
-   private final LongAdder addsApplied = new LongAdder();
-   private final LongAdder acksRequested = new LongAdder();
-   private final LongAdder acksApplied = new LongAdder();
 
    private final long subscriptionID;
 
@@ -83,19 +66,23 @@ private volatile long value;
 
    private final StorageManager storage;
 
+   private volatile long value;
    private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> valueUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "value");
 
    private volatile long persistentSize;
    private static final AtomicLongFieldUpdater<PageSubscriptionCounterImpl> persistentSizeUpdater = AtomicLongFieldUpdater.newUpdater(PageSubscriptionCounterImpl.class, "persistentSize");
 
+   // these are only ever added to on the add path, so LongAdder keeps them off a single contended cache line
+   private final LongAdder addsApplied = new LongAdder();
+   private final LongAdder persistentSizeAdded = new LongAdder();
+
    private LinkedList<PendingCounter> loadList;
 
-public PageSubscriptionCounterImpl(StorageManager storageManager, long subscriptionID) {
-      this.storage = storageManager;
+   public PageSubscriptionCounterImpl(final StorageManager storage,
+                                      final long subscriptionID) {
       this.subscriptionID = subscriptionID;
+      this.storage = storage;
    }
-
-
 
    @Override
    public void markRebuilding() {
@@ -119,7 +106,17 @@ public PageSubscriptionCounterImpl(StorageManager storageManager, long subscript
          logger.debug("Subscription {} finished rebuilding", subscriptionID);
       }
       snapshot();
-      this.isDeleted = false;
+      resetAdded(valueUpdater.get(this), persistentSizeUpdater.get(this));
+   }
+
+   /**
+    * Re-seeds the "added" counters with a known baseline (the loaded or rebuilt value).
+    */
+   private void resetAdded(long count, long size) {
+      addsApplied.reset();
+      addsApplied.add(count);
+      persistentSizeAdded.reset();
+      persistentSizeAdded.add(size);
    }
 
    @Override
@@ -128,17 +125,22 @@ public PageSubscriptionCounterImpl(StorageManager storageManager, long subscript
    }
 
    @Override
-public long getValue() {
-      return Math.max(0L, value_updater.get(this));
-   }
-
-public long getValueSize() {
-      return Math.max(0L, size_updater.get(this));
+   public long getValue() {
+      if (isRebuilding()) {
+         if (logger.isTraceEnabled()) {
+            logger.trace("returning getValue from isPending on subscription {}, recordedValue={}", subscriptionID, recordedValueUpdater.get(this));
+         }
+         return recordedValueUpdater.get(this);
+      }
+      if (logger.isTraceEnabled()) {
+         logger.trace("returning regular getValue subscription {}, value={}", subscriptionID, valueUpdater.get(this));
+      }
+      return valueUpdater.get(this);
    }
 
    @Override
    public long getPersistentSizeAdded() {
-      return persistentSizeUpdater.get(this);
+      return persistentSizeAdded.sum();
    }
 
    @Override
@@ -156,23 +158,11 @@ public long getValueSize() {
    }
 
    @Override
-   public void increment(Transaction tx, int add, long addedSize) throws Exception {
-      if (add != 0) {
-         long newCount = value_updater.addAndGet(this, add);
-         if (newCount < 0) {
-            value_updater.compareAndSet(this, newCount, 0);
-         }
-      }
-
-      if (addedSize != 0) {
-         long newSize = size_updater.addAndGet(this, addedSize);
-         if (newSize < 0) {
-            size_updater.compareAndSet(this, newSize, 0);
-         }
-      }
-
-      if (tx != null) {
-         // Transactional storage persistence logic
+   public void increment(Transaction tx, int add, long size) throws Exception {
+      if (tx == null) {
+         process(add, size);
+      } else {
+         applyIncrementOnTX(tx, add, size);
       }
    }
 
@@ -186,58 +176,34 @@ public long getValueSize() {
    }
 
    @Override
-public void loadValue(long recordID, long value, long size) {
-      value_updater.set(this, value);
-      size_updater.set(this, size);
+   public synchronized void loadValue(final long recordID, final long value, long size) {
+      if (logger.isDebugEnabled()) {
+         logger.debug("Counter for subscription {} reloading recordID={}, value={}, size={}", this.subscriptionID, recordID, value, size);
+      }
+      this.recordID = recordID;
+      recordedValueUpdater.set(this, value);
+      recordedSizeUpdater.set(this, size);
+      valueUpdater.set(this, value);
+      persistentSizeUpdater.set(this, size);
+      resetAdded(value, size);
    }
 
    private void process(final int add, final long size) {
-      if (isDeleted && add < 0) {
-         return;
-      }
-
       if (logger.isTraceEnabled()) {
          logger.trace("process subscription={} add={}, size={}", subscriptionID, add, size);
       }
 
-      // Decrements (add < 0): Atomic CAS clamp to enforce zero-floor
-      if (add < 0) {
-         while (true) {
-            long currentVal = valueUpdater.get(this);
-
-            if (currentVal <= 0) {
-               // Counter is already at 0; record applied ACK and drop further subtraction
-               acksApplied.add(-add);
-               return;
-            }
-
-            long newVal = Math.max(0, currentVal + add); // add is negative
-
-            if (valueUpdater.compareAndSet(this, currentVal, newVal)) {
-               acksApplied.add(-add);
-
-               // Thread-safe CAS clamp for persistentSize
-               while (true) {
-                  long currentSize = persistentSizeUpdater.get(this);
-                  if (currentSize <= 0) break;
-                  long newSize = Math.max(0, currentSize + size); // size is negative
-                  if (persistentSizeUpdater.compareAndSet(this, currentSize, newSize)) {
-                     break;
-                  }
-               }
-               return;
-            }
-         }
-      }
-
-      // Increments (add > 0): Re-activate counter and increment
-      this.isDeleted = false;
       long value = valueUpdater.addAndGet(this, add);
-      addsApplied.add(add);
       persistentSizeUpdater.addAndGet(this, size);
 
-      if (pagingStore != null && pagingStore.getPageLimitMessages() != null) {
-         checkAdd(value);
+      if (add > 0) {
+         addsApplied.add(add);
+         persistentSizeAdded.add(size);
+
+         /// we could have pagingStore null on tests, so we need to validate if pagingStore != null before anything...
+         if (pagingStore != null && pagingStore.getPageFullMessagePolicy() != null && !pagingStore.isPageFull()) {
+            checkAdd(value);
+         }
       }
 
       if (isRebuilding()) {
@@ -248,34 +214,62 @@ public void loadValue(long recordID, long value, long size) {
 
    private void checkAdd(long numberOfMessages) {
       Long pageLimitMessages = pagingStore.getPageLimitMessages();
-      if (pageLimitMessages != null && numberOfMessages >= pageLimitMessages) {
-         pagingStore.pageFull(this.subscription);
+      if (pageLimitMessages != null) {
+         if (numberOfMessages >= pageLimitMessages.longValue()) {
+            pagingStore.pageFull(this.subscription);
+         }
       }
    }
 
    @Override
    public void delete() throws Exception {
       Transaction tx = new TransactionImpl(storage);
+
       delete(tx);
+
       tx.commit();
    }
 
-public void reset() {
-      value_updater.set(this, 0);
-      size_updater.set(this, 0);
+   void reset() throws Exception {
+      Transaction tx = new TransactionImpl(storage);
+
+      delete(tx, true);
+
+      tx.commit();
    }
 
    @Override
-public void delete(Transaction tx) throws Exception {
-      // Direct volatile store eliminates CAS loop overhead entirely
-      value_updater.set(this, 0);
-      size_updater.set(this, 0);
-
-      if (tx != null) {
-         // StorageManager delete record logic
-      }
+   public void delete(Transaction tx) throws Exception {
+      delete(tx, false);
    }
 
+   private void delete(Transaction tx, boolean keepZero) throws Exception {
+      if (logger.isDebugEnabled()) {
+         logger.debug("Subscription {} delete, keepZero={}", subscriptionID, keepZero);
+      }
+      // always lock the StorageManager first.
+      try (ArtemisCloseable lock = storage.closeableReadLock()) {
+         synchronized (this) {
+            if (recordID >= 0) {
+               if (logger.isTraceEnabled()) {
+                  logger.trace("Deleting page counter with recordID={}, using TX={}", this.recordID, tx.getID());
+               }
+               storage.deletePageCounter(tx.getID(), this.recordID);
+               tx.setContainsPersistent();
+            }
+
+            if (keepZero) {
+               tx.setContainsPersistent();
+               recordID = storage.storePageCounter(tx.getID(), subscriptionID, 0L, 0L);
+            } else {
+               recordID = -1;
+            }
+
+            valueUpdater.set(this, 0);
+            persistentSizeUpdater.set(this, 0);
+         }
+      }
+   }
 
    @Override
    public void loadInc(long id, int add, long size) {
