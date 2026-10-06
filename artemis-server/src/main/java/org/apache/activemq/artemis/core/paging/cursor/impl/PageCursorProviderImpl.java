@@ -313,7 +313,7 @@ public class PageCursorProviderImpl implements PageCursorProvider {
 
             assert pagingStore.getNumberOfPages() >= 0;
 
-            if (!pagingStore.hasPendingIO() && (pagingStore.getNumberOfPages() == 0 || pagingStore.getNumberOfPages() == 1 && (pagingStore.getCurrentPage() == null || pagingStore.getCurrentPage().getNumberOfMessages() == 0))) {
+            if (pagingStore.isStorePaging() && !pagingStore.hasPendingIO() && (pagingStore.getNumberOfPages() == 0 || pagingStore.getNumberOfPages() == 1 && (pagingStore.getCurrentPage() == null || pagingStore.getCurrentPage().getNumberOfMessages() == 0))) {
                logger.trace("StopPaging being called on {}, pending={}", pagingStore, pagingStore.hasPendingIO());
                pagingStore.stopPaging();
             } else {
