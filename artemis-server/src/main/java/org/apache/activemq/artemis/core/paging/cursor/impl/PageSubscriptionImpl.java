@@ -270,9 +270,13 @@ public final class PageSubscriptionImpl implements PageSubscription {
 
    @Override
    public void onPageModeCleared(Transaction tx) throws Exception {
-      // this could be null on testcases
-      counter.delete(tx);
-      this.empty = true;
+      if (!this.empty) {
+         this.empty = true;
+         // this could be null on testcases
+         if (counter != null) {
+            counter.delete(tx);
+         }
+      }
    }
 
    /**
