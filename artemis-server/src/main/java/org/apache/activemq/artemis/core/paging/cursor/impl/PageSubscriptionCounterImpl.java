@@ -92,7 +92,7 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       }
       super.markRebuilding();
       recordedSizeUpdater.set(this, persistentSizeUpdater.get(this));
-      recordedValueUpdater.set(this, recordedValueUpdater.get(this));
+      recordedValueUpdater.set(this, valueUpdater.get(this));
       try {
          reset();
       } catch (Exception e) {
