@@ -355,7 +355,15 @@ public class PageCursorProviderImpl implements PageCursorProvider {
          }
       }
 
-      for (long i = firstPage; i <= minPage; i++) {
+      // minPage stops at the last page a cursor has a record for, so pages after it that hold no messages (for example
+      // empty pages created on restart) would never be depaged. Walk up to the page before the one being written.
+      // Beyond minPage only empty page files are removed: checkPageCompletion treats a page with no cursor record as
+      // complete when the subscription is marked empty, so that check alone is not enough to protect unread messages.
+      final long lastPage = pagingStore.getCurrentWritingPage() - 1;
+      for (long i = firstPage; i <= lastPage; i++) {
+         if (i > minPage && pagingStore.checkPageFileExists(i)) {
+            break;
+         }
          if (!checkPageCompletion(cursorList, i)) {
             break;
          }
