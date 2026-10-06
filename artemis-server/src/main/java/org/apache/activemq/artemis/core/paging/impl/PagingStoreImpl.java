@@ -845,8 +845,8 @@ public class PagingStoreImpl implements PagingStore {
             paging = false;
             ActiveMQServerLogger.LOGGER.pageStoreStop(storeName, getPageInfo());
             pageLimitReleased();
+            this.cursorProvider.onPageModeCleared();
          }
-         this.cursorProvider.onPageModeCleared();
          if (purgePageFolder.get()) {
             execute(this::purgeFolder);
          }
