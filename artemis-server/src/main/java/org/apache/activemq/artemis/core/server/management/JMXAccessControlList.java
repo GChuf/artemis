@@ -113,6 +113,19 @@ public class JMXAccessControlList {
                bucket.exactMatches().put(rawPattern, entry);
             }
          }
+
+         // merge wildcard patterns into every property bucket
+         Bucket wildcardBucket = grouped.get(WILDCARD);
+         if (wildcardBucket != null) {
+            for (Map.Entry<String, Bucket> groupedEntry : grouped.entrySet()) {
+               if (!groupedEntry.getKey().equals(WILDCARD)) {
+                  List<AccessEntry> regexPatterns = groupedEntry.getValue().regexPatterns();
+                  regexPatterns.addAll(wildcardBucket.regexPatterns());
+                  // sort the regex patterns by key length and then alphabetically
+                  regexPatterns.sort(Comparator.comparing((AccessEntry accessEntry) -> accessEntry.access().getKey(), keyComparator));
+               }
+            }
+         }
          return grouped;
       });
 
@@ -130,7 +143,7 @@ public class JMXAccessControlList {
 
          for (Map.Entry<String, String> entry : keyPropertyList.entrySet()) {
             String propKey = entry.getKey();
-            Bucket bucket = bucketedMap.get(propKey);
+            Bucket bucket = bucketedMap.getOrDefault(propKey, bucketedMap.get(WILDCARD));
 
             String key = normalizeKey(propKey + "=" + entry.getValue());
             if (bucket != null) {
@@ -142,16 +155,6 @@ public class JMXAccessControlList {
 
                // regex matching
                for (AccessEntry regexEntry : bucket.regexPatterns()) {
-                  if (regexEntry.access().getKeyPattern().matcher(key).matches()) {
-                     return regexEntry.access().authorizeUserForMethod(methodName, userRoles);
-                  }
-               }
-            }
-
-            // fallback for wildcards in key
-            Bucket wildcardBucket = bucketedMap.get("*");
-            if (wildcardBucket != null) {
-               for (AccessEntry regexEntry : wildcardBucket.regexPatterns()) {
                   if (regexEntry.access().getKeyPattern().matcher(key).matches()) {
                      return regexEntry.access().authorizeUserForMethod(methodName, userRoles);
                   }
