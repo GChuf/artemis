@@ -134,16 +134,20 @@ The systemd service file generated for the broker sets both, so the broker logs 
 
 [,ini]
 ----
-Environment="ARTEMIS_CONSOLE_PATTERN=%%-5level [%%logger] %%msg%%n"
+Environment="ARTEMIS_CONSOLE_PATTERN=<%%level{FATAL=2, ERROR=3, WARN=4, INFO=6, DEBUG=7, TRACE=7}>%%-5level [%%logger] %%msg%%n"
 Environment=ARTEMIS_FILE_LEVEL=OFF
 ----
 
 Note that `%` must be escaped as `%%` in systemd unit files.
+The leading `<N>` is a syslog priority prefix: journald strips it from the message and stores it as the entry's priority, so commands like `journalctl -u artemis -p warning` show only warnings and errors.
+Only the first line of a multi-line message (e.g. a stack trace) carries the priority.
+
 Since the file appenders use `createOnDemand`, `log/artemis.log` is not created at all when nothing is written to it.
 Use `journalctl -u artemis` or similar commands to read the logs.
 Audit logging, when enabled, is still written to `log/audit.log`.
 
-NOTE: Instances upgraded from an earlier version keep their existing `log4j2.properties`, which does not read these variables.
+When upgrading an instance, `artemis upgrade` backs up the existing `etc/log4j2.properties` to the `old-config-bkp.N/etc` folder and adds these settings to it.
+Customized logger levels and appenders are kept; a customized console pattern is left untouched and therefore does not read `ARTEMIS_CONSOLE_PATTERN`.
 
 == Configuring Broker Audit Logging
 

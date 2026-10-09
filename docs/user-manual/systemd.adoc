@@ -17,6 +17,18 @@ You might want to tweak or add additional configuration inside the service file,
 
 You can read more about systemd https://systemd.io/[here].
 
+== Logging
+
+When running as a service, the broker logs to journald only. Read the logs with `journalctl -u artemis`, or only warnings and errors with `journalctl -u artemis -p warning`.
+
+[WARNING]
+====
+* With journald's default `Storage=auto`, logs are only kept in memory, and lost on reboot, unless the `/var/log/journal` directory exists.
+Create it, or set `Storage=persistent` in `/etc/systemd/journald.conf`, to keep logs across reboots.
+* journald rate-limits each service (by default 10000 messages per 30 seconds) and drops messages above the limit.
+If you enable `DEBUG`/`TRACE` or audit logging, raise the limit with `LogRateLimitIntervalSec=` and `LogRateLimitBurst=` in the service file.
+====
+
 == Enabling systemd service
 
 You can now use `systemctl` commands to start/stop/restart the service, named `artemisTest`:

@@ -33,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 import org.apache.activemq.artemis.util.JVMArgumentParser;
@@ -260,6 +261,7 @@ public class Upgrade extends InstallAbstract {
       }
 
       upgradeLogging(context, etcFolder, etcBkp);
+      upgradeLog4j2(context, etcFolder, tmp, etcBkp);
 
       context.out.println();
       context.out.println("*******************************************************************************************************************************");
@@ -454,6 +456,37 @@ public class Upgrade extends InstallAbstract {
             copy(inputStream, outputStream);
          }
       }
+   }
+
+   // patch the settings used by the systemd service into an existing log4j2.properties, keeping any user customizations
+   private void upgradeLog4j2(ActionContext context, File etcFolder, File tmp, File etcBkp) throws Exception {
+      final File log4j2 = new File(etcFolder, Create.ETC_LOG4J2_PROPERTIES);
+      if (!log4j2.exists()) {
+         return;
+      }
+
+      try (Stream<String> lines = Files.lines(log4j2.toPath())) {
+         if (lines.anyMatch(line -> line.contains("ARTEMIS_CONSOLE_PATTERN") || line.contains("ARTEMIS_FILE_LEVEL"))) {
+            return; // already upgraded
+         }
+      }
+
+      final File log4j2Tmp = new File(tmp, Create.ETC_LOG4J2_PROPERTIES);
+      final File log4j2Bkp = new File(etcBkp, Create.ETC_LOG4J2_PROPERTIES);
+      final String nl = System.lineSeparator();
+
+      Files.copy(log4j2.toPath(), log4j2Tmp.toPath());
+      replaceLines(context, log4j2Tmp, log4j2, log4j2Bkp,
+         "^\\s*appender\\.console\\.name\\s*=\\s*console\\s*$",
+            "$0" + nl + "appender.console.direct=true",
+         "^\\s*appender\\.console\\.layout\\.pattern\\s*=\\s*%d %-5level \\[%logger\\] %msg%n\\s*$",
+            Matcher.quoteReplacement("appender.console.layout.pattern=${env:ARTEMIS_CONSOLE_PATTERN:-%d %-5level [%logger] %msg%n}"),
+         "^\\s*appender\\.log_file\\.name\\s*=\\s*log_file\\s*$",
+            "$0" + nl + "appender.log_file.createOnDemand = true" +
+            nl + "appender.log_file.filter.threshold.type = ThresholdFilter" +
+            nl + Matcher.quoteReplacement("appender.log_file.filter.threshold.level = ${env:ARTEMIS_FILE_LEVEL:-INFO}"),
+         "^\\s*appender\\.audit_log_file\\.name\\s*=\\s*audit_log_file\\s*$",
+            "$0" + nl + "appender.audit_log_file.createOnDemand = true");
    }
 
    protected File findBackup(ActionContext context) throws IOException {
