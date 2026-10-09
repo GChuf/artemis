@@ -24,7 +24,7 @@ Wants=network-online.target
 Type=exec
 Environment=${environment}
 Environment="ARTEMIS_CONSOLE_PATTERN=%%-5level [%%logger] %%msg%%n"
-Environment=ARTEMIS_FILE_LEVEL=OFF
+Environment="ARTEMIS_FILE_LEVEL=OFF"
 ExecStart=${exec-start}
 TimeoutStopSec=60s
 SuccessExitStatus=143
