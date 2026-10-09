@@ -240,4 +240,15 @@ public class JMXAccessControlListTest {
       assertTrue(controlList.authorizeUserForMethod(new ObjectName("org.myDomain:foo=bar"), "listSomething", Set.of("admin")));
    }
 
+   @Test
+   public void testAuthorize_LongerWildcardInKeyNameTakesPriority() throws MalformedObjectNameException {
+      // longer wildcard matches should have higher priority than the shorter wildcard matches.
+      JMXAccessControlList controlList = new JMXAccessControlList();
+      controlList.addToRoleAccess("org.myDomain", "type=*", "listSomething", "roleA");
+      controlList.addToRoleAccess("org.myDomain", "*=verylongvalue", "listSomething", "roleB");
+
+      assertTrue(controlList.authorizeUserForMethod(new ObjectName("org.myDomain:type=verylongvalue"), "listSomething", Set.of("roleB")));
+      assertFalse(controlList.authorizeUserForMethod(new ObjectName("org.myDomain:type=verylongvalue"), "listSomething", Set.of("roleA")));
+   }
+
 }
