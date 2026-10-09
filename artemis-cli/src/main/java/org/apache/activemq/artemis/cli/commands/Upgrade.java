@@ -252,7 +252,6 @@ public class Upgrade extends InstallAbstract {
       if (!systemdService.exists()) {
          final String instancePath = directory.getCanonicalPath();
          final Map<String, String> serviceFilters = new LinkedHashMap<>();
-         serviceFilters.put("${java-args-append}", "JAVA_ARGS_APPEND=-Dartemis.console.level=OFF");
          serviceFilters.put("${environment}", "ARTEMIS_INSTANCE=" + instancePath);
          serviceFilters.put("${exec-start}", instancePath + "/bin/artemis run");
 

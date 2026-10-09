@@ -21,8 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -583,8 +581,6 @@ public class Create extends InstallAbstract {
    public void generateSystemdService(File etcFolder) throws Exception {
       Map<String, String> serviceFilters = new LinkedHashMap<>();
 
-      // set JAVA_ARGS_APPEND: Set file output level to OFF when runing as a service. Output to console only without outputting time and date.
-      serviceFilters.put("${java-args-append}", "JAVA_ARGS_APPEND=-Dartemis.file.pattern=%-5level [%logger] %msg%n -Dartemis.file.level=OFF");
       // set the ARTEMIS_INSTANCE environment variable and the exec-start command to run the broker
       serviceFilters.put("${environment}", "ARTEMIS_INSTANCE=" + path(directory));
       serviceFilters.put("${exec-start}", path(directory) + "/bin/artemis run");
