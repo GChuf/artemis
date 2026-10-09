@@ -13,18 +13,11 @@ You might want to tweak or add additional configuration inside the service file,
 * add `Nice` to tweak niceness of the java process
 * add `Alias`
 * increase or decrease `TimeoutStopSec` and `RestartSec`
-* tweak the console log level, which is set to `OFF` to avoid the overhead of logging to both file and console
+* change `ARTEMIS_CONSOLE_PATTERN` and `ARTEMIS_FILE_LEVEL`; by default the service logs to journald only, without the date and time (see xref:logging.adoc[Logging])
 
 You can read more about systemd https://systemd.io/[here].
 
-== Enable systemd service via flags
-
-It is also possible to automate the service installation via `--enable-systemd-service` and `--systemd-service-name` flags.
-In order to do this, the broker creation script usually needs to be run with `sudo` or `root` privileges.
-
-To enable the service automatically, and to change its name (from the default `artemis`), run:
-
-`./artemis create brokername --enable-systemd-service --systemd-service-name=artemisTest`
+== Enabling systemd service
 
 You can now use `systemctl` commands to start/stop/restart the service, named `artemisTest`:
 

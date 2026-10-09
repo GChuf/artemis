@@ -125,9 +125,25 @@ appender.log_file.policies.cron.schedule = 0 0 0 * * ?
 appender.log_file.policies.cron.evaluateOnStartup = true
 ----
 
-While the default console log level is set to `INFO`, the console log level is set to `OFF` via additional java flags in the case of running Apache Artemis as a systemd service.
-This is configured in the artemis.service systemd file: `JAVA_ARGS_APPEND=-Dartemis.console.level=OFF`.
-This is to avoid the overhead of logging to both the console and the file. Any potential errors at startup will still be visible when checking the systemd service logs, by running `journalctl -u artemis` or similar commands.
+The default `log4j2.properties` reads two optional environment variables:
+
+`ARTEMIS_CONSOLE_PATTERN`:: overrides the console layout pattern (default `%d %-5level [%logger] %msg%n`).
+`ARTEMIS_FILE_LEVEL`:: sets the threshold of the `log/artemis.log` file appender (default `INFO`); `OFF` disables it.
+
+The systemd service file generated for the broker sets both, so the broker logs to journald only, without its own date and time since journald timestamps every line:
+
+[,ini]
+----
+Environment="ARTEMIS_CONSOLE_PATTERN=%%-5level [%%logger] %%msg%%n"
+Environment=ARTEMIS_FILE_LEVEL=OFF
+----
+
+Note that `%` must be escaped as `%%` in systemd unit files.
+Since the file appenders use `createOnDemand`, `log/artemis.log` is not created at all when nothing is written to it.
+Use `journalctl -u artemis` or similar commands to read the logs.
+Audit logging, when enabled, is still written to `log/audit.log`.
+
+NOTE: Instances upgraded from an earlier version keep their existing `log4j2.properties`, which does not read these variables.
 
 == Configuring Broker Audit Logging
 
