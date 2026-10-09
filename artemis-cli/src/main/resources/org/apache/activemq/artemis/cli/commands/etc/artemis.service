@@ -37,8 +37,21 @@ SendSIGKILL=no
 NotifyAccess=all
 Restart=always
 RestartSec=10
+
+#User and group with which to run the service, to avoid running as root
 #User=artemis
 #Group=artemis
+
+#Niceness parameter. Lower values mean higher CPU priority.
+#Acceptable range is from +19 to -20. Default is 0.
+#Nice=-10
+
+#IO niceness parameters.
+#IOSchedulingClass=best-effort
+#IOSchedulingPriority=2
+
+#
+#Alias=
 
 [Install]
 WantedBy=multi-user.target
