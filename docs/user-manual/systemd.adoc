@@ -31,13 +31,13 @@ If you enable `DEBUG`/`TRACE` or audit logging, raise the limit with `LogRateLim
 
 == Enabling systemd service
 
-You can now use `systemctl` commands to start/stop/restart the service, named `artemisTest`:
+You can now use `systemctl` commands to start/stop/restart the service, named `artemis`:
 
 [,console]
 ----
-systemctl start   artemisTest
-systemctl stop    artemisTest
-systemctl restart artemisTest
+systemctl start   artemis
+systemctl stop    artemis
+systemctl restart artemis
 ----
 
 You can read the systemctl man page https://man7.org/linux/man-pages/man1/systemctl.1.html[here].
