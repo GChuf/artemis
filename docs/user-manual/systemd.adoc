@@ -13,7 +13,7 @@ You might want to tweak or add additional configuration inside the service file,
 * add `Nice` to tweak niceness of the java process
 * add `Alias`
 * increase or decrease `TimeoutStopSec` and `RestartSec`
-* change `ARTEMIS_CONSOLE_PATTERN` and `ARTEMIS_FILE_LEVEL`; by default the service logs to journald only, without the date and time (see xref:logging.adoc[Logging])
+* change `ARTEMIS_CONSOLE_PATTERN` and `ARTEMIS_FILE_LEVEL`; by default the service logs to journald only. (See xref:logging.adoc[Logging])
 
 You can read more about systemd https://systemd.io/[here].
 
