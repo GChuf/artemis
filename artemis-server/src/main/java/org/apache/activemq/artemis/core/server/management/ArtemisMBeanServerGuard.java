@@ -189,6 +189,9 @@ public class ArtemisMBeanServerGuard implements GuardInvocationHandler {
       }
       Set<String> currentUserRoles = getCurrentUserRoles();
       if (currentUserRoles.isEmpty()) {
+         if (AuditLogger.isResourceLoggingEnabled()) {
+            AuditLogger.objectInvokedFailure(objectName, operationName);
+         }
          throw new SecurityException("User not authorized to access operation: " + operationName);
       }
       boolean authorized = authorizeUserForMethod(objectName, operationName, currentUserRoles);
