@@ -66,10 +66,10 @@ image::images/artemis_text_black_small.png[align="center"]
 
 * xref:core-bridges.adoc#core-bridges[Core Bridges]
 * xref:clusters.adoc#clusters[Clustering]
-* xref:lock-coordination.adoc#lock-coordination[Lock Coordination / HA with Mirroring]
+* xref:lock-coordination.adoc#lock-coordination-ha-with-mirroring[Lock Coordination / HA with Mirroring]
 * xref:ha.adoc#high-availability-and-failover[High Availability & Failover]
 ** xref:network-isolation.adoc#network-isolation-split-brain[Network Isolation]
-** xref:restart-sequence.adoc#restart-sequence[Restart Sequence]
+** xref:restart-sequence.adoc#restart-sequence-if-using-journal-replication[Restart Sequence]
 ** xref:activation-tools.adoc#activation-sequence-tools[Activation Tools]
 * xref:amqp-broker-connections.adoc#broker-connections[AMQP Broker Connections]
 ** xref:amqp-broker-connections.adoc#amqp-server-connections[Server Connections]
@@ -89,9 +89,9 @@ image::images/artemis_text_black_small.png[align="center"]
 == Security
 
 * xref:threat-model.adoc#threat-model[Threat Model]
-* xref:security.adoc#authentication-authorization[Authentication & Authorization]
+* xref:security.adoc#authentication-authorization[Authentication & Authorisation]
 * xref:masking-passwords.adoc#masking-passwords[Masking Passwords]
-* xref:resource-limits.adoc#resource-limits[Limiting Resource Utilization]
+* xref:resource-limits.adoc#resource-limits[Limiting Resource Utilisation]
 
 == Performance
 
@@ -117,6 +117,7 @@ image::images/artemis_text_black_small.png[align="center"]
 
 == Data Storage
 * xref:persistence.adoc#persistence[Persistence]
+* xref:data-retention.adoc#data-retention[Data Retention]
 * xref:data-tools.adoc#data-tools[Data Tools]
 * xref:libaio.adoc#libaio-native-libraries[Libaio Native Libraries]
 
@@ -126,7 +127,8 @@ image::images/artemis_text_black_small.png[align="center"]
 * xref:configuring-transports.adoc#configuring-the-transport[Configuring Network Transports]
 * xref:flow-control.adoc#flow-control[Flow Control for Remote Core Clients]
 
-== Customizing Broker Behavior
+[#customizing-broker-behavior]
+== Customising Broker Behaviour
 
 * xref:broker-plugins.adoc#plugin-support[Broker Plugins]
 * xref:intercepting-operations.adoc#intercepting-operations[Intercepting Network Operations]

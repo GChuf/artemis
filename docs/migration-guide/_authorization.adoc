@@ -1,7 +1,8 @@
-= Authorization
+[#authorization]
+= Authorisation
 
-To complete security migration, we need to deal with authorization policies as well.
-In ActiveMQ, authorization is specified using the appropriate broker plugin in `conf/activemq.xml`, like
+To complete security migration, we need to deal with authorisation policies as well.
+In ActiveMQ, authorisation is specified using the appropriate broker plugin in `conf/activemq.xml`, like
 
 [,xml]
 ----
@@ -129,4 +130,4 @@ The following table shows the wildcard syntax difference.
 
 Basically, by default only the _any word_ character is different, so that's why we used `GUESTS.#` in {project-name-short} example instead of ActiveMQ's `GUESTS.>` syntax.
 
-Powered with this knowledge, you should be able to transform your current ActiveMQ authorization policies to {project-name-short}.
+Powered with this knowledge, you should be able to transform your current ActiveMQ authorisation policies to {project-name-short}.

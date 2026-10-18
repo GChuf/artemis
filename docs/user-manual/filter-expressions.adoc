@@ -7,7 +7,7 @@
 
 It is the same as the syntax used for JMS & Jakarta Messaging selectors, but the predefined identifiers are different.
 For documentation on JMS selector syntax please see the JavaDoc for https://docs.oracle.com/javaee/7/api/javax/jms/Message.html[`javax.jms.Message`].
-For the corresponding Jakarta Messaging JavaDoc see https://jakarta.ee/specifications/messaging/3.0/apidocs/jakarta/jms/message[`jakarta.jms.Message`].
+For the corresponding Jakarta Messaging JavaDoc see https://jakarta.ee/specifications/messaging/3.0/apidocs/jakarta/jms/Message.html[`jakarta.jms.Message`].
 
 Filter expressions are used in several places:
 
@@ -110,7 +110,7 @@ The XML parser used for XPath is configured with these default "features":
 * `+http://xml.org/sax/features/external-parameter-entities+`: `false`
 * `+http://apache.org/xml/features/disallow-doctype-decl+`: `true`
 
-However, in order to deal with any implementation-specific issues the features can be customized by using system properties starting with the `org.apache.activemq.documentBuilderFactory.feature:` prefix, e.g.:
+However, in order to deal with any implementation-specific issues the features can be customised by using system properties starting with the `org.apache.activemq.documentBuilderFactory.feature:` prefix, e.g.:
 
 ----
 -Dorg.apache.activemq.documentBuilderFactory.feature:http://xml.org/sax/features/external-general-entities=true

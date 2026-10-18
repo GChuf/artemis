@@ -6,7 +6,7 @@ The whole idea of this step is to keep installation and configuration of the bro
 
 So in order to start with {project-name-short} you need execute something like this
 
-$ bin/artemis create --user admin --password admin --role admins --allow-anonymous true /opt/artemis
+$ bin/artemis create --user admin --password admin --role admins --allow-anonymous /opt/artemis
 
 No matter where you installed your broker binaries, the broker instance will be now in `/opt/artemis` directory.
 The content of this directory will be familiar to every ActiveMQ user:
@@ -28,7 +28,7 @@ The `etc/artemis.profile` and `etc/artemis-utility.profile` files are similar to
 In the `etc/artemis.profile` you can configure environment variables for the broker started by executing the `run` command, mostly regular JVM args related to SSL context, debugging, etc.
 In the `etc/artemis-utility.profile` file you can configure environment variables for all CLI commands other than run, mostly regular JVM args related to SSL context, debugging, etc.
 
-There's not much difference in logging configuration between two brokers, so anyone familiar with Java logging systems in general will find herself at home here.
+There's not much difference in logging configuration between two brokers, so anyone familiar with Java logging systems in general will feel at home here.
 The `etc/log4j2.properties` file is where it's all configured for the broker.
 The `etc/log4j2-utility.properties` file is where it's all configured for all CLI commands other than run.
 

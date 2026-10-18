@@ -34,7 +34,7 @@ This format follows the recommendation from the https://git-scm.com/book/en/v2/D
 == Configuring Git repositories
 
 Aside from the traditional `origin` and `upstream` repositories committers will need an additional reference for the canonical Apache git repository where they will be merging and pushing pull-requests.
-For the purposes of this document, let's assume these ref/repo associations already exist as described in the xref:code.adoc[Working with the Code] section:
+For the purposes of this document, let's assume these ref/repo associations already exist as described in the xref:_code.adoc#working-with-the-code[Working with the Code] section:
 
 * `origin` : https://github.com/(your-user-name)/artemis.git
 * `upstream` : https://github.com/apache/artemis
@@ -162,7 +162,7 @@ It is recommended that you work away from main for two reasons:
 . When you send a PR, your PR branch could be rebased during the process and your commit ID changed.
 You might get unexpected conflicts while rebasing your old branch.
 . You could end up pushing things upstream that you didn't intend to.
-Minimize your risks by working on a branch away from main.
+Minimise your risks by working on a branch away from main.
 
 == Notes
 

@@ -68,7 +68,7 @@ In this scenario any message published on an address on one of the brokers will 
 
 image::images/amqp-federation-address-mesh.png[]
 
-Because this configuration now creates a loop with more than two brokers the configuration must add a `max-hops` value to ensure that the messages sent to one of the brokers does not propagate beyond the two closest neighbors in the loop otherwise the messages would loop forever amongst the three brokers.
+Because this configuration now creates a loop with more than two brokers the configuration must add a `max-hops` value to ensure that the messages sent to one of the brokers does not propagate beyond the two closest neighbours in the loop otherwise the messages would loop forever amongst the three brokers.
 
 [,xml]
 ----
@@ -90,17 +90,17 @@ Because this configuration now creates a loop with more than two brokers the con
 </broker-connections>
 ----
 
-By configuring each of the brokers with a `max-hops` value as above the message will be stopped from moving beyond the neighboring broker that receives it and no message looping occurs.
+By configuring each of the brokers with a `max-hops` value as above the message will be stopped from moving beyond the neighbouring broker that receives it and no message looping occurs.
 
 === Address Federation Ring
 
 Another less common configuration is a good demonstration of a case where using the `max-hops` settings is critical for preventing an infinite loop of message federation.
-This is also known as a ring and involves creating an address federation configuration that connects to a neighboring broker amongst three or more broker instances.
+This is also known as a ring and involves creating an address federation configuration that connects to a neighbouring broker amongst three or more broker instances.
 In this scenario the configuration must set a `max-hops` value of N-1 where N is the number of brokers in the ring.
 
 image::images/amqp-federation-address-ring.png[]
 
-To achieve this configuration each broker would need to add a broker connection for its neighbor as follows.
+To achieve this configuration each broker would need to add a broker connection for its neighbour as follows.
 Note the `max-hops=4` in this case since there are five brokers in the diagram, this ensures a federated message never cross back through the originating broker and thus cannot create an message loop.
 
 [,xml]
@@ -120,7 +120,7 @@ Note the `max-hops=4` in this case since there are five brokers in the diagram, 
 === Hub and Spoke Address Federation
 
 Another configuration that allows consumers on brokers to read messages produced on any other broker peer is a hub and spoke configuration.
-In this configuration spoke brokers connect to a central hub and message traffic between the spokes passes through that hub broker which centralizes communication and allows the spokes to only need to know about one other broker, the hub broker.
+In this configuration spoke brokers connect to a central hub and message traffic between the spokes passes through that hub broker which centralises communication and allows the spokes to only need to know about one other broker, the hub broker.
 When demand exists on any of the spokes they create a federation consumer link to the hub, this in turn causes the hub to create federation consumer links to each of the spokes where the address exists regardless of the presence of a producer on those spokes in order to ensure that when a producer arrives the messages that it sends reach the other spokes with attached consumers (this is shown on diagram at `spoke 3`).
 
 image::images/amqp-federation-address-hub-spoke.png[]

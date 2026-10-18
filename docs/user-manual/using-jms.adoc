@@ -57,7 +57,7 @@ In this instance we have created a connection factory that is bound to `invmConn
 
 In certain situations there could be multiple server instances running within a particular JVM.
 In that situation each server would typically have an InVM acceptor with a unique server-ID.
-A client using JMS and JNDI can account for this by specifying a connction factory for each server, like so:
+A client using JMS and JNDI can account for this by specifying a connection factory for each server, like so:
 
 [,properties]
 ----
@@ -90,7 +90,7 @@ Whether there is one or many host:port combinations in the URL they are treated 
 
 The `udp` scheme is also supported which should use a host:port combination that matches the `group-address` and `group-port` from the corresponding `broadcast-group` configured on the broker(s).
 
-Each scheme has a specific set of properties which can be set using the traditional URL query string format (e.g. `scheme://host:port?key1=value1&key2=value2`) to customize the underlying transport mechanism.
+Each scheme has a specific set of properties which can be set using the traditional URL query string format (e.g. `scheme://host:port?key1=value1&key2=value2`) to customise the underlying transport mechanism.
 For example, if a client wanted to connect to a remote server using TCP and SSL it would create a connection factory like so, `tcp://remote-host:5445?ssl-enabled=true`.
 
 All the properties available for the `tcp` scheme are described in xref:configuring-transports.adoc#configuring-the-netty-transport[the documentation regarding the Netty transport].
@@ -200,7 +200,7 @@ Note, the text that follows `dynamicQueues/` or `dynamicTopics/` must correspond
 Here's the code for the example:
 
 First we'll create a JNDI initial context from which to lookup our JMS objects.
-If the above properties are set in `jndi.properties` and it is on the classpath then any new, empty `InitialContext` will be initialized using those properties:
+If the above properties are set in `jndi.properties` and it is on the classpath then any new, empty `InitialContext` will be initialised using those properties:
 
 [,java]
 ----

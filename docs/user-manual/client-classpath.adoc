@@ -46,7 +46,7 @@ For more information of the clients individual dependencies, see:
 
 == Repackaged '-all' clients
 
-Even though it is highly recommend to use the maven dependencies, in cases this isnt a possibility and neither is using the individual dependencies as detailed above then the all-inclusive repackaged jar could be used as an alternative.
+Even though it is highly recommended to use the maven dependencies, in cases this isn't a possibility and neither is using the individual dependencies as detailed above then the all-inclusive repackaged jar could be used as an alternative.
 
 These jars are available at Maven Central:
 
@@ -58,4 +58,4 @@ For Jakarta Messaging add the `artemis-jakarta-client-all` jar instead.
 
 WARNING: These repackaged jars include all the xref:client-classpath-jms.adoc#artemis-jms-client-dependencies[client's dependencies].
 Be careful with mixing other components jars in your application as they may clash with each other.
-Note also that the '-all' clients cant be embedded in the same JVM as the broker, for that you must use `artemis-jms-client` or `artemis-jakarta-client` as appropriate.
+Note also that the '-all' clients can't be embedded in the same JVM as the broker, for that you must use `artemis-jms-client` or `artemis-jakarta-client` as appropriate.

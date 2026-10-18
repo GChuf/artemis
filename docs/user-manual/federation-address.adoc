@@ -127,7 +127,7 @@ Both upstreams are configured with the same address-policy `news-address-federat
 
 *It is important that federation name is globally unique.*
 
-==== address-policy parameters
+=== address-policy parameters
 
 name::
 All address-policies must have a unique name in the server.
@@ -165,7 +165,7 @@ Default is `false`.
 
 NOTE: `address-policy` and `queue-policy` elements can be defined in the same federation and be linked to the same upstream.
 
-==== transformer parameters
+=== transformer parameters
 
 name::
 Unique name in the server used to reference the transformer in `address-policy` and `queue-policy`.
@@ -178,7 +178,7 @@ This gives you the opportunity to transform the message's header or body before 
 
 property:: holds key-value pairs that can be used to configure the transformer.
 
-==== Upstream parameters
+=== Upstream parameters
 Tag `upstream` defines the upstream broker connection and the policies to use.
 
 name::

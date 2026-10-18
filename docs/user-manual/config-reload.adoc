@@ -185,7 +185,7 @@ Below lists the effects of adding, deleting and updating of an element/attribute
 | `<redelivery-delay>`
 | X (no more than one can be present)
 | The configured redelivery-delay will be removed from running broker after reloading
-| The redelivery-delay for the matchin address will be updated after reloading.
+| The redelivery-delay for the matching address will be updated after reloading.
 
 | `<redelivery-delay-multiplier>`
 | X (no more than one can be present)
@@ -463,7 +463,7 @@ Below lists the effects of adding, deleting and updating of an element/attribute
 | attribute `name`
 | N/A
 | X
-| A queue with new name will be deployed and the queue with old name will be updeployed after reloading (see Note above).
+| A queue with new name will be deployed and the queue with old name will be undeployed after reloading (see Note above).
 
 | attribute `max-consumers`
 | If max-consumers > current consumers max-consumers will update on reload

@@ -109,6 +109,7 @@ include::undelivered-messages.adoc[leveloffset=1]
 //== Data Storage
 
 include::persistence.adoc[leveloffset=1]
+include::data-retention.adoc[leveloffset=1]
 include::data-tools.adoc[leveloffset=1]
 include::libaio.adoc[leveloffset=1]
 

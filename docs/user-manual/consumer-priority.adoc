@@ -16,7 +16,7 @@ Where a consumer does not set, the default priority *0* is used.
 
 === JMS Example
 
-When using the JMS Client you can set the priority to be used, by using address parameters when  creating the destination used by the consumer.
+When using the JMS Client you can set the priority to be used, by using address parameters when creating the destination used by the consumer.
 
 [,java]
 ----

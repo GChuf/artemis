@@ -31,7 +31,7 @@ Without a delayed redelivery, the system can get into a "thrashing" state, with 
 Two Journal update records are stored every time a redelivery happens.
 One for the number of deliveries that happened, and one in case a scheduled redelivery is being used.
 
-It is recommended to keep max-redelivery-records=1 in situations where you are operating with very short redelivery delays as you will be creating unecessary records on the journal.
+It is recommended to keep max-redelivery-records=1 in situations where you are operating with very short redelivery delays as you will be creating unnecessary records on the journal.
 
 === Configuring Delayed Redelivery
 
@@ -201,7 +201,7 @@ In these cases, updating the delivery count persistently before delivering the m
 However, if the delivery count is not updated persistently before the message delivery happens, in the event of a server crash, messages might have been delivered but that will not have been reflected in the delivery count.
 During the recovery phase, the server will not have knowledge of that and will deliver the message with `redelivered` set to `false` while it should be `true`.
 
-As this behavior breaks strict JMS semantics, the broker can persist the delivery count before message delivery, but this feature is disabled by default due to performance implications.
+As this behaviour breaks strict JMS semantics, the broker can persist the delivery count before message delivery, but this feature is disabled by default due to performance implications.
 
 To enable it, set `persist-delivery-count-before-delivery` to `true` in `broker.xml`:
 

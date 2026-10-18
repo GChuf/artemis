@@ -60,7 +60,7 @@ An example of the file looks like
 | karaf
 
 | rolePrincipalClass
-| Class name used for role authorization purposes
+| Class name used for role authorisation purposes
 | org.apache.karaf.jaas.boot.principal.RolePrincipal
 |===
 

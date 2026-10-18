@@ -33,10 +33,10 @@ Example:
 ./artemis data print --journal ../data/history
 ----
 
-==== Paging and Large Messages
+== Paging and Large Messages
 When retention is enabled, paging and large messages are also stored on the retention folder for replaying, so replay will also work for both paged and large messages.
 
-==== Non Persistent Messages
+== Non Persistent Messages
 Non persistent messages are never stored anywhere in the broker. If you intend to retain data your producers should be using Durable messages.
 
 == Recovering data from retention
@@ -50,10 +50,10 @@ The broker will scan the set of files accordingly to the parameters you passed a
 === CLI recover operation
 
 The CLI recover operation is intended as a low level operation, where data is read and recovered directly into a set of journal files.
-Notice uou should never manipulate journal files that are being used by an active broker as that could risk the integrity of your data files and running broker.
+Notice you should never manipulate journal files that are being used by an active broker as that could risk the integrity of your data files and running broker.
 
 [,shell]
 ----
-./artemis data recovery --journal ../data/history --target ../data/recovered --large-messages ../data/large-messages
+./artemis data recover --journal ../data/history --target ../data/recovered --large-messages ../data/large-messages
 ----
 

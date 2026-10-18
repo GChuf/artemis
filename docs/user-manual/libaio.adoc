@@ -89,7 +89,7 @@ To perform this installation on RHEL or Fedora, you can simply type this at a co
 
 Or on Debian systems:
 
- sudo apt-get install libtool gcc-g++ gcc libaio libaio- cmake
+ sudo apt-get install libtool g++ gcc libaio-dev cmake
 
 [NOTE]
 ====

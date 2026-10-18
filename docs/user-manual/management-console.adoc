@@ -55,7 +55,7 @@ INFO  [org.apache.activemq.artemis] AMQ241004: Artemis Console available at http
 ----
 
 The web console is detected by inspecting the value of the `<display-name>` tag in the war file's `WEB-INF/web.xml` descriptor.
-By default it looks for `hawtio`.
+By default it looks for `Artemis Console`.
 However, if this value is changed for any reason the broker can look for this new value by setting the following system property
 
 ----

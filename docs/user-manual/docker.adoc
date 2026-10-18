@@ -83,11 +83,12 @@ $ ./prepare-docker.sh --from-release --artemis-version <version>
 This will copy all the files necessary to build any of the pre-configured Docker images and provide you with additional instructions.
 Follow these instructions to finish building the image you want based on one of the provided Docker files or even one of your own.
 
-=== Customizing the Image
+[#customizing-the-image]
+=== Customising the Image
 
 ==== Environment Variables
 
-Environment variables determine the options configured for the `artemis create` command when running `docker build`.
+Environment variables determine the options configured for the `artemis create` command when the container runs for the first time.
 The available options are:
 
 `ARTEMIS_USER`::
@@ -107,7 +108,7 @@ The combination of the above environment variables results in the `docker-run.sh
 
 [,console]
 ----
-${ARTEMIS_HOME}/bin/artemis create --user ${ARTEMIS_USER} --password ${ARTEMIS_PASSWORD} --silent ${LOGIN_OPTION} ${EXTRA_ARGS}
+${ARTEMIS_HOME}/bin/artemis create --user ${ARTEMIS_USER} --password ${ARTEMIS_PASSWORD} --silent ${LOGIN_OPTION} ${EXTRA_ARGS} .
 ----
 
 Note: `LOGIN_OPTION` is either `--allow-anonymous` or `--require-login` depending on the value of `ANONYMOUS_LOGIN`.
@@ -131,7 +132,7 @@ be saved and reused on each run.
 
 ==== Overriding files in `etc` folder
 
-You can use customized configuration for the broker instance by replacing the files residing in the `etc` folder with the custom ones, e.g. `broker.xml` or `artemis.profile`.
+You can use customised configuration for the broker instance by replacing the files residing in the `etc` folder with the custom ones, e.g. `broker.xml` or `artemis.profile`.
 Put the replacement files inside a folder and map it as a volume to:
 ----
 /var/lib/artemis-instance/etc-override

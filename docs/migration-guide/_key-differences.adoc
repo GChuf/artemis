@@ -17,7 +17,7 @@ It consists of a message journal for fast sequential storing of messages (and ot
 It consists only of the append-only message journal.
 Because of the differences in how paging is done, there's no need for the message index.
 We'll talk more about that in a minute.
-It's important to say at this point that these two stores are not interchangeable, and data migration if needed must be carefully planed.
+It's important to say at this point that these two stores are not interchangeable, and data migration if needed must be carefully planned.
 
 What do we mean by paging differences?
 Paging is the process that happens when broker can't hold all incoming messages in its memory.

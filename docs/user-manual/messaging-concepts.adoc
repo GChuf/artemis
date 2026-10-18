@@ -16,7 +16,7 @@ Messaging systems allow you to loosely couple heterogeneous systems together, wh
 Unlike systems based on a https://en.wikipedia.org/wiki/Remote_procedure_call[Remote Procedure Call] (RPC) pattern, messaging systems primarily use an asynchronous message passing pattern with no tight relationship between requests and responses.
 Most messaging systems also support a request-response mode, but this is not a primary feature of messaging systems.
 
-Designing systems to be asynchronous from end-to-end allows you to really take advantage of your hardware resources, minimizing the number of threads blocking on IO operations, and to use your network bandwidth to its full capacity.
+Designing systems to be asynchronous from end-to-end allows you to really take advantage of your hardware resources, minimising the number of threads blocking on IO operations, and to use your network bandwidth to its full capacity.
 With an RPC approach you have to wait for a response for each request you make so are limited by the network round trip time or _latency_ of your network.
 With an asynchronous system you can pipeline flows of messages in different directions, so are limited by the network _bandwidth_ not the latency.
 This typically allows you to create much higher performance applications.
@@ -54,7 +54,7 @@ Let's also imagine there are many consumers on the order queue - each representi
 The messaging system delivers each message to one and only one of the ordering processing components.
 Different messages can be processed by different order processors, but a single order is only processed by one order processor - this ensures orders aren't processed twice.
 
-As an order processor receives a message, it fulfills the order, sends order information to the warehouse system, and then updates the order database with the order details.
+As an order processor receives a message, it fulfils the order, sends order information to the warehouse system, and then updates the order database with the order details.
 Once it's done that it acknowledges the message to tell the server that the order has been processed and can be forgotten about.
 Often the send to the warehouse system, update in database and acknowledgement will be completed in a single transaction to ensure https://en.wikipedia.org/wiki/ACID[ACID] properties.
 

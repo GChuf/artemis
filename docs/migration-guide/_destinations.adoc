@@ -1,9 +1,9 @@
 = Destinations
 
-We already talked about addressing differences between ActiveMQ and {project-name-short} in the xref:README.adoc[introduction].
+We already talked about addressing differences between ActiveMQ and {project-name-short} in the xref:_key-differences.adoc#addressing-differences[introduction].
 Now let's dig into the details and see how to configure JMS queues and topics.
-It's important to note here that both brokers are configured by default to _auto-create_ destinations requested by clients, which is preferred behavior for many use cases.
-This is configured using authorization security policies, so we will cover this topic in the later sections of this manual.
+It's important to note here that both brokers are configured by default to _auto-create_ destinations requested by clients, which is preferred behaviour for many use cases.
+This is configured using authorisation security policies, so we will cover this topic in the later sections of this manual.
 For now, let's see how you can predefine JMS queues and topics in both brokers.
 
 In ActiveMQ, destinations are pre-defined in the `<destinations>` section of the `conf/activemq.xml` configuration file.
@@ -36,7 +36,7 @@ So the corresponding {project-name-short} configuration for the ActiveMQ example
     <address name="my-topic">
         <multicast></multicast>
     </address>
-</adresses>
+</addresses>
 ----
 
 After this step we have our destinations ready in the new broker.

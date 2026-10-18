@@ -100,7 +100,7 @@ WARNING: When mixing bridges or federations with mirrors in the same configurati
 
 image:images/lock-coordination-example.png[HA with mirroring]
 
-You can find a https://github.com/apache/artemis-examples/tree/main/examples/features/broker-connection/ha-with-mirroring[working example] on how to run HA with Mirroring.
+You can find working examples of HA with mirroring for https://github.com/apache/artemis-examples/tree/main/examples/features/broker-connection/ha-with-dual-mirror[two brokers] and https://github.com/apache/artemis-examples/tree/main/examples/features/broker-connection/ha-with-mesh-mirror[three brokers in a mesh].
 
 == Configuration Options
 

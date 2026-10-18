@@ -1,4 +1,5 @@
-= Authentication & Authorization
+[#authentication-authorization]
+= Authentication & Authorisation
 :idprefix:
 :idseparator: -
 :docinfo: shared
@@ -71,7 +72,7 @@ NOTE: When security configuration is provided via system properties, it takes pr
 
 == Caching Security Operations
 
-For performance reasons both *authentication and authorization is cached* independently.
+For performance reasons both *authentication and authorisation is cached* independently.
 Entries are removed from the caches (i.e. invalidated) either when the cache reaches its maximum size in which case the least-recently used entry is removed or when an entry has been in the cache "too long".
 
 The size of the caches are controlled by the `authentication-cache-size` and `authorization-cache-size` configuration parameters.
@@ -224,7 +225,7 @@ You can do this using the fully qualified queue name (i.e. FQQN) in the `match` 
 
 [NOTE]
 ====
-You cannot limit the `send` permission using a `security-setting` on the FQQN in conjuction with another on the address as a whole, e.g.:
+You cannot limit the `send` permission using a `security-setting` on the FQQN in conjunction with another on the address as a whole, e.g.:
 [,xml]
 ----
 <security-setting match="foo">
@@ -250,7 +251,7 @@ The explicit goal of using FQQN here is to be _exact_.
 === Applying `view` and `edit` permissions to the management api
 The `view` and `edit` permissions are optionally applied to the management apis of the broker.
 
-For RBAC on JMX MBean access they can replace the authorization section in management.xml as described at xref:management.adoc#jmx-authorization-in-broker-xml[JMX authorization in broker.xml]
+For RBAC on JMX MBean access they can replace the authorisation section in management.xml as described at xref:management.adoc#jmx-authorization-in-broker-xml[JMX authorisation in broker.xml]
 
 For RBAC on management resources accessed via messages sent to the management address, the additional permissions are enabled by configuring xref:configuration-index.adoc#management-message-rbac[`management-message-rbac`] as described at xref:management.adoc#fine-grained-rbac-on-management-messages[Fine grained RBAC on management messages]
 
@@ -367,7 +368,7 @@ Specifies a value that matches the `write` permission.
 The default value is `write`.
 
 enableListener::
-Whether or not to enable a listener that will automatically receive updates made in the LDAP server and update the broker's authorization configuration in real-time.
+Whether or not to enable a listener that will automatically receive updates made in the LDAP server and update the broker's authorisation configuration in real-time.
 The default value is `true`.
 +
 Some LDAP servers (e.g. OpenLDAP) don't support the "persistent search" feature which allows the "listener" functionality to work.
@@ -672,7 +673,7 @@ include::_properties-login-module-warning.adoc[]
 
 ==== LDAPLoginModule
 
-The LDAP login module enables you to perform authentication and authorization by checking the incoming credentials against user data stored in a central X.500 directory server.
+The LDAP login module enables you to perform authentication and authorisation by checking the incoming credentials against user data stored in a central X.500 directory server.
 For systems that already have an X.500 directory server in place, this means that you can rapidly integrate the broker with the existing security database and user accounts can be managed using the X.500 system.
 It is implemented by `org.apache.activemq.artemis.spi.core.security.jaas.LDAPLoginModule`.
 
@@ -729,7 +730,7 @@ If `readTimeout` is not specified, the default is to wait for the response until
 
 userBase::
 selects a particular subtree of the DIT to search for user entries.
-The subtree is specified by a DN, which specifes the base node of the subtree.
+The subtree is specified by a DN, which specifies the base node of the subtree.
 For example, by setting this option to `ou=User,ou=ActiveMQ,ou=system`, the search for user entries is restricted to the subtree beneath the `ou=User,ou=ActiveMQ,ou=system` node.
 
 userSearchMatching::
@@ -750,13 +751,13 @@ This option is a boolean.
 `true`   indicates it will try to match any entry belonging to the subtree of the `userBase` node (maps to `javax.naming.directory.SearchControls.SUBTREE_SCOPE`).
 
 userRoleName::
-specifies the name of the multi-valued attribute of the user entry that contains a list of role names for the user (where the role names are interpreted as group names by the broker's authorization plug-in).
+specifies the name of the multi-valued attribute of the user entry that contains a list of role names for the user (where the role names are interpreted as group names by the broker's authorisation plug-in).
 If you omit this option, no role names are extracted from the user entry.
 
 roleBase::
 if you want to store role data directly in the directory server, you can use a combination of role options (`roleBase`, `roleSearchMatching`, `roleSearchSubtree`, and `roleName`) as an alternative to (or in addition to) specifying the `userRoleName` option.
 This option selects a particular subtree of the DIT to search for role/group entries.
-The subtree is specified by a DN, which specifes the base node of the subtree.
+The subtree is specified by a DN, which specifies the base node of the subtree.
 For example, by setting this option to `ou=Group,ou=ActiveMQ,ou=system`, the search for role/group entries is restricted to the subtree beneath the `ou=Group,ou=ActiveMQ,ou=system` node.
 
 roleName::
@@ -833,7 +834,7 @@ this is used only for testing or debugging;
 normally, it should be set to `false`, or omitted;
 default is `false`
 
-Any additional configuration option not recognized by the LDAP login module itself  is passed as-is to the underlying LDAP connection logic.
+Any additional configuration option not recognised by the LDAP login module itself  is passed as-is to the underlying LDAP connection logic.
 
 Add user entries under the node specified by the `userBase` option.
 When creating a new user entry in the directory, choose an object class that supports the `userPassword` attribute (for example, the `person` or `inetOrgPerson` object classes are typically suitable).
@@ -844,7 +845,7 @@ Create a new child of the `roleBase` node, where the `objectClass` of the child 
 Set the `cn` (or whatever attribute type is specified by `roleName`) of the new child node equal to the name of the role/group.
 Define a `member` attribute for each member of the role/group, setting the `member` value to the DN of the corresponding user (where the DN is specified either fully, `uid=jdoe,ou=User,ou=ActiveMQ,ou=system`, or partially, `uid=jdoe`).
 
-If you want to add roles to user entries, you would need to customize the directory schema, by adding a suitable attribute type to the user entry's object class.
+If you want to add roles to user entries, you would need to customise the directory schema, by adding a suitable attribute type to the user entry's object class.
 The chosen attribute type must be capable of handling multiple values.
 
 ===== LDAPLoginSSLSocketFactory
@@ -934,7 +935,7 @@ The path to a Certificate Revocation List (CRL) file for additional certificate 
 Default is `null`.
 
 crcOptions::
-Comma-separated list of PKIXRevocationChecker options to configure certificate revocation checking behavior when using PKIX trust manager.
+Comma-separated list of PKIXRevocationChecker options to configure certificate revocation checking behaviour when using PKIX trust manager.
 Available options include: `ONLY_END_ENTITY`, `PREFER_CRLS`, `NO_FALLBACK`, `SOFT_FAIL`.
 For further details about these options, see https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/security/cert/PKIXRevocationChecker.Option.html[PKIXRevocationChecker.Option JavaDoc].
 Default is `null`.
@@ -967,7 +968,7 @@ In this scenario, authentication is actually performed during the SSL/TLS handsh
 The role of the plug-in is as follows:
 
 * To further constrain the set of acceptable users, because only the user DNs explicitly listed in the relevant properties file are eligible to be authenticated.
-* To associate a list of groups with the received user identity, facilitating integration with the authorization feature.
+* To associate a list of groups with the received user identity, facilitating integration with the authorisation feature.
 * To require the presence of an incoming certificate (by default, the SSL/TLS layer is configured to treat the presence of a client certificate as optional).
 
 The JAAS certificate login module stores a collection of certificate DNs in a pair of flat files.
@@ -1154,7 +1155,7 @@ The simplest way to make the login configuration available to JAAS is to add the
 
 ==== KubernetesLoginModule
 
-The Kubernetes login module enables you to perform authentication and authorization by validating the `Bearer` token against the Kubernetes API.
+The Kubernetes login module enables you to perform authentication and authorisation by validating the `Bearer` token against the Kubernetes API.
 The authentication is done by submitting a `TokenReview` request that the Kubernetes cluster validates.
 The response will tell whether the user is authenticated and the associated username and roles.
 It is implemented by `org.apache.activemq.artemis.spi.core.security.jaas.KubernetesLoginModule`.
@@ -1256,13 +1257,13 @@ cached for quite a long time. This option specifies the time for which the key i
 Defaults to `3600` (seconds).
 
 metadataRetrySeconds::
-When the OIDC Login Module is initialized for the first time, OpenID Connect provider must be contacted to get information from two endpoints:
+When the OIDC Login Module is initialised for the first time, OpenID Connect provider must be contacted to get information from two endpoints:
 
 * Main metadata from `<provider-url>/.well-known/openid-configuration` - only to get the `jwks_uri` endpoint
 * Public key information from `jwks_uri`
 
 +
-When a problem occurs during first initialization, `metadataRetrySeconds` specifies the delay before the information is fetched again. +
+When a problem occurs during first initialisation, `metadataRetrySeconds` specifies the delay before the information is fetched again. +
 Defaults to `30` (seconds).
 
 tlsVersion::
@@ -1292,7 +1293,7 @@ There's no default value.
 requiredClaims::
 Comma-separated list of claim names that should be present (validation of the claim values is configured separately)
 in the JWT token. +
-Defaults to `aud, iss, sub, azp, exp` (audience, issuer, subject, authorize party, expiration date).
+Defaults to `aud, iss, sub, azp, exp` (audience, issuer, subject, authorise party, expiration date).
 
 identityPaths::
 Comma-separated _JSON paths_ that point to the fields (direct or nested) in the JWT token which contain values (strings, JSON string
@@ -1307,7 +1308,7 @@ There's no default value. For Keycloak OpenID Connect provider it could be for e
 roleMapping::
 Comma-separated list of `jwtRole=localRole` mappings. +
 This option allows configuration of possible _role mapping_ if the roles present (as configured by `rolesPaths` option) in the JWT
-token should be _translated_ into other role names. This behavior is usually specific to LDAP role mapping and is easy to avoid
+token should be _translated_ into other role names. This behaviour is usually specific to LDAP role mapping and is easy to avoid
 with JWT, but it is still an option.
 Defaults to no mapping and roles are taken directly from JWT token.
 
@@ -1568,15 +1569,15 @@ The is done through role-mapping entries in the security-settings block:
 ----
 <security-settings>
    [...]
-   <role-mapping from="cn=admins,ou=Group,ou=ActiveMQ,ou=system" to="my-admin-role"/>
-   <role-mapping from="cn=users,ou=Group,ou=ActiveMQ,ou=system" to="my-user-role"/>
+   <role-mapping from="cn=admins,ou=Group,ou=Artemis,ou=system" to="my-admin-role"/>
+   <role-mapping from="cn=users,ou=Group,ou=Artemis,ou=system" to="my-user-role"/>
 </security-settings>
 ----
 
 NOTE: Role mapping is additive.
 That means the user will keep the original role(s) as well as the newly assigned role(s).
 
-NOTE: This role mapping only affects the roles which are used to authorize queue access through the configured acceptors.
+NOTE: This role mapping only affects the roles which are used to authorise queue access through the configured acceptors.
 It can not be used to map the role required to access the web console.
 
 == SASL
@@ -1662,7 +1663,7 @@ This is configured in the `artemis.profile` via the system property `-Dhawtio.re
 * Create a key pair for the client and import the public key in a truststore file.
 +
 ----
-keytool -storetype pkcs12 -keystore client-keystore.p12 -storepass securepass -keypass securepass -alias client -genkey -keyalg "RSA" -keysize 2048 -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -ext bc=ca:false -ext eku=cA
+keytool -storetype pkcs12 -keystore client-keystore.p12 -storepass securepass -keypass securepass -alias client -genkey -keyalg "RSA" -keysize 2048 -dname "CN=Artemis Client, OU=Artemis, O=Artemis, L=AMQ, S=AMQ, C=AMQ" -ext bc=ca:false -ext eku=cA
 keytool -storetype pkcs12 -keystore client-keystore.p12 -storepass securepass -alias client -exportcert -rfc > client.crt
 keytool -storetype pkcs12 -keystore client-truststore.p12 -storepass securepass -keypass securepass -importcert -alias client-ca -file client.crt -noprompt
 ----
@@ -1685,17 +1686,17 @@ keytool -storetype pkcs12 -keystore client-truststore.p12 -storepass securepass 
 
 * Use the private key created in the previous step to set up your client, i.e. if the client app is a browser install the private key in the browser.
 
-## Controlling JMS ObjectMessage deserialization
+## Controlling JMS ObjectMessage deserialisation
 
 A simple class filtering mechanism is available so that a user can specify which packages are to be trusted and which are not.
-Objects whose classes are from trusted packages can be deserialized without problem, whereas those from 'not trusted' packages will be denied deserialization.
+Objects whose classes are from trusted packages can be deserialised without problem, whereas those from 'not trusted' packages will be denied deserialisation.
 
 A `deny list` tracks packages that are not trusted and an `allow list` tracks trusted packages.
-By default, both lists are empty, meaning _any_ serializable object is allowed to be deserialized.
-If an object whose class matches one of the packages in deny list, it is not allowed to be deserialized.
-If it matches one in the allow list the object can be deserialized.
+By default, both lists are empty, meaning _any_ serializable object is allowed to be deserialised.
+If an object whose class matches one of the packages in deny list, it is not allowed to be deserialised.
+If it matches one in the allow list the object can be deserialised.
 If a package appears in both deny list and allow list, the one in deny list takes precedence.
-If a class neither matches with deny list nor with the allow list, the class deserialization will be denied unless the allow list is empty (meaning the user doesn't specify the allow list at all).
+If a class neither matches with deny list nor with the allow list, the class deserialisation will be denied unless the allow list is empty (meaning the user doesn't specify the allow list at all).
 
 A class is considered as a "match" if:
 
@@ -1733,12 +1734,12 @@ comma separated list of entries for the allow list.
 org.apache.activemq.artemis.jms.deserialization.denylist::
 comma separated list of entries for the deny list.
 
-Once defined, all JMS object message deserialization in the VM is subject to checks against the two lists.
+Once defined, all JMS object message deserialisation in the VM is subject to checks against the two lists.
 However if you create a ConnectionFactory and set a new set of deny/allow lists on it, the new values will override the system properties.
 
 === Config for resource adapters
 
-Message beans using a JMS resource adapter to receive messages can also control their object deserialization via properly configuring relevant properties for their resource adapters.
+Message beans using a JMS resource adapter to receive messages can also control their object deserialisation via properly configuring relevant properties for their resource adapters.
 There are two properties that you can configure with connection factories in a resource adapter:
 
 deserializationDenyList::
@@ -1756,7 +1757,7 @@ For details about masking passwords in broker.xml please see the xref:masking-pa
 == Custom Security Manager
 
 The underpinnings of the broker's security implementation can be changed if so desired.
-The broker uses a component called a "security manager" to implement the actual authentication and authorization checks.
+The broker uses a component called a "security manager" to implement the actual authentication and authorisation checks.
 By default, the broker uses `org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager` to provide JAAS integration, but users can provide their own implementation of `org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager5` and configure it in `bootstrap.xml` using the `security-manager` element.
 Alternatively, a custom security manager can be configured at boot time via system properties as described in <<custom-security-manager-via-system-properties>>.
 Here is an example of configuring a custom security manager in `bootstrap.xml`:

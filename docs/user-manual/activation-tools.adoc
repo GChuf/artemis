@@ -11,7 +11,7 @@ Here is a disaster scenario built around the RI (using https://zookeeper.apache.
 
 == ZooKeeper cluster disaster
 
-A proper ZooKeeper cluster should use at least 3 nodes, but what happens if all these nodes crash loosing any activation state information required to manage replication?
+A proper ZooKeeper cluster should use at least 3 nodes, but what happens if all these nodes crash, losing any activation state information required to manage replication?
 
 During the disaster (i.e. ZooKeeper nodes are no longer reachable) the follow occurs:
 

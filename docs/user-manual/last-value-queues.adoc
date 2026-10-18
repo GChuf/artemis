@@ -137,7 +137,7 @@ This allows clients to be distributed across the cluster to leverage the computi
 
 However, if you wanted to use a last-value queue in a cluster then in order to enforce last-value semantics all messages would be required to go to a queue on a _single_ node.
 This would effectively _nullify_ the benefits of clustering.
-Also, the arrival of messages on and and redistribution of those messages from nodes other than the node where the last-value semantics would be enforced would almost certainly impact which message is considered "last."
+Also, the arrival of messages on and redistribution of those messages from nodes other than the node where the last-value semantics would be enforced would almost certainly impact which message is considered "last."
 
 For these reasons last-value queues are not supported in a traditional cluster.
 However, it would be possible to use a xref:connection-routers.adoc#connection-routers[connection router] in front of a cluster (or even a set of non-clustered brokers) to ensure all clients which need to use the same last-value queue are directed to the same node.

@@ -301,7 +301,7 @@ Setting `consumer-window-size` to `-1` means there is no flow control and the br
 Flow control can be configured at the `acceptor` as well using the `stompConsumerWindowSize` URL parameter.
 This value is `10240` (i.e. 10K) by default for clients using `client` and `client-individual` acknowledgement modes.
 It is `-1` for clients using the `auto` acknowledgement mode.
-Even if `stompConsumerWindowSize` is set on the STOMP `acceptor` it will be overriden by the value provided by individual clients using the `consumer-window-size` header on their `SUBSCRIBE` frame.
+Even if `stompConsumerWindowSize` is set on the STOMP `acceptor` it will be overridden by the value provided by individual clients using the `consumer-window-size` header on their `SUBSCRIBE` frame.
 
 [NOTE]
 ====

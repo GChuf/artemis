@@ -16,7 +16,7 @@ An example of sending a scheduled message using the JMS API is as follows.
 
 [,java]
 ----
-TextMessage message = session.createTextMessage("This is a scheduled message message which will be delivered in 5 sec.");
+TextMessage message = session.createTextMessage("This is a scheduled message which will be delivered in 5 sec.");
 message.setLongProperty("_AMQ_SCHED_DELIVERY", System.currentTimeMillis() + 5000);
 producer.send(message);
 

@@ -45,7 +45,7 @@ Disabled by default
 == Configuring a Specific Level for a Logger
 
 Sometimes it is necessary to get more detailed logs from a particular logger.
-For example, when you're trying to troublshoot an issue.
+For example, when you're trying to troubleshoot an issue.
 Say you needed to get TRACE logging from the logger `org.foo`.
 
 Then you need to configure the logging level for the `org.foo` logger to `TRACE`, e.g.:

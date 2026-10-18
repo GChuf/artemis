@@ -104,7 +104,7 @@ If the value is `BLOCK` then client message producers will block when they try a
 | -1 (disabled)
 
 | `max-read-page-bytes`
-|Maximum memory, in bytes, that can be used to read paged messages into memory per-queue. When applying this limit, the broker takes into account both messages that are currently delivering and messages that are ready to be delivered to consumers. The default value is 2 * page-size (usually being 20 MB). If consumers are slow to acknowledge messages, you can increase the default value to ensure that the memory is not consumed by messages pending acknowledgment, which can starve the broker of messages.
+|Maximum memory, in bytes, that can be used to read paged messages into memory per-queue. When applying this limit, the broker takes into account both messages that are currently delivering and messages that are ready to be delivered to consumers. The default value is 2 * page-size (usually being 20 MB). If consumers are slow to acknowledge messages, you can increase the default value to ensure that the memory is not consumed by messages pending acknowledgement, which can starve the broker of messages.
 | 2 * page-size-bytes
 
 |prefetch-page-messages
@@ -248,7 +248,7 @@ When using ASYNCIO, the default should be `3333333`.
 
 The system should keep at least one paged file in memory caching ahead reading messages.
 Also every active subscription could keep one paged file in memory.
-So, if your system has too many queues it is recommended to minimize the page-size.
+So, if your system has too many queues it is recommended to minimise the page-size.
 
 == Page Limits and Page Full Policy
 

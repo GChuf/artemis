@@ -9,7 +9,7 @@ Here are just a few reasons:
 {project-name-full} is licensed using the Apache Software License v 2.0 to minimise barriers to adoption.
 * {project-name-full} is designed with usability in mind.
 * Written in Java.
-Runs on any platform with a Java 11+ runtime, that's everything from Windows desktops to IBM mainframes.
+Runs on any platform with a Java 17+ runtime, that's everything from Windows desktops to IBM mainframes.
 * Amazing performance.
 Our ground-breaking high-performance journal provides persistent messaging performance at rates normally seen for non-persistent messaging, our non-persistent messaging performance rocks the boat too.
 * Full feature set.

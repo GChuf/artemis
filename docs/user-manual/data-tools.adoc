@@ -17,7 +17,7 @@ The following sub-commands are available when running the CLI `data` command fro
 | Export the message data using a special and independent XML format
 
 | `imp`
-| Imports the journal to a running broker using the output from expt
+| Imports the journal to a running broker using the output from `exp`
 
 | `encode`
 | shows an internal format of the journal encoded to String
@@ -58,7 +58,7 @@ For example:
 [,console]
 ----
 $ ./artemis help data print
-Usage: artemis data print [--f] [--jdbc] [--legacy] [--reclaimed] [--safe]
+Usage: artemis data print [--ascii] [--f] [--jdbc] [--reclaimed] [--safe]
                           [--skip-bindings] [--skip-journal] [--verbose]
                           [--bindings=<binding>] [--broker=<brokerConfig>]
                           [--jdbc-bindings-table-name=<jdbcBindings>]
@@ -77,6 +77,7 @@ Print data records information. WARNING: don't use while a production server is
 running.
       <configuration>        Broker Configuration URI. Default: xml:
                                null/etc/bootstrap.xml.
+      --ascii                Use ASCII table output style
       --bindings=<binding>   The folder used for bindings. Default: read from
                                broker.xml.
       --broker=<brokerConfig>
@@ -111,8 +112,6 @@ running.
       --large-messages=<largeMessges>
                              The folder used for large-messages. Default: read
                                from broker.xml.
-      --legacy               Use legacy semicolon-separated output format
-                               instead of table columns.
       --max-pages=<maxPages> Maximum number of pages to read. Default:
                                unlimited (-1).
       --output=<output>      Output name for the file.
@@ -127,11 +126,11 @@ running.
       --verbose              Print additional information.
 ----
 
-=== Understanding `print` output
+== Understanding `print` output
 
 The `print` command reads each journal (bindings and messages) and produces two sections per journal:
 
-==== Per-file records
+=== Per-file records
 
 First, the tool iterates over each physical journal file and prints every record it contains, exactly as written.
 This includes *all* operations: adds, updates, deletes, transaction commits, and rollbacks.
@@ -163,7 +162,7 @@ The *Operation* column shows the type of journal operation:
 
 This section is useful for understanding the full history of what was written to the journal, including records that were later deleted or rolled back.
 
-==== Surviving Records Summary
+=== Surviving Records Summary
 
 After all individual files have been listed, the tool loads the journal and prints only the *surviving records* -- the net result after replaying all operations.
 Delete operations cancel out their corresponding adds, rolled-back transactions are discarded, and only the records that would be loaded by the broker on startup remain:

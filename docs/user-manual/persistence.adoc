@@ -4,7 +4,7 @@
 :docinfo: shared
 
 {project-name-full} ships with two persistence options.
-The file journal which is  highly optimized for the messaging use case and gives great performance, and also the JDBC Store, which uses JDBC to connect to a database of your choice.
+The file journal which is  highly optimised for the messaging use case and gives great performance, and also the JDBC Store, which uses JDBC to connect to a database of your choice.
 
 == File Journal (Default)
 
@@ -33,7 +33,7 @@ The majority of the journal is written in Java; however, we abstract out the int
 === Java NIO
 
 The first implementation uses standard Java https://en.wikipedia.org/wiki/New_I/O[NIO] to interface with the file system.
-This provides extremely good performance and runs on any platform where there's a Java 6+ runtime.
+This provides extremely good performance and runs on any platform with a supported Java runtime (Java 17 or later).
 
 === Linux Asynchronous IO
 

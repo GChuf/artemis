@@ -347,7 +347,7 @@ Similar to the <<#interceptor,Interceptor>> example, but using MQTT interceptors
 == JAAS
 
 The `jaas` example shows you how to configure the broker to use JAAS for security.
-JAAS is leveraged to delegate user authentication and authorization to existing security infrastructure.
+JAAS is leveraged to delegate user authentication and authorisation to existing security infrastructure.
 
 == JMS Auto Closable
 

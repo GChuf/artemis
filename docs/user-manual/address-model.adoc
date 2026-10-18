@@ -10,7 +10,7 @@ Every supported messaging protocol and API defines a different set of messaging 
 * MQTT uses _topics_
 * AMQP uses generic _nodes_
 
-In order to deal the the unique semantics and use-cases for each of these the broker has a flexible and powerful address model based on the following _core_ set of resources:
+In order to deal with the unique semantics and use-cases for each of these the broker has a flexible and powerful address model based on the following _core_ set of resources:
 
 * *address*
 * *queue*
@@ -197,11 +197,11 @@ MessageConsumer consumer = session.createConsumer(q1);
 
 NOTE: The string `::` should only be used for FQQN and not in any other context in address or queue names.
 
-The examples below show how to use broker side configuration to statically configure a queue with publish subscribe behavior for shared, non-shared, durable and non-durable subscription behavior.
+The examples below show how to use broker side configuration to statically configure a queue with publish subscribe behaviour for shared, non-shared, durable and non-durable subscription behaviour.
 
 ==== Shared, Durable Subscription Queue using `max-consumers`
 
-The default behavior for queues is to not limit the number connected queue consumers.
+The default behaviour for queues is to not limit the number connected queue consumers.
 The `max-consumers` parameter of the queue element can be used to limit the number of connected consumers allowed at any one time.
 
 Open the file `etc/broker.xml` for editing.

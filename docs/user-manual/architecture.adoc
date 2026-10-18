@@ -76,5 +76,5 @@ It is possible to talk to a JMS messaging system directly from an EJB, MDB or se
 
 Note that all communication between EJB sessions or entity beans and Message Driven beans go through the adaptor and not directly to the broker.
 
-The large arrow with the prohibited sign shows an EJB session bean talking directly to the the broker.
+The large arrow with the prohibited sign shows an EJB session bean talking directly to the broker.
 This is not recommended as you'll most likely end up creating a new connection and session every time you want to interact from the EJB, which is an anti-pattern.

@@ -145,7 +145,7 @@ Use the management API (e.g via the web console) by invoking `resetAllGroups` on
 By setting `group-rebalance` to `true` at the queue level every time a consumer is added it will trigger a rebalance/reset of the groups.
 
 As noted above, when group rebalance is done there is a risk you may have inflight messages being processed.
-By default, the broker will continue to dispatch whilst rebalance is occuring.
+By default, the broker will continue to dispatch whilst rebalance is occurring.
 To ensure that inflight messages are processed before dispatch of new messages post rebalance, to different consumers, you can set `group-rebalance-pause-dispatch` to `true` which will cause the dispatch to pause whilst rebalance occurs until all inflight messages are processed.
 
 [,xml]

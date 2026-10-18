@@ -45,8 +45,8 @@ This decreases the size of the message and also avoids the overhead of creating 
 Use the `setDisableMessageTimeStamp()` method on the `MessageProducer` class to disable message timestamps if you don't need them.
 * Avoid `ObjectMessage`.
 `ObjectMessage` is convenient but it comes at a cost.
-The body of a `ObjectMessage` uses Java serialization to serialize it to bytes.
-The Java serialized form of even small objects is very verbose so takes up a lot of space on the wire, also Java serialization is slow compared to custom marshalling techniques.
+The body of a `ObjectMessage` uses Java serialisation to serialise it to bytes.
+The Java serialised form of even small objects is very verbose so takes up a lot of space on the wire, also Java serialisation is slow compared to custom marshalling techniques.
 Only use `ObjectMessage` if you really can't use one of the other message types, i.e. if you really don't know the type of the payload until run-time.
 * Avoid `AUTO_ACKNOWLEDGE`.
 `AUTO_ACKNOWLEDGE` mode requires an acknowledgement to be sent from the server for each message received on the client, this means more traffic on the network.

@@ -55,4 +55,4 @@ As demand migrates across a network, duplicate durable subs get created on each 
 The end result can result in duplicate message storage and ultimately duplicate delivery, which is not good.
 When durable subscribers map to virtual topic subscriber queues, the queues can migrate, and the problem can be avoided.
 
-In {project-name-short}, because a durable sub is modeled as a queue, this problem does not arise.
+In {project-name-short}, because a durable sub is modelled as a queue, this problem does not arise.

@@ -24,7 +24,7 @@ Another important part of clustering is _server discovery_ where servers can bro
 Once a cluster node has been configured it is common to simply copy that configuration to other nodes to produce a symmetric cluster.
 However, care must be taken when copying the files.
 Do not copy the _data_ (i.e. the `bindings`, `journal`, `paging`, and `large-messages` directories) from one node to another.
-When a node is started for the first time and initializes its journal files it also persists a special identifier to the `journal` directory.
+When a node is started for the first time and initialises its journal files it also persists a special identifier to the `journal` directory.
 This id _must_ be unique among nodes in the cluster or the cluster will not form properly.
 ====
 
@@ -41,7 +41,7 @@ A single broker can handle _millions_ of messages per second in certain  use-cas
 If you can't meet your performance goal with a single broker only then move to a clustered configuration.
 Only add complexity when there is a _clear benefit_.
 
-The main way a cluster can reduce overall message throughput is if there are are not enough producers & consumers on each node leading to message build-up on some nodes and consumer starvation others.
+The main way a cluster can reduce overall message throughput is if there are not enough producers & consumers on each node leading to message build-up on some nodes and consumer starvation others.
 The cluster has mechanisms to deal with this (i.e. message load-balancing & redistribution, which will be covered later), but you really don't want the broker to intervene and move messages between nodes unless absolutely necessary because *that adds latency*.
 
 Therefore, when thinking in performance terms the main question one must answer when choosing a clustered configuration is: Do I have enough clients so that each node in the cluster has sufficient consumers to receive all the messages produced on that node?
@@ -70,7 +70,7 @@ Server discovery is *disabled by default* for security reasons.
 
 Before enabling server discovery, check that the broadcast endpoint authenticates the senders:
 
-* *JGroups*: configure the JGroups `AUTH` protocol and/or TLS in the stack referenced by `jgroups-file` so only authorized members can send broadcasts.
+* *JGroups*: configure the JGroups `AUTH` protocol and/or TLS in the stack referenced by `jgroups-file` so only authorised members can send broadcasts.
 * *UDP*: has no built-in sender authentication; use only on trusted networks.
 
 Set the JVM system property `artemis.discovery.enabled=true` or the environment
@@ -168,7 +168,7 @@ Here is another example broadcast group that defines a JGroups broadcast group:
    <broadcast-group name="my-broadcast-group">
       <broadcast-period>2000</broadcast-period>
       <jgroups-file>test-jgroups-file_ping.xml</jgroups-file>
-      <jgroups-channel>activemq_broadcast_channel</jgroups-channel>
+      <jgroups-channel>artemis_broadcast_channel</jgroups-channel>
       <connector-ref>netty-connector</connector-ref>
    </broadcast-group>
 </broadcast-groups>
@@ -178,7 +178,7 @@ To be able to use JGroups to broadcast, one must specify two attributes, i.e. `j
 
 jgroups-file::
 This is the name of JGroups configuration file.
-It will be used to initialize JGroups channels.
+It will be used to initialise JGroups channels.
 Make sure the file is in the Java resource path so that the broker can load it.
 The typical location for the file is the `etc` directory from the broker instance.
 
@@ -319,7 +319,7 @@ Here is another example that defines a JGroups discovery group:
 <discovery-groups>
    <discovery-group name="my-broadcast-group">
       <jgroups-file>test-jgroups-file_ping.xml</jgroups-file>
-      <jgroups-channel>activemq_broadcast_channel</jgroups-channel>
+      <jgroups-channel>artemis_broadcast_channel</jgroups-channel>
       <refresh-timeout>10000</refresh-timeout>
    </discovery-group>
 </discovery-groups>
@@ -329,7 +329,7 @@ To receive broadcast from JGroups channels, one must specify two attributes, `jg
 
 jgroups-file::
 This is the name of the JGroups configuration file.
-It will be used to initialize JGroups channels.
+It will be used to initialise JGroups channels.
 Make sure the file is in the java resource path so that the broker can load it.
 
 jgroups-channel::
@@ -572,7 +572,7 @@ A value of -1 means no window.
 
 producer-window-size::
 The size for producer flow control over cluster connection.
-it's by default is 1MB.
+Default is 1MB.
 
 call-failover-timeout::
 Similar to `call-timeout` but used when a call is made during a failover attempt.
@@ -684,7 +684,7 @@ The set of servers over which the factory load balances can be determined in one
 * Specifying servers explicitly in the URL.
 This also requires setting the `useTopologyForLoadBalancing` parameter to `false` on the URL.
 * Using discovery.
-This is the default behavior.
+This is the default behaviour.
 
 == Specifying Members of a Cluster Explicitly
 
@@ -812,7 +812,7 @@ This is especially useful in certain environments (e.g. the cloud) where the siz
 When scaling up a cluster (i.e. adding nodes) there is no risk of message loss, but when scaling down a cluster (i.e. removing nodes) the messages on those nodes would be lost unless the broker sent them to another node in the cluster.
 The broker can be configured to do just that.
 
-To enable this behavior configure `scale-down` in the `live-only` `ha-policy`, e.g.:
+To enable this behaviour configure `scale-down` in the `live-only` `ha-policy`, e.g.:
 
 [,xml]
 ----
@@ -829,7 +829,7 @@ To enable this behavior configure `scale-down` in the `live-only` `ha-policy`, e
 If `scale-down`/`enabled` is `true` then when the server is shutdown gracefully (i.e. stopped without crashing) it will find another node in the cluster and send _all_ of its messages (both durable and non-durable) to that node.
 The messages are processed in order and go to the _back_ of the respective queues on the other node (just as if the messages were sent from an external client for the first time).
 
-The _target_ of the scale down operation can be configured a few differnt ways.
+The _target_ of the scale down operation can be configured a few different ways.
 The above example uses `discovery-group-ref` to reference a `discovery-group` which will be used to find the target broker.
 This should be the same `discovery-group` referenced by your `cluster-connection`.
 You can also specify a static list of `connector` elements, e.g.:

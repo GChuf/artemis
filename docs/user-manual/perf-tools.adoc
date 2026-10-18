@@ -10,8 +10,8 @@ They are also quite useful on their own.
 
 In summary, the provided `perf` tools are:
 
-. `producer` tool: it can generate both all-out throughput or target-rate load, using https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/bytesmessage[BytesMessage] of a configured size
-. `consumer` tool: it uses a https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/messagelistener[MessageListener] to consume messages sent by the `producer` command
+. `producer` tool: it can generate both all-out throughput or target-rate load, using https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/BytesMessage.html[BytesMessage] of a configured size
+. `consumer` tool: it uses a https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/MessageListener.html[MessageListener] to consume messages sent by the `producer` command
 . `client` tools: it packs both tools as a single command
 
 Most users will just need the `client` tool, but the `producer` and `consumer` tools allow performing tests in additional scenario(s):
@@ -31,7 +31,7 @@ In both cases, the user should set `JAVA_ARGS` environment variable to override 
 
 == Case 1: Single producer Single consumer over a queue
 
-This is the simplest possible case: running a load test with 1 producer and 1 consumer on a non-durable queue `TEST_QUEUE`,  using https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/deliverymode#NON_PERSISTENT[non-persistent]  1024 bytes long (by default) messages, using https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/session#AUTO_ACKNOWLEDGE[auto-acknowledge].
+This is the simplest possible case: running a load test with 1 producer and 1 consumer on a non-durable queue `TEST_QUEUE`,  using https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/DeliveryMode.html#NON_PERSISTENT[non-persistent]  1024 bytes long (by default) messages, using https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/Session.html#AUTO_ACKNOWLEDGE[auto-acknowledge].
 
 Let's see what happens after typing:
 
@@ -58,7 +58,7 @@ WARN  [org.apache.activemq.artemis.core.client] AMQ212053: CompletionListener/Se
 
 It shows two things:
 
-. the load generator uses https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/messageproducer#send-javax.jms.Destination-javax.jms.Message-javax.jms.CompletionListener-[async message producers]
+. the load generator uses https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/MessageProducer.html#send-javax.jms.Destination-javax.jms.Message-javax.jms.CompletionListener-[async message producers]
 . `confirmationWindowSize` is specific to the Core protocol; the `perf` commands uses Core as the default JMS provider
 
 === Live Latency Console Reporting
@@ -109,7 +109,7 @@ percentiles of latency to acknowledge sent messages
 transfer time::
 percentiles of latency to transfer messages from producer(s) to consumer(s)
 
-The `perf` commands uses https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/messageproducer#send-javax.jms.Destination-javax.jms.Message-javax.jms.CompletionListener-[JMS 2 async message producers] that allow the load generator to accumulate in-flight sent messages and depending on the protocol implementation, may block its producer thread due to producer flow control.
+The `perf` commands uses https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/MessageProducer.html#send-javax.jms.Destination-javax.jms.Message-javax.jms.CompletionListener-[JMS 2 async message producers] that allow the load generator to accumulate in-flight sent messages and depending on the protocol implementation, may block its producer thread due to producer flow control.
 e.g: the Core client can block producer threads to refill credits while https://qpid.apache.org/components/jms/index.html[Qpid JMS] won't.
 
 The `perf` tool is implementing its own in-flight sent requests tracking and can be configured to limit the amount of pending sent messages,  while reporting the rate by which producers are "blocked" awaiting completions
@@ -204,9 +204,9 @@ And on the `SUMMARY` statistics:
 
 The Console output format isn't designed for easy latency comparisons, however the `perf` commands expose `--hdr <hdr file name>` parameter to produce a http://hdrhistogram.org/[HDR Histogram] compatible report that can be opened with different visualizers + eg https://hdrhistogram.github.io/HdrHistogramJSDemo/logparser.html[Online HdrHistogram Log Analyzer], https://github.com/ennerf/HdrHistogramVisualizer[HdrHistogramVisualizer] or https://github.com/HdrHistogram/HistogramLogAnalyzer[HistogramLogAnalyzer].
 
-NOTE: Any latency collected trace on this guide is going to use https://hdrhistogram.github.io/HdrHistogramJSDemo/logparser.html[Online HdrHistogram Log Analyzer] as HDR Histogram visualizer tool.
+NOTE: Any latency collected trace on this guide is going to use https://hdrhistogram.github.io/HdrHistogramJSDemo/logparser.html[Online HdrHistogram Log Analyzer] as HDR Histogram visualiser tool.
 
-Below is the visualization of the HDR histograms collected while adding to the previous benchmark
+Below is the visualisation of the HDR histograms collected while adding to the previous benchmark
 
 [,bash]
 ----
@@ -289,8 +289,8 @@ This metric is borrowed from the http://highscalability.com/blog/2015/10/5/your-
 
 The source of such delay could be:
 
-* slow responding broker: the load generator reached `--max-pending` and the expected rate cannot be honored
-* client running out of resources (lack of CPU time, GC pauses, etc etc): load generator cannot keep-up with the expected rate because it is just "too fast" for it
+* slow responding broker: the load generator reached `--max-pending` and the expected rate cannot be honoured
+* client running out of resources (lack of CPU time, GC pauses, etc.): load generator cannot keep-up with the expected rate because it is just "too fast" for it
 * protocol-dependent blocking behaviours: CORE JMS 2 async send can block due to `producerWindowSize` exhaustion
 
 A sane run of a target rate test should keep `delay send time` under control or investigation actions must be taken to understand what's the source of the delay.
@@ -351,9 +351,9 @@ and it would print...
 javax.jms.IllegalStateException: Cannot create durable subscription - client ID has not been set
 ----
 
-Given that the generator is creating https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/session#createDurableConsumer-javax.jms.Topic-java.lang.String-[unshared durable Topic subscriptions], is it mandatory to set a ClientID for each connection used.
+Given that the generator is creating https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/Session.html#createDurableConsumer-javax.jms.Topic-java.lang.String-[unshared durable Topic subscriptions], is it mandatory to set a ClientID for each connection used.
 
-The `perf client` tool creates a connection for each consumer by default and auto-generates both ClientIDs and subscriptions names (as required by the https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/session#createDurableConsumer-javax.jms.Topic-java.lang.String-[unshared durable Topic subscriptions API]).
+The `perf client` tool creates a connection for each consumer by default and auto-generates both ClientIDs and subscriptions names (as required by the https://jakarta.ee/specifications/messaging/2.0/apidocs/javax/jms/Session.html#createDurableConsumer-javax.jms.Topic-java.lang.String-[unshared durable Topic subscriptions API]).
 ClientID still requires users to specify Client ID prefixes with `--clientID <Client ID prefix>` and takes care to unsubscribe the consumers on test completion.
 
 The complete commands now looks like:
@@ -381,7 +381,7 @@ The complete commands now looks like:
 --- aggregated transfer time:   mean:  46216.99 us - 50.00%:  45311.00 us - 90.00%:  57855.00 us - 99.00%:  78335.00 us - 99.90%:  97791.00 us - 99.99%: 113151.00 us - max:    125439.00 us
 ----
 
-Results shows that `tranfer time` isn't queuing up, meaning that subscribers are capable to keep-up with the producers: hence a reasonable rate to test could be ~80% of the perceived `sent` rate ie `--rate 60000`:
+Results shows that `transfer time` isn't queuing up, meaning that subscribers are capable to keep-up with the producers: hence a reasonable rate to test could be ~80% of the perceived `sent` rate ie `--rate 60000`:
 
 [,bash]
 ----
