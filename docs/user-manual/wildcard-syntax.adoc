@@ -56,8 +56,7 @@ But `news.*.sport` would _not_ match:
 
 * `news.europe.politics`
 
-[#customizing-the-syntax]
-== Customising the Syntax
+== Customizing the Syntax
 
 It's possible to further configure the syntax of the wildcard addresses using the broker configuration.
 For that, the `<wildcard-addresses>` configuration tag is used.

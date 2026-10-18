@@ -83,8 +83,7 @@ $ ./prepare-docker.sh --from-release --artemis-version <version>
 This will copy all the files necessary to build any of the pre-configured Docker images and provide you with additional instructions.
 Follow these instructions to finish building the image you want based on one of the provided Docker files or even one of your own.
 
-[#customizing-the-image]
-=== Customising the Image
+=== Customizing the Image
 
 ==== Environment Variables
 
@@ -132,7 +131,7 @@ be saved and reused on each run.
 
 ==== Overriding files in `etc` folder
 
-You can use customised configuration for the broker instance by replacing the files residing in the `etc` folder with the custom ones, e.g. `broker.xml` or `artemis.profile`.
+You can use customized configuration for the broker instance by replacing the files residing in the `etc` folder with the custom ones, e.g. `broker.xml` or `artemis.profile`.
 Put the replacement files inside a folder and map it as a volume to:
 ----
 /var/lib/artemis-instance/etc-override

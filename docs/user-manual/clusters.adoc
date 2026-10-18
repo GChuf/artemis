@@ -24,7 +24,7 @@ Another important part of clustering is _server discovery_ where servers can bro
 Once a cluster node has been configured it is common to simply copy that configuration to other nodes to produce a symmetric cluster.
 However, care must be taken when copying the files.
 Do not copy the _data_ (i.e. the `bindings`, `journal`, `paging`, and `large-messages` directories) from one node to another.
-When a node is started for the first time and initialises its journal files it also persists a special identifier to the `journal` directory.
+When a node is started for the first time and initializes its journal files it also persists a special identifier to the `journal` directory.
 This id _must_ be unique among nodes in the cluster or the cluster will not form properly.
 ====
 
@@ -70,7 +70,7 @@ Server discovery is *disabled by default* for security reasons.
 
 Before enabling server discovery, check that the broadcast endpoint authenticates the senders:
 
-* *JGroups*: configure the JGroups `AUTH` protocol and/or TLS in the stack referenced by `jgroups-file` so only authorised members can send broadcasts.
+* *JGroups*: configure the JGroups `AUTH` protocol and/or TLS in the stack referenced by `jgroups-file` so only authorized members can send broadcasts.
 * *UDP*: has no built-in sender authentication; use only on trusted networks.
 
 Set the JVM system property `artemis.discovery.enabled=true` or the environment
@@ -178,7 +178,7 @@ To be able to use JGroups to broadcast, one must specify two attributes, i.e. `j
 
 jgroups-file::
 This is the name of JGroups configuration file.
-It will be used to initialise JGroups channels.
+It will be used to initialize JGroups channels.
 Make sure the file is in the Java resource path so that the broker can load it.
 The typical location for the file is the `etc` directory from the broker instance.
 
@@ -329,7 +329,7 @@ To receive broadcast from JGroups channels, one must specify two attributes, `jg
 
 jgroups-file::
 This is the name of the JGroups configuration file.
-It will be used to initialise JGroups channels.
+It will be used to initialize JGroups channels.
 Make sure the file is in the java resource path so that the broker can load it.
 
 jgroups-channel::
@@ -684,7 +684,7 @@ The set of servers over which the factory load balances can be determined in one
 * Specifying servers explicitly in the URL.
 This also requires setting the `useTopologyForLoadBalancing` parameter to `false` on the URL.
 * Using discovery.
-This is the default behaviour.
+This is the default behavior.
 
 == Specifying Members of a Cluster Explicitly
 
@@ -812,7 +812,7 @@ This is especially useful in certain environments (e.g. the cloud) where the siz
 When scaling up a cluster (i.e. adding nodes) there is no risk of message loss, but when scaling down a cluster (i.e. removing nodes) the messages on those nodes would be lost unless the broker sent them to another node in the cluster.
 The broker can be configured to do just that.
 
-To enable this behaviour configure `scale-down` in the `live-only` `ha-policy`, e.g.:
+To enable this behavior configure `scale-down` in the `live-only` `ha-policy`, e.g.:
 
 [,xml]
 ----

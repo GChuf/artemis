@@ -41,7 +41,7 @@ We have a project with xref:examples.adoc[a few examples]:
 The broker will not perform any message conversion to any other protocols when sending AMQP and receiving AMQP.
 
 However if you intend your message to be received by an AMQP JMS Client, you must follow the https://www.oasis-open.org/committees/download.php/53086/amqp-bindmap-jms-v1.0-wd05.pdf[JMS Mapping Conventions].
-If you send a body type that is not recognised by this specification the conversion between AMQP and any other protocol will make it a Binary Message.
+If you send a body type that is not recognized by this specification the conversion between AMQP and any other protocol will make it a Binary Message.
 Make sure you follow these conventions if you intend to cross protocols or languages.
 Especially on the message body.
 

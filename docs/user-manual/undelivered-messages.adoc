@@ -201,7 +201,7 @@ In these cases, updating the delivery count persistently before delivering the m
 However, if the delivery count is not updated persistently before the message delivery happens, in the event of a server crash, messages might have been delivered but that will not have been reflected in the delivery count.
 During the recovery phase, the server will not have knowledge of that and will deliver the message with `redelivered` set to `false` while it should be `true`.
 
-As this behaviour breaks strict JMS semantics, the broker can persist the delivery count before message delivery, but this feature is disabled by default due to performance implications.
+As this behavior breaks strict JMS semantics, the broker can persist the delivery count before message delivery, but this feature is disabled by default due to performance implications.
 
 To enable it, set `persist-delivery-count-before-delivery` to `true` in `broker.xml`:
 

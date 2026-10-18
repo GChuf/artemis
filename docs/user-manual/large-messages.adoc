@@ -52,7 +52,7 @@ For xref:persistence.adoc#jdbc-persistence[JDBC persistence] the `large-message-
 
 By default `large-message-table` is `LARGE_MESSAGE_TABLE`.
 
-By default when writing the final bytes to a large message all writes are synchronised to the storage medium.
+By default when writing the final bytes to a large message all writes are synchronized to the storage medium.
 This can be configured via `large-message-sync`, e.g.:
 
 [,xml]
@@ -91,7 +91,7 @@ You can choose to send large messages in compressed form using `compressLargeMes
 If you specify the boolean URL parameter `compressLargeMessage` as true, the system will use the ZIP algorithm to compress the message body as the message is transferred to the server's side.
 Notice that there's no special treatment at the server's side, all the compressing and uncompressing is done at the client.
 
-This behaviour can be tuned further by setting an optional parameter: `compressionLevel`.
+This behavior can be tuned further by setting an optional parameter: `compressionLevel`.
 This will decide how much the message body should be compressed.
 `compressionLevel` accepts an integer of `-1` or a value between `0-9`.
 The default value is `-1` which corresponds to around level 6-7.

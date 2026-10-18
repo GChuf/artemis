@@ -412,7 +412,7 @@ Let's take a look at an example:
 jaas-security::
 Configures JAAS-based security for the server.
 The `domain` attribute refers to the relevant login module entry in `login.config`.
-If different behaviour is needed then a custom security manager can be configured by replacing `jaas-security` with `security-manager`.
+If different behavior is needed then a custom security manager can be configured by replacing `jaas-security` with `security-manager`.
 See the "Custom Security Manager" section in the xref:security.adoc#authentication-authorization[security chapter] for more details.
 
 server::

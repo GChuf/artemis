@@ -350,7 +350,7 @@ Type the password for a retry
 
 == Shell
 
-To initialise the shell session, type `./artemis shell` (or just `./artemis` if you prefer):
+To initialize the shell session, type `./artemis shell` (or just `./artemis` if you prefer):
 
 [,console]
 ----

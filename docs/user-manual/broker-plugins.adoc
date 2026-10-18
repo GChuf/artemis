@@ -13,7 +13,7 @@ It requires:
 * Making sure the plugin is xref:using-server.adoc#adding-runtime-dependencies[on the classpath]
 * Registering it with the broker either via <<registering-a-plugin,xml>> or <<registering-a-plugin-programmatically,programmatically>>.
 
-Only the methods that you want to add behaviour for need to be implemented as all of the interface methods are default methods.
+Only the methods that you want to add behavior for need to be implemented as all of the interface methods are default methods.
 
 == Registering a Plugin
 

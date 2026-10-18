@@ -162,7 +162,7 @@ It is recommended that you work away from main for two reasons:
 . When you send a PR, your PR branch could be rebased during the process and your commit ID changed.
 You might get unexpected conflicts while rebasing your old branch.
 . You could end up pushing things upstream that you didn't intend to.
-Minimise your risks by working on a branch away from main.
+Minimize your risks by working on a branch away from main.
 
 == Notes
 

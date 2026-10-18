@@ -204,9 +204,9 @@ And on the `SUMMARY` statistics:
 
 The Console output format isn't designed for easy latency comparisons, however the `perf` commands expose `--hdr <hdr file name>` parameter to produce a http://hdrhistogram.org/[HDR Histogram] compatible report that can be opened with different visualizers + eg https://hdrhistogram.github.io/HdrHistogramJSDemo/logparser.html[Online HdrHistogram Log Analyzer], https://github.com/ennerf/HdrHistogramVisualizer[HdrHistogramVisualizer] or https://github.com/HdrHistogram/HistogramLogAnalyzer[HistogramLogAnalyzer].
 
-NOTE: Any latency collected trace on this guide is going to use https://hdrhistogram.github.io/HdrHistogramJSDemo/logparser.html[Online HdrHistogram Log Analyzer] as HDR Histogram visualiser tool.
+NOTE: Any latency collected trace on this guide is going to use https://hdrhistogram.github.io/HdrHistogramJSDemo/logparser.html[Online HdrHistogram Log Analyzer] as HDR Histogram visualizer tool.
 
-Below is the visualisation of the HDR histograms collected while adding to the previous benchmark
+Below is the visualization of the HDR histograms collected while adding to the previous benchmark
 
 [,bash]
 ----
@@ -289,7 +289,7 @@ This metric is borrowed from the http://highscalability.com/blog/2015/10/5/your-
 
 The source of such delay could be:
 
-* slow responding broker: the load generator reached `--max-pending` and the expected rate cannot be honoured
+* slow responding broker: the load generator reached `--max-pending` and the expected rate cannot be honored
 * client running out of resources (lack of CPU time, GC pauses, etc.): load generator cannot keep-up with the expected rate because it is just "too fast" for it
 * protocol-dependent blocking behaviours: CORE JMS 2 async send can block due to `producerWindowSize` exhaustion
 

@@ -78,7 +78,7 @@ Debug information should be called through `logger.debug`.
 An important task for any test-case is to clean up all the resources it creates when it runs.
 This includes the server instance itself and any resources created to connect to it (e.g. instances of `ServerLocator`, `ClientSessionFactory`, `ClientSession`, etc.).
 This task is typically completed in the test's `tearDown()` method.
-However, `ActiveMQTestBase` (and other classes which extend it) simplifies this process.
+However, `ActiveMQTestBase`  (and other classes which extend it) simplifies this process.
 As https://github.com/apache/artemis/blob/main/tests/integration-tests/src/test/java/org/apache/activemq/artemis/tests/integration/SimpleTest.java[`org.apache.activemq.artemis.tests.integration.SimpleTest`] demonstrates, there are several methods you can use when creating your test which will ensure proper clean up _automatically_ when the test is torn down.
 These include:
 
@@ -97,7 +97,7 @@ There are numerous methods in `org.apache.activemq.artemis.tests.util.ActiveMQTe
 These methods are named like create&#42;Config(..).
 Each one creates a slightly different configuration but there is a lot of  overlap between them.
 
-In any case, `org.apache.activemq.artemis.core.config.Configuration` is a https://en.wikipedia.org/wiki/Fluent_interface[_fluent_] interface so it's easy to customise however you need.
+In any case, `org.apache.activemq.artemis.core.config.Configuration` is a https://en.wikipedia.org/wiki/Fluent_interface[_fluent_] interface so it's easy to customize however you need.
 
 === Look at other test-cases
 

@@ -43,7 +43,7 @@ It takes no key/value properties for configuration.
 
 == Exported Metrics
 
-The following metrics are exported, categorised by component.
+The following metrics are exported, categorized by component.
 A description for each metric is exported along with the metric itself therefore the description will not be repeated here.
 
 *Every* metric is "tagged" with the `broker` tag (configured via `<name>` in `broker.xml`).
@@ -105,7 +105,7 @@ There are a handful of other useful metrics that are related to the JVM, the und
 These metrics are provided specifically by Micrometer and therefore do not have the `artmemis.` prefix.
 
 ==== JVM memory metrics
-Gauges buffer and memory pool utilisation.
+Gauges buffer and memory pool utilization.
 Underlying data gathered from Java's https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/BufferPoolMXBean.html[BufferPoolMXBeans] and https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/MemoryPoolMXBean.html[MemoryPoolMXBeans].
 
 Enabled by default.
@@ -154,7 +154,7 @@ If you're embedding the broker and using a different logging implementation (e.g
 ====
 
 ==== Security caches
-The following authentication & authorisation cache metrics are exported.
+The following authentication & authorization cache metrics are exported.
 They are all tagged by `cache` (either `authentication` or `authorization`).
 Additional tags are noted.
 
@@ -222,7 +222,7 @@ Here's a configuration with all optional metrics:
 </metrics>
 ----
 
-The plugin can also be configured with key/value properties in order to customise the implementation as necessary, e.g.:
+The plugin can also be configured with key/value properties in order to customize the implementation as necessary, e.g.:
 
 [,xml]
 ----

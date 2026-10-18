@@ -76,7 +76,7 @@ This is not a "client" actor because there is no network call; the operator inte
 === Use cases Artemis does not support
 
 * Message broker as a cryptographic confidentiality boundary — the broker has access to plaintext message payloads; end-to-end encryption between message producers and consumers must be implemented outside the broker.
-* Defence against malicious operators with filesystem or JVM access — an operator with filesystem access can read journal files, modify configuration, or attach a debugger.
+* Defense against malicious operators with filesystem or JVM access — an operator with filesystem access can read journal files, modify configuration, or attach a debugger.
 * Real-time guarantees or bounded latency — the broker is designed for reliability, not hard real-time performance.
 * Byzantine fault tolerance in clustered deployments beyond simple fail-stop failures — the clustering model assumes cluster nodes are honest or fail-stop, not adversarial.
 
@@ -107,7 +107,7 @@ Beyond these specific upgrade/transport paths, protocol switching is not allowed
 === Trust transitions
 
 . *Messaging Client → Broker Core:* Messages from network clients (untrusted or authenticated) are parsed by protocol adapters and routed to the broker core.
-Authentication happens at connection establishment; authorisation happens per operation (sending a message, creating a consumer, creating a queue, etc.).
+Authentication happens at connection establishment; authorization happens per operation (sending a message, creating a consumer, creating a queue, etc.).
 . *Management Client → Broker Core:* Management operations from management clients are subject to RBAC.
 . *Broker Core → Filesystem:* Broker writes to append-only journal and paging files; integrity of persisted data depends on filesystem and OS guarantees.
 
@@ -128,10 +128,10 @@ Authentication happens at connection establishment; authorisation happens per op
 === Concurrency
 
 * The broker is designed to be thread-safe for concurrent client connections.
-* The broker assumes the JVM correctly implements Java's multi-threading semantics (thread synchronisation, memory visibility between threads, safe publication of shared data).
-A JVM with broken concurrency primitives could cause race conditions in authentication, authorisation, or message routing.
+* The broker assumes the JVM correctly implements Java's multi-threading semantics (thread synchronization, memory visibility between threads, safe publication of shared data).
+A JVM with broken concurrency primitives could cause race conditions in authentication, authorization, or message routing.
 * Runtime configuration reload (`broker.xml`, `security-settings`) is safe under load.
-Configuration changes do not cause inconsistent state or authorisation bypass during reload.
+Configuration changes do not cause inconsistent state or authorization bypass during reload.
 
 === Filesystem assumptions
 
@@ -149,7 +149,7 @@ Operators requiring such checks must use OS-level mechanisms (ZFS checksums, dm-
 
 * Does not install signal handlers beyond standard JVM handlers
 * Does not spawn child processes in normal operation (CLI tools may spawn broker as child, but the broker itself does not spawn processes)
-* Does not mutate process-wide JVM state (locale, timezone, default charset) beyond standard JVM behaviour
+* Does not mutate process-wide JVM state (locale, timezone, default charset) beyond standard JVM behavior
 * Does not modify system-wide state (iptables, kernel modules, global system properties)
 * Does not open listening sockets on ports other than those explicitly configured
 
@@ -161,7 +161,7 @@ Operators requiring such checks must use OS-level mechanisms (ZFS checksums, dm-
 
 | `security-enabled`
 | `true`
-| When `false`, disables all authentication and authorisation
+| When `false`, disables all authentication and authorization
 
 | `sslEnabled`
 | `false`
@@ -187,15 +187,15 @@ Enforcement happens at the transport layer during the TLS handshake, before any 
 .. *When authentication is enforced*: Cannot meaningfully interact without authentication.
 Unauthenticated connection attempts are rejected at the protocol level (e.g., MQTT `CONNECT` with invalid credentials) before any messaging operations are permitted.
 However, the attacker can still establish network connections and send protocol frames/packets up to the authentication step; attempt authentication with guessed credentials; attempt DoS via connection exhaustion or malformed input during connection or authentication phase.
-. *Authenticated messaging client (low-privilege):* Has valid credentials but limited authorisation (e.g., can send to specific addresses but not manage the broker).
+. *Authenticated messaging client (low-privilege):* Has valid credentials but limited authorization (e.g., can send to specific addresses but not manage the broker).
 Can attempt privilege escalation via protocol exploits or misuse of broker features.
-. *Authenticated management client (low-privilege):* Has valid credentials but limited authorisation; connects via web console, JMX, Jolokia HTTP, or management messages.
+. *Authenticated management client (low-privilege):* Has valid credentials but limited authorization; connects via web console, JMX, Jolokia HTTP, or management messages.
 Can potentially read broker state and metrics, enumerate queues, addresses, connections, and consumers, view message counts, etc.; monitor broker performance.
 Can attempt to exploit management API vulnerabilities to gain elevated privileges; denial of service via management interface abuse.
 
 === Adversaries Out of Scope
 
-. *Malicious operator with filesystem or JVM access:* An operator with filesystem write access to the data directory, ability to attach a debugger, or `kill -9` access can read/modify all data, bypass all security controls, and cause arbitrary behaviour.
+. *Malicious operator with filesystem or JVM access:* An operator with filesystem write access to the data directory, ability to attach a debugger, or `kill -9` access can read/modify all data, bypass all security controls, and cause arbitrary behavior.
 The broker does not defend against malicious operators.
 . *Side-channel observers:* Timing attacks on message routing, cache-timing on authentication, speculative execution side channels.
 . *Co-tenant attackers in shared JVM:* If multiple applications share the same JVM and classpath, the broker does not defend against malicious code in the same JVM.
@@ -214,8 +214,8 @@ Reports against such deployments with are triaged as `OUT-OF-SCOPE`.
 . *Authentication of messaging & management clients:* When just `security-enabled=true` then protocol-level authentication is enforced (e.g. via username & password, JWT, etc.).
 However, when TLS client certificate authentication is also enabled then transport-layer authentication during TLS handshake is enforced.
 TLS client certificates provide stronger authentication as they prevent unauthenticated clients from establishing any connection.
-. *Authorisation of messaging clients:* When `security-enabled=true` and `security-settings` are configured.
-. *Authorisation for management clients:* When `management-message-rbac=true` *or* `management.xml` is configured appropriately and `security-settings` are in place.
+. *Authorization of messaging clients:* When `security-enabled=true` and `security-settings` are configured.
+. *Authorization for management clients:* When `management-message-rbac=true` *or* `management.xml` is configured appropriately and `security-settings` are in place.
 . *Confidentiality and integrity of messages in transit:* When `sslEnabled=true` on the relevant `acceptor`.
 
 == Security Properties Not Provided
@@ -223,14 +223,14 @@ TLS client certificates provide stronger authentication as they prevent unauthen
 . *End-to-end confidentiality of message payloads:* The broker has access to plaintext message bodies.
 If message payloads must be kept confidential from the broker operator, the application must implement application-layer encryption.
 . *Authentication of message content origin:* The broker authenticates the _connection_ that sends a message, not the message itself.
-A compromised client or a client authorised to send to an address can claim to be any logical sender.
+A compromised client or a client authorized to send to an address can claim to be any logical sender.
 Applications requiring non-repudiation must implement message signing.
 . *Authentication of server discovery packets:* The broker and the client don't authenticate the server discovery packets.
 Server discovery broadcast endpoints must implement authentication.
 . *Comprehensive per-client message rate limiting across all protocols:* Message rate limiting is available for Core and MQTT 5 clients, but *not* for AMQP, STOMP, OpenWire, or MQTT 3.x clients.
 Clients using protocols without rate limiting can send messages at line rate until paging or disk space limits are enforced.
 Operators must use network-level controls for protocols that lack broker-side rate limiting.
-. *Memory growth within paging limits:* Memory consumption that grows with messages up to configured paging limits is expected behaviour, not a DoS vulnerability.
+. *Memory growth within paging limits:* Memory consumption that grows with messages up to configured paging limits is expected behavior, not a DoS vulnerability.
 However, super-linear CPU consumption or hangs on pathological input *are* bugs.
 . *Byzantine fault tolerance in clustering:* Clustered deployments assume peer brokers are honest or fail-stop.
 If a peer broker is compromised and sends adversarial messages, the cluster may enter an inconsistent state.
@@ -242,7 +242,7 @@ The broker does not validate journal or paging file integrity; tampering is not 
 
 === For operators deploying the broker
 
-. *Enable authentication and authorisation:* Set `security-enabled=true`.
+. *Enable authentication and authorization:* Set `security-enabled=true`.
 . *Configure TLS for network exposure:* If the broker is exposed to an untrusted network, enable SSL/TLS on all protocol ports.
 Use strong cipher suites and disable weak protocols (SSLv3, TLS 1.0, TLS 1.1) to prevent protocol downgrade attacks.
 The broker inherits TLS configuration from the JVM; insecure TLS settings expose credentials and message content.
@@ -252,7 +252,7 @@ This is stronger than protocol-level authentication because the TLS handshake is
 Recommended for internet-facing brokers or environments with untrusted networks.
 . *Restrict filesystem access:* Ensure read/write access to the broker's instance directory (and all sub-directories) is restricted to trusted operators.
 Among other things, the instance directory includes all configuration, message data, and logs for the broker so protecting it is critical for security.
-For example, an attacker who can write to `broker.xml` can reconfigure `security-settings` and bypass all authorisation.
+For example, an attacker who can write to `broker.xml` can reconfigure `security-settings` and bypass all authorization.
 . *Restrict management interface access:* JMX is not exposed on the network by default whereas Jolokia HTTP and the web console are exposed on localhost by default.
 Ensure authentication and TLS are enabled; prefer localhost-only binding for management interfaces exposed to untrusted networks.
 . *Review and harden JAAS configuration:* If using JAAS, ensure login modules are correctly configured and credentials are not embedded in cleartext files with world-readable permissions.
@@ -286,7 +286,7 @@ Ensure authentication and TLS are enabled; prefer localhost-only binding for man
 
 | `BY-DESIGN`
 | Concerns a property Artemis <<security-properties-not-provided,explicitly does not provide>>.
-Intentional behaviour, not a vulnerability.
+Intentional behavior, not a vulnerability.
 |===
 
 *Note:* If a report cannot be cleanly assigned to one of these dispositions, the model has a gap and <<conditions-that-might-change-this-model,should be revised>>.

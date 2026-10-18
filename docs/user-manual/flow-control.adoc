@@ -60,7 +60,7 @@ Messages will remain on the server side ready to be consumed by other consumers.
 Setting this to 0 can give deterministic distribution between multiple consumers on a queue.
 
 Most of the consumers cannot be clearly identified as fast or slow consumers but are in-between.
-In that case, setting the value of `consumerWindowSize` to optimise performance depends on the messaging use case and requires benchmarks to find the optimal value, but a value of 1MiB is fine in most cases.
+In that case, setting the value of `consumerWindowSize` to optimize performance depends on the messaging use case and requires benchmarks to find the optimal value, but a value of 1MiB is fine in most cases.
 
 Please see xref:examples.adoc#examples[the examples chapter] for an example which shows how to configure the broker to prevent consumer buffering when dealing with slow consumers.
 
@@ -170,7 +170,7 @@ However, since AMQP credits represent whole messages and not bytes, it would be 
 For this reason there is an additional parameter available on address settings that specifies an upper bound on an address size in bytes.
 Once this upper bound is reached the broker will start rejecting AMQP messages.
 This limit is the max-size-bytes-reject-threshold and is by default set to -1 (or no limit).
-This additional parameter allows a kind of soft and hard limit, in normal circumstances the broker will utilise the max-size-bytes parameter using flow control to put back pressure on the client, but will protect the broker by rejecting messages once the address size is reached.
+This additional parameter allows a kind of soft and hard limit, in normal circumstances the broker will utilize the max-size-bytes parameter using flow control to put back pressure on the client, but will protect the broker by rejecting messages once the address size is reached.
 
 === Rate limited flow control
 

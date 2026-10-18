@@ -10,7 +10,7 @@ A part of high availability is _failover_ which we define as the _ability for cl
 
 == Terminology
 
-In order to discuss both configuration and runtime behaviour consistently we need to define a couple nouns and adjectives.
+In order to discuss both configuration and runtime behavior consistently we need to define a couple nouns and adjectives.
 These terms will be used throughout the documentation, configuration, source code, and runtime logs.
 
 === Configuration
@@ -165,7 +165,7 @@ These settings are designed for reliability and to help the broker detect proble
 sync::
 Specifies that all changes are immediately flushed to disk.
 noac::
-Disables attribute caching. This behaviour is needed to achieve attribute cache coherence among multiple clients.
+Disables attribute caching. This behavior is needed to achieve attribute cache coherence among multiple clients.
 soft::
 Specifies that if the NFS server is unavailable the error should be reported rather than waiting for the server to come back online.
 +
@@ -189,23 +189,23 @@ Use reasonable values when you configure `timeo` and `retrans`. A default `timeo
 === Replication
 
 When using replication, the primary and the backup servers do not share the same data directories.
-All data synchronisation is done over the network.
+All data synchronization is done over the network.
 Therefore, all (durable) data received by the primary server will be duplicated to the backup.
 
-Note that upon start-up the backup server will first need to synchronise all existing data from the primary server before becoming capable of replacing the primary server should it fail.
-Therefore, unlike when using shared storage, a backup will not be _fully operational_ until after it finishes synchronising the data with its primary server.
-The time it takes for this to happen depends on the amount of data to be synchronised and the connection speed.
+Note that upon start-up the backup server will first need to synchronize all existing data from the primary server before becoming capable of replacing the primary server should it fail.
+Therefore, unlike when using shared storage, a backup will not be _fully operational_ until after it finishes synchronizing the data with its primary server.
+The time it takes for this to happen depends on the amount of data to be synchronized and the connection speed.
 
 [NOTE]
 ====
-In general, synchronisation occurs in parallel with current network traffic so this won't cause any blocking for current clients.
-However, there is a critical moment at the end of this process where the replicating server must complete the synchronisation and ensure the backup acknowledges this completion.
+In general, synchronization occurs in parallel with current network traffic so this won't cause any blocking for current clients.
+However, there is a critical moment at the end of this process where the replicating server must complete the synchronization and ensure the backup acknowledges this completion.
 This exchange between the replicating server and backup will block any journal related operations.
 The maximum length of time that this exchange will block is controlled by the `initial-replication-sync-timeout` configuration element.
 ====
 
 Since replication will create a copy of the data at the backup then in case of a successful fail-over, the backup's data will be newer than the primary's data.
-If you configure your backup to allow failback to the primary then when the primary is restarted it will be passive and the active backup will synchronise its data with the passive primary before stopping to allow the passive primary to become active again.
+If you configure your backup to allow failback to the primary then when the primary is restarted it will be passive and the active backup will synchronize its data with the passive primary before stopping to allow the passive primary to become active again.
 If both servers are shutdown then the administrator will have to determine which one has the latest data.
 
 [NOTE]
@@ -474,22 +474,22 @@ Here's a simple example:
 If you need to upgrade the broker version in a journal replication setup, follow this procedure to avoid downtime:
 
 . **Stop the backup server**, upgrade it to the new version, and start it.
-At this point the backup will synchronise with the primary server.
-. **Wait for synchronisation to complete**.
-The backup must be fully synchronised with the primary before proceeding.
+At this point the backup will synchronize with the primary server.
+. **Wait for synchronization to complete**.
+The backup must be fully synchronized with the primary before proceeding.
 . **Stop the primary server**, upgrade it to the new version, and start it.
-The upgraded primary will now synchronise with the backup and then fail back to become active again.
+The upgraded primary will now synchronize with the backup and then fail back to become active again.
 
 [NOTE]
 ====
 This procedure ensures continuous availability during the upgrade process.
-The backup takes over when the primary is stopped for upgrade, and then the primary resumes its active role after synchronisation is complete.
+The backup takes over when the primary is stopped for upgrade, and then the primary resumes its active role after synchronization is complete.
 ====
 
 [IMPORTANT]
 ====
 Always upgrade the backup server first.
-Upgrading the primary first could result in compatibility issues or data synchronisation problems.
+Upgrading the primary first could result in compatibility issues or data synchronization problems.
 ====
 
 ==== Apache ZooKeeper Integration
@@ -668,7 +668,7 @@ As with shared storage the `allow-failback` option can be set for both quorum vo
 With quorum voting replication you need to set an extra property `check-for-active-server` to `true` in the `primary` configuration.
 If set to `true` then during start-up the primary server will first search the cluster for another active server using its nodeID.
 If it finds one it will contact this server and try to "failback".
-Since this is a remote replication scenario the primary will have to synchronise its data with the backup server running with its ID. Once they are in sync it will request the other server (which it assumes it is a backup that has assumed its duties) to shutdown in order for it to take over.
+Since this is a remote replication scenario the primary will have to synchronize its data with the backup server running with its ID. Once they are in sync it will request the other server (which it assumes it is a backup that has assumed its duties) to shutdown in order for it to take over.
 This is necessary because otherwise the primary server has no means to know whether there was a fail-over or not, and if there was, if the server that took its duties is still running or not.
 To configure this option at your `broker.xml` configuration file as follows:
 
@@ -958,7 +958,7 @@ However, this comes at a great cost: reproducing the full server state (includin
 This would require every operation on the primary server to be reproduced on the backup server in the exact same global order to ensure a consistent state.
 This is extremely hard to do in a performant and scalable way, especially when one considers that multiple threads are changing the active server's state concurrently.
 
-It is possible to provide reproduce the full state machine using techniques such as _virtual synchrony_, but this does not scale well and effectively serialises all operations to a single thread, dramatically reducing concurrency.
+It is possible to provide reproduce the full state machine using techniques such as _virtual synchrony_, but this does not scale well and effectively serializes all operations to a single thread, dramatically reducing concurrency.
 
 Other techniques for multi-threaded use-cases exist such as reproducing lock states or thread scheduling, but this is very hard to achieve at a Java level.
 

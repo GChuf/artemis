@@ -138,7 +138,7 @@ This can be useful if federating large numbers of addresses that have low traffi
 The default value is `false` and the federation receiver address bindings will be attached to the matching addresses on the remote.
 When enabled the remote broker must have wildcard routing enabled for this feature to work correctly.
 
-The following set of elements can be configured within the address policy to control the behaviour of the deployed policy.
+The following set of elements can be configured within the address policy to control the behavior of the deployed policy.
 For the policy to actually match any addresses on the target broker an include must be provided at a minimum.
 
 include::
@@ -146,7 +146,7 @@ The address-match pattern to use to match included addresses, multiple of these 
 exclude::
 The address-match pattern to use to match excluded addresses, multiple of these can be set, or it can be omitted if no excludes are needed.
 property::
-A key / value property setting that allows for configuration options to be set either at the root federation level or within each federation policy that affects some defined behaviour of the policy implementation.
+A key / value property setting that allows for configuration options to be set either at the root federation level or within each federation policy that affects some defined behavior of the policy implementation.
 
 == Queue federation configuration elements
 
@@ -192,7 +192,7 @@ auto-delete-message-count::
 After the initiating broker has disconnected, the maximum number of messages allowed in the remote queue for the queue to be eligible for automatic deletion.
 The default value is `0`.
 
-The following set of elements can be configured within the queue policy to control the behaviour of the deployed policy.
+The following set of elements can be configured within the queue policy to control the behavior of the deployed policy.
 
 include::
 The queue-match pattern to use to match included queues and enforce that a matched queue is also bound to a specific address.
@@ -201,11 +201,11 @@ exclude::
 The queue-match pattern to use to match excluded queues that the policy should ignore.
 Multiple of these can be set, or it can be omitted if no excludes are needed.
 property::
-A key / value property setting that allows for configuration options to be set either at the root federation level or within each federation policy that affects some defined behaviour of the policy implementation.
+A key / value property setting that allows for configuration options to be set either at the root federation level or within each federation policy that affects some defined behavior of the policy implementation.
 
 == Federation policy property configuration index
 
-The following properties can be set either at the federation element level or set per-policy in order to apply different behaviours to different policies within the same federation configuration.
+The following properties can be set either at the federation element level or set per-policy in order to apply different behaviors to different policies within the same federation configuration.
 When remote address or queue policies are configured the value of these properties are sent to the remote along with the policies to ensure both sides are operating with the same configurations.
 Certain value can also be set in the broker connection URI when noted if not set in any of the available locations the configuration default value is used.
 

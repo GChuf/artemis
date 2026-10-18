@@ -86,7 +86,7 @@ image::images/amqp-federation-queue-with-hop.png[]
 
 To accomplish this the federation queue policy for the intermediary broker must have additional configuration to allow for federation of messages when no local demand is present but a federation consumer is.
 Normally federation queue policies do no consider a federation queue binding on a local queue as demand to avoid creating loops.
-To disable that behaviour the policy supports the attribute `include-federated` which defaults to `false`.
+To disable that behavior the policy supports the attribute `include-federated` which defaults to `false`.
 The XML configuration for `broker-2` is below that employs this option.
 
 [,xml]

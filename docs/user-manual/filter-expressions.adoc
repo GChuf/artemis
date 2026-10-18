@@ -110,7 +110,7 @@ The XML parser used for XPath is configured with these default "features":
 * `+http://xml.org/sax/features/external-parameter-entities+`: `false`
 * `+http://apache.org/xml/features/disallow-doctype-decl+`: `true`
 
-However, in order to deal with any implementation-specific issues the features can be customised by using system properties starting with the `org.apache.activemq.documentBuilderFactory.feature:` prefix, e.g.:
+However, in order to deal with any implementation-specific issues the features can be customized by using system properties starting with the `org.apache.activemq.documentBuilderFactory.feature:` prefix, e.g.:
 
 ----
 -Dorg.apache.activemq.documentBuilderFactory.feature:http://xml.org/sax/features/external-general-entities=true

@@ -41,7 +41,7 @@ The difference is that you can use any messaging protocol on top of _InVm_ trans
 One of the advantages of using Netty for IO layer, is that WebSockets are supported out of the box.
 So, there's no need for the separate _ws_ transport like in ActiveMQ, the _tcp_ (Netty) acceptor in {project-name-short} will detect Web Socket clients and handle them accordingly.
 
-To summarise this topic, here's a table that shows you how to migrate your ActiveMQ transport connectors to the {project-name-short} acceptors
+To summarize this topic, here's a table that shows you how to migrate your ActiveMQ transport connectors to the {project-name-short} acceptors
 
 |===
 | ActiveMQ | {project-name-short} (options in the acceptor URL)

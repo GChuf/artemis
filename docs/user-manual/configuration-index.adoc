@@ -86,7 +86,7 @@ You can also change the prefix through the `broker.xml` by setting:
 <system-property-prefix>yourprefix</system-property-prefix>
 ----
 
-This is to help you customise artemis on embedded systems.
+This is to help you customize artemis on embedded systems.
 
 === Broker properties
 
@@ -388,7 +388,7 @@ The system will create as many files as needed however when reclaiming files it 
 | `true`
 
 | xref:persistence.adoc#configuring-the-message-journal[journal-sync-transactional]
-| if true wait for transaction data to be synchronised to the journal before returning response to client.
+| if true wait for transaction data to be synchronized to the journal before returning response to client.
 | `true`
 
 | xref:persistence.adoc#configuring-the-message-journal[journal-type]
@@ -573,7 +573,7 @@ In most cases this should be set to '1'.
 | 1000
 
 | xref:security.adoc#caching-security-operations[authorization-cache-size]
-| how large to make the authorisation cache
+| how large to make the authorization cache
 | 1000
 
 | system-property-prefix
@@ -732,7 +732,7 @@ If you set this to `true` there will be a record stored on the journal for the p
 | xref:management.adoc#suppressing-session-notifications[suppress-session-notifications]
 | Whether to suppress `SESSION_CREATED` and `SESSION_CLOSED` notifications.
 Set to `true` to reduce notification overhead.
-However, these are required to enforce unique client ID utilisation in a cluster for MQTT clients.
+However, these are required to enforce unique client ID utilization in a cluster for MQTT clients.
 | `false`
 
 | xref:address-settings.adoc#literal-matches[literal-match-markers]

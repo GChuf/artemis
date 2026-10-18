@@ -73,7 +73,7 @@ See the section on xref:ha.adoc#replication-configuration[Replication Configurat
 ==== Active Voting
 
 By default, if the active broker loses its replication connection to the passive broker then it will just carry on and wait for a passive to reconnect and start replicating again.
-However, this may mean that it remains active even though the passive broker has activated so this behaviour is configurable via the `vote-on-replication-failure` property.
+However, this may mean that it remains active even though the passive broker has activated so this behavior is configurable via the `vote-on-replication-failure` property.
 
 See the section on xref:ha.adoc#replication-configuration[Replication Configuration] for more details on configuration.
 

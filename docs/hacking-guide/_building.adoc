@@ -2,8 +2,8 @@
 
 We use Apache Maven to build the code, distribution, etc. and to manage dependencies.
 
-Building requires JDK 25 or later and Maven 3.9 or later.
-The broker itself runs on Java 17 or later.
+Building requires JDK 17 or later and Maven 3.9 or later.
+Building a release (i.e. using the `release` profile) requires JDK 25.
 
 == Full Release
 

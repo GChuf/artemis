@@ -262,7 +262,7 @@ It can be disabled by setting `jmx-management-enabled` to `false` in `broker.xml
 
 Artemis uses the Java Virtual Machine's `Platform MBeanServer` by default. This is guarded using role based authorisation that leverages the broker's JAAS plugin support.
 
-The RBAC used to restrict access to Mbeans and their operations can be configured in `one` of two ways. Via security-settings in broker.xml, described in xref:management.adoc#jmx-authorization-in-broker-xml[JMX authorisation in broker.xml], or via the `authorization` element in the `management.xml` that is described below.
+The RBAC used to restrict access to Mbeans and their operations can be configured in `one` of two ways. Via security-settings in broker.xml, described in xref:management.adoc#jmx-authorization-in-broker-xml[JMX authorization in broker.xml], or via the `authorization` element in the `management.xml` that is described below.
 
 ===== JMX authorisation in management.xml
 
@@ -376,11 +376,10 @@ The `default-access` element is basically the catch-all for every method call th
 This has the same semantics as a `match` element.
 
 
-[#jmx-authorization-in-broker-xml]
-==== JMX authorisation in broker.xml
+==== JMX authorization in broker.xml
 The existing xref:security.adoc#role-based-security-for-addresses[security-settings] in broker.xml can be used for JMX RBAC.
 
-Using the `view` and `edit` permissions on matches in security-settings provides an alternative to the authorisation section in management.xml.
+Using the `view` and `edit` permissions on matches in security-settings provides an alternative to the authorization section in management.xml.
 Using a single security model based on addresses, with reloadable configuration, simplifies operation.
 
 An xref:management.adoc#artemis_rbac_mbean_server_guard[MBeanServer interceptor] that delegates to the broker security manager must be configured with a JVM system property that allows it to be added to all MBeanServers in the JVM.
@@ -391,7 +390,7 @@ This is configured via a system property as follows:
 ----
  java -Djavax.management.builder.initial=org.apache.activemq.artemis.core.server.management.ArtemisRbacMBeanServerBuilder
 ----
-IMPORTANT: When this property is provided, the authorisation section of management.xml *_MUST_* be omitted/removed as that depends on an alternative MBeanServer interceptor and builder.
+IMPORTANT: When this property is provided, the authorization section of management.xml *_MUST_* be omitted/removed as that depends on an alternative MBeanServer interceptor and builder.
 
 The security-settings match addresses used for JMX RBAC use the `mops.` (shorthand for management operations) xref:configuration-index.adoc#management-rbac-prefix[prefix].
 
@@ -934,7 +933,7 @@ _Management messages_ are regular Core Client messages with well-known propertie
 When such a management message is sent to the management address the broker will handle it, extract the information, invoke the operation on the managed resources, and send a _management reply_ to the management message's reply-to address (specified by `ClientMessageImpl.REPLYTO_HEADER_NAME`).
 
 A `ClientConsumer` can be used to consume the management reply and retrieve the result of the operation (if any) stored in the reply's body.
-For portability, results are returned as a https://json.org[JSON] String rather than Java Serialisation (the `org.apache.activemq.artemis.api.core.management.ManagementHelper` can be used to convert the JSON string to Java objects).
+For portability, results are returned as a https://json.org[JSON] String rather than Java Serialization (the `org.apache.activemq.artemis.api.core.management.ManagementHelper` can be used to convert the JSON string to Java objects).
 
 These steps can be simplified to make it easier to invoke management operations using Core messages:
 
@@ -1079,7 +1078,7 @@ If these notifications are not otherwise used they can be disabled through:
 <suppress-session-notifications>true</suppress-session-notifications>
 ----
 
-The only time these notifications are _required_ is in a cluster with MQTT clients where unique client ID utilisation needs to be enforced.
+The only time these notifications are _required_ is in a cluster with MQTT clients where unique client ID utilization needs to be enforced.
 Default value is `false`
 
 ==== Receiving Notification Messages

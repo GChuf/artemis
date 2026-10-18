@@ -8,7 +8,7 @@ The fixed size is maintained by removing the message at the head of the queue wh
 
 For example, consider a queue configured with a ring size of 3 and a producer which sends the messages `A`, `B`, `C`, & `D` in that order.
 Once `C` is sent the number of messages in the queue will be 3 which is the same as the configured ring size.
-We can visualise the queue growth like this...
+We can visualize the queue growth like this...
 
 After `A` is sent:
 
@@ -129,7 +129,7 @@ Therefore, since a ring queue prefers messages at the tail of the queue over mes
 
 Transaction or core session rollbacks are treated the same way.
 
-If you wish to avoid these kinds of situations and you're using the Core client directly or the core JMS client you can minimise messages in delivery by reducing the size of `consumerWindowSize` (1024 * 1024 bytes by default).
+If you wish to avoid these kinds of situations and you're using the Core client directly or the core JMS client you can minimize messages in delivery by reducing the size of `consumerWindowSize` (1024 * 1024 bytes by default).
 
 == Scheduled Messages
 

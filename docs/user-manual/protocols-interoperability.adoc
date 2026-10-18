@@ -58,7 +58,7 @@ Please see xref:core.adoc#using-core[Core] for more details.
 
 ==== APIs and Other Interfaces
 
-Although JMS and Jakarta Messaging are standardised APIs, they do not define a network protocol.
+Although JMS and Jakarta Messaging are standardized APIs, they do not define a network protocol.
 The {project-name-short} xref:using-jms.adoc#using-jms-or-jakarta-messaging[JMS & Jakarta Messaging clients] are implemented on top of the core protocol.
 We also provide a xref:using-jms.adoc#jndi[client-side JNDI implementation].
 

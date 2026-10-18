@@ -110,7 +110,7 @@ This QoS has the least network traffic overhead and the least burden on the clie
 * QoS 1 (`AT LEAST ONCE`)
 +
 Guarantees that a message will reach its intended recipient one or more times.
-The sender will continue to send the message until it receives an acknowledgement from the recipient, confirming it has received the message.
+The sender will continue to send the message until it receives an acknowledgment from the recipient, confirming it has received the message.
 The result of this QoS is that the recipient may receive the message multiple times, and also increases the network overhead than QoS 0, (due to acks).
 In addition more burden is placed on the sender as it needs to store the message and retry should it fail to receive an ack in a reasonable time.
 
@@ -285,10 +285,10 @@ The client must also support per-message deflate and request it via the standard
 
 == Link Stealing
 
-The MQTT specifications define a behaviour often referred to as "link stealing." This means that whenever a new client connects with the same client ID as another existing client then the existing client's session will be closed and its network connection will be terminated.
+The MQTT specifications define a behavior often referred to as "link stealing." This means that whenever a new client connects with the same client ID as another existing client then the existing client's session will be closed and its network connection will be terminated.
 
-In certain use-cases this behaviour is not desired so it is configurable.
-The URL parameter `allowLinkStealing` can be configured on the MQTT `acceptor` to modify this behaviour.
+In certain use-cases this behavior is not desired so it is configurable.
+The URL parameter `allowLinkStealing` can be configured on the MQTT `acceptor` to modify this behavior.
 By default `allowLinkStealing` is `true`.
 If it is set to `false` then whenever a new client connects with the same client ID as another existing client then the _new_ client's session will be closed and its network connection will be terminated.
 In the case of MQTT 5 clients they will receive a disconnect reason code of https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901208[`0x80` (i.e. "Unspecified error")].
@@ -312,7 +312,7 @@ This can be changed using the `mqtt-session-scan-interval` element set in the `c
 == Flow Control
 
 MQTT 3.x lacks a flow control mechanism.
-The sending party determines how many QoS 1 & 2 messages can be published without acknowledgement.
+The sending party determines how many QoS 1 & 2 messages can be published without acknowledgment.
 On the broker side, this is controlled by the `defaultMaximumInFlightPublishMessages` URL parameter on the MQTT `acceptor` in `broker.xml`, which defaults to `65535`.
 
 MQTT 5 introduced a simple form of https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Flow_Control[flow control].
@@ -327,12 +327,12 @@ A value of `0` is prohibited by the MQTT 5 specification.
 A value of `-1` will prevent the broker from informing the client of any receive maximum which means flow-control will be disabled from clients to the broker.
 This is effectively the same as setting the value to `65535`, but reduces the size of the `CONNACK` packet by a few bytes.
 
-If the MQTT 5 client doesn't send the https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901049[Receive Maximum] property to the broker, the broker uses its `defaultMaximumInFlightPublishMessages` setting to determine the maximum number of QoS 1 & 2 messages it can send without acknowledgement.
+If the MQTT 5 client doesn't send the https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901049[Receive Maximum] property to the broker, the broker uses its `defaultMaximumInFlightPublishMessages` setting to determine the maximum number of QoS 1 & 2 messages it can send without acknowledgment.
 
 == Topic Alias Maximum
 
 MQTT 5 introduced https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Topic_Alias[topic aliasing].
-This is an optimisation for the size of `PUBLISH` control packets as a 2-byte integer value can now be substituted for the _name_ of the topic which can potentially be quite long.
+This is an optimization for the size of `PUBLISH` control packets as a 2-byte integer value can now be substituted for the _name_ of the topic which can potentially be quite long.
 
 Both the client and the broker can inform each other about the _maximum_ alias value they support (i.e. how many different aliases they support).
 This is controlled on the broker using the `topicAliasMaximum` URL parameter on the `acceptor` used by the MQTT client.
@@ -382,14 +382,13 @@ MQTT 5 introduced https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.htm
 
 However, there are currently no challenge / response mechanisms implemented so if a client passes the "Authentication Method" property in its `CONNECT` packet it will receive a `CONNACK` with a reason code of `0x8C` (i.e. bad authentication method) and the network connection will be closed.
 
-[#publish-authorization-failures]
-== Publish Authorisation Failures
+== Publish Authorization Failures
 
-The MQTT 3.1.1 specification is ambiguous regarding the broker's behaviour when a `PUBLISH` packet fails due to a lack of authorisation.
+The MQTT 3.1.1 specification is ambiguous regarding the broker's behavior when a `PUBLISH` packet fails due to a lack of authorization.
 In http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718042[section 3.3.5] it says:
 
 ____
-If a Server implementation does not authorise a PUBLISH to be performed by a Client; it has no way of informing that Client.
+If a Server implementation does not authorize a PUBLISH to be performed by a Client; it has no way of informing that Client.
 It MUST either make a positive acknowledgement, according to the normal QoS rules, or close the Network Connection
 ____
 
@@ -424,7 +423,7 @@ For MQTT 5 clients you can instead have the broker reject the `DUP=0` case with 
 
 By default `rejectUnexpectedDuplicatePacketId` is `false`.
 This setting has no effect on MQTT 3.x clients as those versions don't support `PUBREC` reason codes.
-The MQTT 5 specification doesn't require this behaviour, but it allows it.
+The MQTT 5 specification doesn't require this behavior, but it allows it.
 It is provided as an option to detect and alert non-compliant clients.
 A `PUBREC` reason code >= `0x80` terminates the QoS 2 flow, so the affected client's publish will fail.
 

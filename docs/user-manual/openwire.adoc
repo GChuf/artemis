@@ -46,7 +46,7 @@ As a result, advisory addresses and queues will be displayed on the management c
 This sometimes cause confusion because the advisory objects are internally managed without user being aware of them.
 In addition, users may not want the advisory topics at all (they cause extra resources and performance penalty) and it is convenient to disable them at all from the broker side.
 
-The protocol provides two parameters to control advisory behaviours on the broker side.
+The protocol provides two parameters to control advisory behaviors on the broker side.
 
 supportAdvisory::
 Indicates whether the broker supports advisory messages.

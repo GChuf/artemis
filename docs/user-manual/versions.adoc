@@ -57,7 +57,7 @@ Cluster components on new brokers (cluster connections, bridges, backups, federa
 See xref:core.adoc#core-connection-handshake[Core connection handshake] for details.
 * On secured Core connections the broker initially limits frame size to 4 KiB until the connection is authenticated, then raises the limit to 128 KiB.
 Unauthenticated clients no longer receive real cluster topology; they receive a placeholder response until authentication succeeds.
-Both behaviours can be tuned or disabled per acceptor; see xref:core.adoc#core-connection-handshake[Core connection handshake].
+Both behaviors can be tuned or disabled per acceptor; see xref:core.adoc#core-connection-handshake[Core connection handshake].
 * *Upgrade brokers before mixing old and new versions in a secured cluster.*
 An old broker connecting to a broker that has already been upgraded does not send connection-level credentials in the Core connect handshake.
 The upgraded broker therefore treats the connection as unauthenticated and responds with only the placeholder topology entry, not the real cluster view.
@@ -77,14 +77,14 @@ https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315920&versio
 * The xref:lock-coordination.adoc#lock-coordination-ha-with-mirroring[lock coordinators] now support a new `auto-start` attribute to control whether a coordinator begins polling for the distributed lock on broker activation, plus new `startLockCoordinator` / `stopLockCoordinator` management operations and matching `lock start` / `lock stop` CLI commands.
 * A lock coordinator that cannot reach its distributed lock store (e.g. ZooKeeper is unreachable) no longer hangs broker shutdown indefinitely.
 * The AMQP protocol module has been updated to proton-j 0.35.0 with a new `maxTransfersPerDelivery` configuration option.
-* The journal file lock health-check behaviour is now configurable via the new `journal-lock-monitor-timeout` and `journal-lock-monitor-max-retries` parameters in `broker.xml`.
+* The journal file lock health-check behavior is now configurable via the new `journal-lock-monitor-timeout` and `journal-lock-monitor-max-retries` parameters in `broker.xml`.
 See xref:persistence.adoc#configuring-the-message-journal[configuring the message journal] for details.
 * MQTT QoS 1 and QoS 2 message delivery has been redesigned for resiliency across broker restarts and client reconnects.
 
 === Upgrading from 2.55.0
 
 
-* Due to https://issues.apache.org/jira/browse/ARTEMIS-6128[ARTEMIS-6128] the `Alder32` and `fileAlder32` properties have been deprecated in favour of `Adler32` and `fileAdler32` respectively.
+* Due to https://issues.apache.org/jira/browse/ARTEMIS-6128[ARTEMIS-6128] the `Alder32` and `fileAlder32` properties have been deprecated in favor of `Adler32` and `fileAdler32` respectively.
 * Due to https://issues.apache.org/jira/browse/ARTEMIS-6172[ARTEMIS-6172] the HTTP-specific transport parameters deprecated by https://issues.apache.org/jira/browse/ARTEMIS-5819[ARTEMIS-5819] (`httpClientIdleTime`, `httpClientIdleScanPeriod`, `httpResponseTime`, `httpServerScanPeriod`) are restored.
 These are required so HTTP-tunneled Core connections can create response slots for server-initiated packets (for example cluster topology updates) without starving replies to client requests.
 * Due to https://issues.apache.org/jira/browse/ARTEMIS-6189[ARTEMIS-6189] MQTT QoS 1 and QoS 2 message delivery has been redesigned for resiliency across broker restarts and client reconnects.
@@ -153,7 +153,7 @@ https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315920&versio
 
 === Highlights
 
-* The documentation chapters have been reorganised
+* The documentation chapters have been reorganized
 * The PDF output has been improved for better readability
 * https://issues.apache.org/jira/browse/ARTEMIS-5925[ARTEMIS-5925] - The Lock coordinator can now be applied to broker connections, supporting "Star Mirror" for enhanced HA topologies
 * https://issues.apache.org/jira/browse/ARTEMIS-5946[ARTEMIS-5946] - Update to Artemis Console 1.7.0
@@ -173,8 +173,8 @@ https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315920&versio
 
 === Upgrading from 2.51.0
 
-* Due to https://issues.apache.org/jira/browse/ARTEMIS-5928[ARTEMIS-5928], any broker receiving Core downstream federation requests from another broker (e.g. for xref:federation-address.adoc#configuring-downstream-federation[addresses] or xref:federation-queue.adoc#configuring-downstream-federation[queues]) will reject those requests until the appropriate authorisation is configured.
-Authorisation is configured in `broker.xml` via the `federations` element using the `downstream-authorization` attribute.
+* Due to https://issues.apache.org/jira/browse/ARTEMIS-5928[ARTEMIS-5928], any broker receiving Core downstream federation requests from another broker (e.g. for xref:federation-address.adoc#configuring-downstream-federation[addresses] or xref:federation-queue.adoc#configuring-downstream-federation[queues]) will reject those requests until the appropriate authorization is configured.
+Authorization is configured in `broker.xml` via the `federations` element using the `downstream-authorization` attribute.
 See the xref:federation-address.adoc#configuring-downstream-federation[downstream address federation] or xref:federation-queue.adoc#configuring-downstream-federation[downstream queue federation] documentation for more details.
 
 == Version 2.51.0
@@ -213,7 +213,7 @@ Run `./artemis help consumer` from your broker instance's `bin` directory for mo
 * There are two new TLS transport options - `crcOptions` & `ocspResponderURL`.
 These will help with certificate management.
 See details xref:configuring-transports.adoc#configuring-netty-ssl[here].
-* The new xref:paging.adoc#monitoring-disk[`disk-full-policy`] `address-setting` allows new behaviours when the broker's disk fills up instead of always blocking.
+* The new xref:paging.adoc#monitoring-disk[`disk-full-policy`] `address-setting` allows new behaviors when the broker's disk fills up instead of always blocking.
 * There's a new `artemis-jakarta-client` feature for Karaf use-cases needing Jakarta compatibility.
 
 === Upgrading from 2.44.0
@@ -234,7 +234,7 @@ This may impact users filtering results based on this field.
 
 The functionality previously provided via these parameters was non-functional and ultimately unnecessary.
 Idle connection management should be done through xref:connection-ttl.adoc#detecting-dead-connections[existing parameters].
-* Due to https://issues.apache.org/jira/browse/ARTEMIS-5092[ARTEMIS-5092] all the existing `addSecuritySettings` management methods have been deprecated in favour of the new JSON-based implementation.
+* Due to https://issues.apache.org/jira/browse/ARTEMIS-5092[ARTEMIS-5092] all the existing `addSecuritySettings` management methods have been deprecated in favor of the new JSON-based implementation.
 * Due to https://issues.apache.org/jira/browse/ARTEMIS-5843[ARTEMIS-5843] all Docker images use the directory `/opt/artemis` instead of `/opt/activemq-artemis`.
 
 == Version 2.44.0
@@ -343,11 +343,11 @@ Further technical details are available on https://issues.apache.org/jira/browse
 
 * The broker was always meant to scan MQTT sessions every `5000` milliseconds, but due to a bug it was doing so every `500` milliseconds instead.
 This has been fixed via https://issues.apache.org/jira/browse/ARTEMIS-5202[ARTEMIS-5202].
-Since this is technically changing the default behaviour of the broker it is being enumerated here for clarity.
+Since this is technically changing the default behavior of the broker it is being enumerated here for clarity.
 Keep in mind that this is configurable via the xref:mqtt.adoc#automatic-subscription-clean-up[`mqtt-session-scan-interval`] parameter in `broker.xml`.
 
 * Due to https://issues.apache.org/jira/browse/ARTEMIS-5364[ARTEMIS-5364] several adjustments have been made to the supporting files used to run the broker on both Linux and Windows.
-While these changes do not result in any significant behavioural differences, they're worth noting here since users often modify these files for their specific use-case.
+While these changes do not result in any significant behavioral differences, they're worth noting here since users often modify these files for their specific use-case.
 +
 The relevant changes include:
 
@@ -395,7 +395,7 @@ This move is about security just like the recent move to Java 17.
 Notable differences:
 
 ** From a graphical interface perspective the main change is that the prominently featured "tree" component was relocated to the "Artemis JMX" view available from the menu on the left of the screen.
-The categorised resource tabs which were available previously are now the main and recommended way to interact with the broker.
+The categorized resource tabs which were available previously are now the main and recommended way to interact with the broker.
 These tabs offer a paged view which is filterable and sortable and scales well for resource heavy use-cases.
 
 ** Any request with an origin header using the `https` scheme which is ultimately received by Jolokia via HTTP is now discarded by default since it is deemed insecure.
@@ -404,12 +404,12 @@ If that isn't feasible then you can accept the risk by adding `<ignore-scheme/>`
 See the https://jolokia.org/reference/html/manual/security.html[Jolokia documentation] for more details.
 
 ** The console will now automatically protect itself from brute-force attacks (e.g. i.e. repeated, quick login attempts).
-This behaviour is controlled by the `hawtio.authenticationThrottled` system property.
-If you wish to disable this behaviour then set this property to `false` (e.g. in `artemis.profile`).
+This behavior is controlled by the `hawtio.authenticationThrottled` system property.
+If you wish to disable this behavior then set this property to `false` (e.g. in `artemis.profile`).
 It is `true` by default. See the https://hawt.io/docs/security.html#_configuration_properties[Hawtio documentation] for more details.
 --
 +
-The behaviour and presentation should be more consistent overall, and anything that was possible before should still be possible since the underlying management API has not changed.
+The behavior and presentation should be more consistent overall, and anything that was possible before should still be possible since the underlying management API has not changed.
 +
 In order to upgrade an existing instance of 2.39.0 to 2.40.0 you can use the xref:upgrading.adoc#upgrading-tool[`upgrade` command] which will *automatically perform* all the changes or you can make the following changes manually:
 +
@@ -462,7 +462,7 @@ This compression can be used transparently for AMQP, STOMP, or MQTT when communi
 * The xref:broker-plugins.adoc#plugin-support[`ActiveMQServerMessagePlugin`] now has a `messageMoved()` callback.
 * xref:core-bridges.adoc#configuring-core-bridges[Core bridge configuration] now supports `client-id` which will make it much easier to identify bridge connections on remote brokers.
 * The `consumer` xref:using-cli.adoc[CLI command] now supports consuming messages "forever" by specifying `-1` for `--receive-timeout`.
-* The xref:security.adoc#caching-security-operations[authentication & authorisation caches] now have detailed debug logging.
+* The xref:security.adoc#caching-security-operations[authentication & authorization caches] now have detailed debug logging.
 * There's been a handful of updates to broker management:
 ** The documentation has been improved with more examples for xref:management.adoc#exposing-jmx-using-jolokia[Jolokia] and a new sub-section on xref:management.adoc#management-method-option-syntax[management method option syntax].
 ** It's now possible to pass empty "options" to the xref:management.adoc#management-method-option-syntax[management methods] that accept them.
@@ -509,7 +509,7 @@ https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315920&versio
 
 * Numerous dependency upgrades triggered by integration with https://docs.github.com/en/code-security/getting-started/dependabot-quickstart-guide[GitHub's Dependabot].
 * Stability improvement for use-cases involving slower IO devices (e.g. NFS) and the NIO journal via https://issues.apache.org/jira/browse/ARTEMIS-4949[ARTEMIS-4949].
-* Code optimisation in the address manager to decrease CPU utilisation and increase broker scalability for use-cases involving a large number of addresses and queues courtesy of https://issues.apache.org/jira/browse/ARTEMIS-4814[ARTEMIS-4814].
+* Code optimization in the address manager to decrease CPU utilization and increase broker scalability for use-cases involving a large number of addresses and queues courtesy of https://issues.apache.org/jira/browse/ARTEMIS-4814[ARTEMIS-4814].
 * Stability improvement for use-cases involving STOMP clients connecting over WebSockets via https://issues.apache.org/jira/browse/[ARTEMIS-3509].
 * Lots of internal "code gardening" improvements for developers to make the code-base simpler and more consistent.
 
@@ -731,7 +731,7 @@ java.lang.IllegalArgumentException: AMQ229247: Invalid address configuration for
 
 * Due to https://issues.apache.org/jira/browse/ARTEMIS-3707[ARTEMIS-3707] all use of `javax.transaction.TransactionManager` was removed from the JCA Resource Adapter.
 However, this rendered the `transactionTimeout` activation configuration property useless.
-Some existing users rely on this behaviour so it has been restored and properly deprecated for future removal.
+Some existing users rely on this behavior so it has been restored and properly deprecated for future removal.
 
 == Version 2.28.0
 
@@ -833,7 +833,7 @@ You can still follow the steps from the previous version to build and deploy the
 However, you should stop using it as it will not be maintained any more.
 . Due to https://issues.apache.org/jira/browse/ARTEMIS-3980[ARTEMIS-3980] the web content was removed from the binary distribution.
 We now redirect web requests with the root target to the administration console.
-To enable this new redirect behaviour on current instances you have to update `bootstrap.xml`.
+To enable this new redirect behavior on current instances you have to update `bootstrap.xml`.
 Change:
 +
 [,xml]
@@ -848,7 +848,7 @@ to:
 <web path="web" rootRedirectLocation="console">
 ----
 +
-If you used to customise the index page or to add custom content in the `web` folder please refer to the xref:web-server.adoc#embedded-web-server[web-server documentation] for more information on disabling the redirect and enabling the web content.
+If you used to customize the index page or to add custom content in the `web` folder please refer to the xref:web-server.adoc#embedded-web-server[web-server documentation] for more information on disabling the redirect and enabling the web content.
 
 == Version 2.25.0
 
@@ -987,14 +987,14 @@ This means that *Core clients will now expect the `CN` or Subject Alternative Na
 +
 This impacts all core-based clients including core JMS clients and core connections between cluster nodes.
 Although this is a "breaking" change, _not_ performing hostname verification is a security risk (e.g. due to man-in-the-middle attacks).
-Enabling it by default aligns Core client behaviour with industry standards.
+Enabling it by default aligns Core client behavior with industry standards.
 To deal with this you can do one of the following:
 
  ** Update your SSL certificates to use a hostname which matches the hostname in the client's URL.
 This is the recommended option with regard to security.
  ** Update any connector using `sslEnabled=true` to also use `verifyHost=false`.
 Using this option means that you won't get the extra security of hostname verification, but no certificates will need to change.
-This essentially restores the previous default behaviour.
+This essentially restores the previous default behavior.
 
 +
 For additional details about please refer to section 3.1 of https://datatracker.ietf.org/doc/html/rfc2818#section-3.1[RFC 2818 "HTTP over TLS"].
@@ -1003,7 +1003,7 @@ For additional details about please refer to section 3.1 of https://datatracker.
 Previously an instance of `javax.net.ssl.SSLContext` was created for _every_ connection.
 This would implicitly pick up any changes to the keystore and  truststore for any new connection.
 However, this was grossly inefficient and therefore didn't scale well with lots of connections.
-The behaviour was changed so that just one `javax.net.ssl.SSLContext` is created for each `acceptor`.
+The behavior was changed so that just one `javax.net.ssl.SSLContext` is created for each `acceptor`.
 However, one can still reload keystores & truststores from disk without restarting the broker.
 Simply use the `reload` management operation on the `acceptor`.
 This is available via JMX, the web console, Jolokia, etc.
@@ -1022,8 +1022,8 @@ This was a follow-up from https://issues.apache.org/jira/browse/ARTEMIS-2909[ART
 The "rate" metric mistakenly left visible on the web console after it was removed from the management API.
 . Due to https://issues.apache.org/jira/browse/ARTEMIS-3141[ARTEMIS-3141], https://issues.apache.org/jira/browse/ARTEMIS-3128[ARTEMIS-3128], & https://issues.apache.org/jira/browse/ARTEMIS-3175[ARTEMIS-3175] the data returned for any "list" or "browse" management method which return message data, including those exposed via the web console, will have their return data truncated by default.
 This is done to avoid adverse conditions with large volumes of message data which could potentially negatively impact broker stability.
-The `management-message-attribute-size-limit` address-setting controls this behaviour.
-If you wish to restore the previous (and potentially dangerous behaviour) then you can specify `-1` for this.
+The `management-message-attribute-size-limit` address-setting controls this behavior.
+If you wish to restore the previous (and potentially dangerous behavior) then you can specify `-1` for this.
 It is `256` by default.
 
 == Version 2.17.0
@@ -1032,7 +1032,7 @@ https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315920&versio
 
 === Highlights
 
-* xref:broker-plugins.adoc#using-the-brokermessageauthorizationplugin[Message-level authorisation] similar to ActiveMQ Classic.
+* xref:broker-plugins.adoc#using-the-brokermessageauthorizationplugin[Message-level authorization] similar to ActiveMQ Classic.
 * A count of addresses and queues is now available from the management API.
 * You can now reload the broker's configuration from disk via the management API rather than waiting for the periodic  disk scan to pick it up
 * Performance improvements on libaio journal.
@@ -1055,7 +1055,7 @@ https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315920&versio
 * Consumer window size support for individual STOMP clients
 * Improved JDBC connection management
 * New web console based on Hawtio 2
-* Performance optimisations (i.e. caching) for authentication and authorisation
+* Performance optimizations (i.e. caching) for authentication and authorization
 * Support for admin objects in the JCA resource adapter to facilitate deployment into 3rd-party Java EE application servers
 * Ability to prevent an acceptor from automatically starting
 
@@ -1101,7 +1101,7 @@ A time-series database is a great tool for this job.
 This is exactly what tools like Prometheus do.
 That data can then be used to create informative graphs, etc.
 using tools like Grafana.
-Of course, one can skip all the tools and just do some simple maths to calculate rates based on the last time the counts were retrieved.
+Of course, one can skip all the tools and just do some simple math to calculate rates based on the last time the counts were retrieved.
  .. Use the broker's xref:management.adoc#message-counters[message counters].
 Message counters are the broker's simple way of providing historical information about the queue.
 They provide similar results to the previous solutions, but with less flexibility since they only track data while the broker is up and there's not really any good options for graphing.
@@ -1149,7 +1149,7 @@ https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315920&versio
 * Command-line `check` tool for checking the health of a broker
 * Support disabling metrics per address via the xref:address-settings.adoc#address-settings[`enable-metrics` address setting]
 * Improvements to the xref:logging.adoc#configuring-broker-audit-logging[audit logging]
-* Speed optimisations for the `HierarchicalObjectRepository`, an internal object used to store address and security settings
+* Speed optimizations for the `HierarchicalObjectRepository`, an internal object used to store address and security settings
 
 === Upgrading from 2.12.0
 
@@ -1633,7 +1633,7 @@ https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315920&versio
 
 === Highlights
 
-* Better support of OpenWire features (e.g. reconnect, producer flow-control, optimised acknowledgements)
+* Better support of OpenWire features (e.g. reconnect, producer flow-control, optimized acknowledgements)
 * SSL keystore reload at runtime.
 * Initial support for JDBC persistence.
 * Support scheduled messages on last-value queue.

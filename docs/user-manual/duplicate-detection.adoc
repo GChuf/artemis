@@ -122,7 +122,7 @@ To configure the cache size on a per-address basis use the `id-cache-size` `addr
 ----
 
 When a message is sent to an address with a specific `id-cache-size` configured it will take precedence over the global `id-cache-size` value.
-This allows for greater flexibility and optimisation of duplicate ID caches.
+This allows for greater flexibility and optimization of duplicate ID caches.
 
 The default value for the per-address `id-cache-size` is `20000`. A value of `0` disables caching.
 

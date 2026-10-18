@@ -89,9 +89,9 @@ image::images/artemis_text_black_small.png[align="center"]
 == Security
 
 * xref:threat-model.adoc#threat-model[Threat Model]
-* xref:security.adoc#authentication-authorization[Authentication & Authorisation]
+* xref:security.adoc#authentication-authorization[Authentication & Authorization]
 * xref:masking-passwords.adoc#masking-passwords[Masking Passwords]
-* xref:resource-limits.adoc#resource-limits[Limiting Resource Utilisation]
+* xref:resource-limits.adoc#resource-limits[Limiting Resource Utilization]
 
 == Performance
 
@@ -127,8 +127,7 @@ image::images/artemis_text_black_small.png[align="center"]
 * xref:configuring-transports.adoc#configuring-the-transport[Configuring Network Transports]
 * xref:flow-control.adoc#flow-control[Flow Control for Remote Core Clients]
 
-[#customizing-broker-behavior]
-== Customising Broker Behaviour
+== Customizing Broker Behavior
 
 * xref:broker-plugins.adoc#plugin-support[Broker Plugins]
 * xref:intercepting-operations.adoc#intercepting-operations[Intercepting Network Operations]
