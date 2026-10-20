@@ -17,9 +17,12 @@
 package org.apache.activemq.artemis.core.management.impl.view;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.activemq.artemis.api.core.JsonUtil;
 import org.apache.activemq.artemis.json.JsonObject;
@@ -27,6 +30,7 @@ import org.apache.activemq.artemis.json.JsonObjectBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ViewTest {
 
@@ -77,6 +81,77 @@ public class ViewTest {
 
       // past the last page
       assertEquals(0, myView.getPagedResult(11, 100).size());
+   }
+
+   @Test
+   public void testSortWithNullValues() {
+      // TimSort only detects comparator contract violations with 32+ elements so use well over that
+      List<Integer> list = new ArrayList<>();
+      for (int i = 0; i < 200; i++) {
+         list.add(i % 3 == 0 ? null : i);
+      }
+
+      for (long seed = 0; seed < 20; seed++) {
+         Collections.shuffle(list, new Random(seed));
+
+         ActiveMQAbstractView<Integer, ?> ascending = createIdentityView(list);
+         List<Integer> result = ascending.getPagedResult(-1, -1);
+         List<Integer> expected = new ArrayList<>(list);
+         expected.sort(Comparator.nullsLast(Comparator.naturalOrder()));
+         assertEquals(expected, result);
+
+         ActiveMQAbstractView<Integer, ?> descending = createIdentityView(list);
+         descending.sortOrder = "desc";
+         result = descending.getPagedResult(-1, -1);
+         expected.sort(Comparator.nullsLast(Comparator.<Integer>reverseOrder()));
+         assertEquals(expected, result);
+      }
+   }
+
+   @Test
+   public void testSortWithMixedValueTypes() {
+      List<Object> list = new ArrayList<>();
+      for (int i = 0; i < 200; i++) {
+         list.add(switch (i % 4) {
+            case 0 -> null;
+            case 1 -> i;
+            case 2 -> "s" + i;
+            default -> new Object[] {i};
+         });
+      }
+
+      for (long seed = 0; seed < 20; seed++) {
+         Collections.shuffle(list, new Random(seed));
+         List<Object> result = createIdentityView(list).getPagedResult(-1, -1);
+         assertEquals(list.size(), result.size());
+         assertNull(result.get(result.size() - 1));
+      }
+   }
+
+   private static <T> ActiveMQAbstractView<T, ?> createIdentityView(List<T> list) {
+      ActiveMQAbstractView<T, ?> view = new ActiveMQAbstractView<>() {
+         @Override
+         Object getField(T o, String fieldName) {
+            return o;
+         }
+
+         @Override
+         public Class getClassT() {
+            return null;
+         }
+
+         @Override
+         public JsonObjectBuilder toJson(T obj) {
+            return null;
+         }
+
+         @Override
+         public String getDefaultOrderColumn() {
+            return "";
+         }
+      };
+      view.setCollection(list);
+      return view;
    }
 
    protected String createJsonFilter(String fieldName, String operationName, String value) {
