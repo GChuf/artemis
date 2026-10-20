@@ -172,7 +172,7 @@ public class Upgrade extends InstallAbstract {
          File artemisUtilityProfileCmdBkp = new File(etcBkp, Create.ETC_ARTEMIS_UTILITY_PROFILE_CMD);
 
          dataFolder = getDATA(context, dataFolder, artemisProfileCmd, "set ARTEMIS_DATA_DIR=");
-         renameDataFiles(dataFolder);
+         renameDataFiles(context, dataFolder);
 
          if (artemisUtilityProfileCmd.exists()) {
             write("etc/" + Create.ETC_ARTEMIS_UTILITY_PROFILE_CMD, artemisUtilityProfileCmdTmp, filters, false, false);
@@ -217,7 +217,7 @@ public class Upgrade extends InstallAbstract {
          File artemisUtilityProfileBkp = new File(etcBkp, Create.ETC_ARTEMIS_UTILITY_PROFILE);
 
          dataFolder = getDATA(context, dataFolder, artemisProfile, "ARTEMIS_DATA_DIR=");
-         renameDataFiles(dataFolder);
+         renameDataFiles(context, dataFolder);
 
          if (artemisUtilityProfile.exists()) {
             write("etc/" + Create.ETC_ARTEMIS_UTILITY_PROFILE, artemisUtilityProfileTmp, filters, false, false);
@@ -484,28 +484,30 @@ public class Upgrade extends InstallAbstract {
 
    }
 
-   private void renameDataFiles(File dataFolder) throws Exception {
+   // brokers before the rename (2.x) wrote journal files with the activemq- prefix; instances already using
+   // the artemis- prefix have no such files, so upgrading them again leaves the data untouched
+   private void renameDataFiles(ActionContext context, File dataFolder) throws IOException {
+      renameJournalFiles(context, new File(dataFolder, "journal"), "activemq-data-", "artemis-data-", ".amq");
+      renameJournalFiles(context, new File(dataFolder, "bindings"), "activemq-bindings-", "artemis-bindings-", ".bindings");
+   }
 
-      File journalFilesDirectory = new File(dataFolder, "journal");
-      File bindingsFilesDirectory = new File(dataFolder, "bindings");
-
-      for (File file : journalFilesDirectory.listFiles()) {
-         String filename = file.getAbsolutePath();
-         if (filename.endsWith(".amq")) {
-            filename = filename.replace("activemq", "artemis");
-            File newFile = new File(filename);
-            file.renameTo(newFile);
-         }
+   private void renameJournalFiles(ActionContext context, File directory, String oldPrefix, String newPrefix, String suffix) throws IOException {
+      File[] oldFiles = directory.listFiles((dir, name) -> name.startsWith(oldPrefix) && name.endsWith(suffix));
+      if (oldFiles == null || oldFiles.length == 0) {
+         return;
       }
 
-      for (File file : bindingsFilesDirectory.listFiles()) {
-         String filename = file.getAbsolutePath();
-         if (filename.endsWith(".bindings")) {
-            filename = filename.replace("activemq", "artemis");
-            File newFile = new File(filename);
-            file.renameTo(newFile);
-         }
+      // mixing both sets of files would corrupt the journal, e.g. if the new version was started before upgrading
+      File[] newFiles = directory.listFiles((dir, name) -> name.startsWith(newPrefix) && name.endsWith(suffix));
+      if (newFiles != null && newFiles.length > 0) {
+         throw new IOException(String.format("Cannot rename the journal files in %s as it contains files with both the %s and %s prefixes", directory, oldPrefix, newPrefix));
       }
 
+      for (File file : oldFiles) {
+         File target = new File(directory, newPrefix + file.getName().substring(oldPrefix.length()));
+         Files.move(file.toPath(), target.toPath());
+      }
+
+      context.out.println("Renamed " + oldFiles.length + " journal files in " + directory + " from " + oldPrefix + "* to " + newPrefix + "*");
    }
 }
