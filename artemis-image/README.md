@@ -25,7 +25,7 @@ The embedded broker main class accepts up to two optional arguments:
 
 When both arguments are given, both are applied: data is still kept under `<workDir>`.
 
-An empty or blank `workDir`, or more than two arguments, is rejected with an `IllegalArgumentException` and the broker does not start.
+An empty or blank argument, or more than two arguments, is rejected with an `IllegalArgumentException` and the broker does not start.
 
 Arguments are appended to the container run command, e.g.:
 

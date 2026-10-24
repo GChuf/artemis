@@ -109,6 +109,37 @@ public class MainTest {
       logger.debug("Caught expected IllegalArgumentException: {}", expected.getMessage());
    }
 
+   /*
+    * Tests what happens when an empty properties path arg is given, expect to throw IllegalArgumentException.
+    */
+   @Test
+   @Timeout(5)
+   public void testEmptyPropertiesPath() throws Exception {
+      IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> Main.main(new String[] {tempDir.toString(), ""}));
+      logger.debug("Caught expected IllegalArgumentException: {}", expected.getMessage());
+   }
+
+   /*
+    * Tests what happens when a null properties path arg is given, expect to throw IllegalArgumentException.
+    */
+   @Test
+   @Timeout(5)
+   public void testNullPropertiesPath() throws Exception {
+      IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> Main.main(new String[] {tempDir.toString(), null}));
+      logger.debug("Caught expected IllegalArgumentException: {}", expected.getMessage());
+   }
+
+   /*
+    * Tests what happens when a blank properties path arg is given, expect to throw IllegalArgumentException.
+    * Fails if trim() is removed in Main.java check.
+    */
+   @Test
+   @Timeout(5)
+   public void testBlankPropertiesPath() throws Exception {
+      IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> Main.main(new String[] {tempDir.toString(), "  "}));
+      logger.debug("Caught expected IllegalArgumentException: {}", expected.getMessage());
+   }
+
    @Test
    @Timeout(5)
    public void testThreeArguments() throws Exception {

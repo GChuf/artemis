@@ -55,6 +55,9 @@ public class Main {
 
       String propertiesConfigPath = "/config/," + workDir + "/etc/";
       if (args.length == 2) {
+         if (args[1] == null || args[1].trim().isEmpty()) {
+            throw new IllegalArgumentException("Properties config path cannot be empty");
+         }
          propertiesConfigPath = args[1];
          logger.debug("User supplied properties config path {}", propertiesConfigPath);
       }
