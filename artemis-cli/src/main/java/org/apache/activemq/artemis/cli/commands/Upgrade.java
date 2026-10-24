@@ -18,6 +18,7 @@ package org.apache.activemq.artemis.cli.commands;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,12 +30,18 @@ import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.activemq.artemis.util.JVMArgumentParser;
+import org.apache.activemq.artemis.utils.XMLUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import picocli.CommandLine.Command;
 
 @Command(name = "upgrade", description = "Update a broker instance to the current artemis.home, keeping all the data and broker.xml. Warning: backup your instance before using this command and compare the files.")
@@ -248,6 +255,8 @@ public class Upgrade extends InstallAbstract {
 
       upgradeLogging(context, etcFolder, etcBkp);
 
+      upgradeLockFiles(context, etcFolder);
+
       context.out.println();
       context.out.println("*******************************************************************************************************************************");
 
@@ -439,6 +448,62 @@ public class Upgrade extends InstallAbstract {
          try (InputStream inputStream = openStream("etc/" + Create.ETC_LOG4J2_UTILITY_PROPERTIES);
               OutputStream outputStream = new FileOutputStream(newUtilityLogging)) {
             copy(inputStream, outputStream);
+         }
+      }
+   }
+
+   static void upgradeLockFiles(ActionContext context, File etcFolder) {
+      Set<File> locksFolders = new LinkedHashSet<>();
+
+      File brokerXml = new File(etcFolder, "broker.xml");
+      if (brokerXml.exists()) {
+         try (InputStream inputStream = new FileInputStream(brokerXml)) {
+            NodeList properties = XMLUtil.streamToElement(inputStream).getElementsByTagNameNS("*", "property");
+            for (int i = 0; i < properties.getLength(); i++) {
+               Element property = (Element) properties.item(i);
+               if ("locks-folder".equals(property.getAttribute("key")) && !property.getAttribute("value").isBlank()) {
+                  locksFolders.add(new File(property.getAttribute("value").trim()));
+               }
+            }
+         } catch (Exception e) {
+            context.out.println("Could not parse " + brokerXml + " while looking for locks-folder: " + e.getMessage());
+         }
+      }
+
+      File brokerProperties = new File(etcFolder, "broker.properties");
+      if (brokerProperties.exists()) {
+         try (InputStream inputStream = new FileInputStream(brokerProperties)) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            properties.forEach((key, value) -> {
+               if (key.toString().endsWith(".locks-folder") && !value.toString().isBlank()) {
+                  locksFolders.add(new File(value.toString().trim()));
+               }
+            });
+         } catch (Exception e) {
+            context.out.println("Could not parse " + brokerProperties + " while looking for locks-folder: " + e.getMessage());
+         }
+      }
+
+      locksFolders.forEach(locksFolder -> upgradeLockFolder(context, locksFolder));
+   }
+
+   private static void upgradeLockFolder(ActionContext context, File locksFolder) {
+      File[] oldLockFiles = locksFolder.listFiles((dir, name) -> name.startsWith("ML:"));
+      if (oldLockFiles == null) {
+         context.out.println("Could not list " + locksFolder + ", lock files will not be upgraded");
+         return;
+      }
+      for (File oldLockFile : oldLockFiles) {
+         File newLockFile = new File(locksFolder, "ML_" + oldLockFile.getName().substring(3));
+         if (newLockFile.exists()) {
+            continue;
+         }
+         context.out.println("Renaming " + oldLockFile + " to " + newLockFile);
+         try {
+            Files.move(oldLockFile.toPath(), newLockFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+         } catch (Exception e) {
+            context.out.println("Could not rename " + oldLockFile + " to " + newLockFile + ": " + e.getMessage());
          }
       }
    }

@@ -40,6 +40,9 @@ If a rolling upgrade is not possible, you can force the broker to use the previo
 
 +
 Remove this override once all brokers in the cluster have been upgraded.
+* Due to https://issues.apache.org/jira/browse/ARTEMIS-6232[ARTEMIS-6232], the `FileBasedLockManager` now names its mutable long files (e.g. the activation sequence) `ML_<id>` instead of `ML:<id>`, since `:` is not valid in Windows file names.
+The `artemis upgrade` command renames existing `ML:<id>` files in every `locks-folder` configured in `etc/broker.xml` or `etc/broker.properties`.
+If the `locks-folder` is configured elsewhere, or is not reachable from where the upgrade runs, rename these files manually while all brokers using that folder are stopped.
 
 == Version 2.57.0
 
