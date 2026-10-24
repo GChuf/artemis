@@ -39,27 +39,26 @@ public class Main {
    public static void main(String[] args) throws Exception {
 
       String workDir = DEFAULT_WORK_DIR;
+      String propertiesConfigPath = "/config/," + workDir + "/etc/";
 
       if (args.length >= 1) {
 
-         if (args.length > 2) {
+         if (args.length == 2) {
+            if (args[1] == null || args[1].trim().isEmpty()) {
+               throw new IllegalArgumentException("Properties config path cannot be empty");
+            }
+            propertiesConfigPath = args[1];
+            logger.debug("User supplied properties config path {}", propertiesConfigPath);
+         } else {
             throw new IllegalArgumentException("Too many arguments (" + args.length + "), expected 2 at most: workDir, propertiesConfigPath");
          }
 
          if (args[0] == null || args[0].trim().isEmpty()) {
             throw new IllegalArgumentException("Work directory cannot be empty");
          }
+
          workDir = args[0];
          logger.debug("User supplied work dir {}", workDir);
-      }
-
-      String propertiesConfigPath = "/config/," + workDir + "/etc/";
-      if (args.length == 2) {
-         if (args[1] == null || args[1].trim().isEmpty()) {
-            throw new IllegalArgumentException("Properties config path cannot be empty");
-         }
-         propertiesConfigPath = args[1];
-         logger.debug("User supplied properties config path {}", propertiesConfigPath);
       }
 
       FileConfiguration configuration = new FileConfiguration();
