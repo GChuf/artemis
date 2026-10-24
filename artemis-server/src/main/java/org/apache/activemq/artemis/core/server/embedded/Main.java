@@ -33,10 +33,12 @@ public class Main {
 
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-   private static String workDir = "/app";
+   private static final String DEFAULT_WORK_DIR = "/app";
    private static volatile EmbeddedActiveMQ embeddedServer;
 
    public static void main(String[] args) throws Exception {
+
+      String workDir = DEFAULT_WORK_DIR;
 
       if (args.length >= 1) {
 
