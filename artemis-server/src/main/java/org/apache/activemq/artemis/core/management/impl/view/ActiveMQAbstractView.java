@@ -143,7 +143,7 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
          if (leftValue == rightValue) {
             return 0;
          }
-         // push nulls to bottom of the list
+         // push nulls (including values which couldn't be retrieved) to bottom of the list
          if (leftValue == null) {
             return 1;
          }
@@ -151,15 +151,7 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
             return -1;
          }
 
-         if (leftValue instanceof Comparable l && rightValue instanceof Comparable r) {
-            if (sortOrderAscending) {
-               return l.compareTo(rightValue);
-            } else {
-               return r.compareTo(leftValue);
-            }
-         }
-
-         return 0;
+         return sortOrderAscending ? compareValues(leftValue, rightValue) : compareValues(rightValue, leftValue);
       };
 
       collectionList.sort(cachedComparator);
@@ -176,6 +168,24 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
       int end = Math.min(page * pageSize, size);
 
       return Collections.unmodifiableList(collectionList.subList(start, end));
+   }
+
+   /*
+    * A total order over non-null sort values. Values are grouped by type first since values of the same field can have
+    * different types (e.g. InVM connection IDs are Strings while Netty connection IDs are ChannelIds). Treating such
+    * values as equal violates the comparator contract and comparing them directly throws ClassCastException.
+    */
+   @SuppressWarnings("unchecked")
+   private static int compareValues(Object left, Object right) {
+      Class<?> leftClass = left.getClass();
+      Class<?> rightClass = right.getClass();
+      if (leftClass == rightClass) {
+         if (left instanceof Comparable comparable) {
+            return comparable.compareTo(right);
+         }
+         return left.toString().compareTo(right.toString());
+      }
+      return leftClass.getName().compareTo(rightClass.getName());
    }
 
    public Predicate<T> getPredicate() {
