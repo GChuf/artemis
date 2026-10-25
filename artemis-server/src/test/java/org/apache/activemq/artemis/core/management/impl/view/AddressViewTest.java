@@ -16,12 +16,16 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
+import java.util.List;
+
+import org.apache.activemq.artemis.api.core.management.AddressControl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class AddressViewTest extends ViewTest {
 
@@ -45,5 +49,34 @@ public class AddressViewTest extends ViewTest {
       assertNotEquals("name", view.getDefaultOrderColumn());
       view.setOptions(createLegacyJsonFilter("name", "EQUALS", "123", "name", "asc"));
       assertEquals("name", view.getSortField());
+   }
+
+   @Test
+   public void testSortWithValueWhichCouldNotBeRetrieved() throws Exception {
+      AddressControl failing = Mockito.mock(AddressControl.class);
+      Mockito.when(failing.getNumberOfBytesPerPage()).thenThrow(new IllegalStateException());
+      Mockito.when(failing.isPaging()).thenThrow(new IllegalStateException());
+
+      AddressView view = new AddressView(Mockito.mock(ActiveMQServer.class));
+      assertNull(view.getField(failing, AddressField.NUMBER_OF_BYTES_PER_PAGE.getName()));
+      assertNull(view.getField(failing, AddressField.PAGING.getName()));
+
+      AddressControl small = mockAddress(100);
+      AddressControl medium = mockAddress(200);
+      AddressControl large = mockAddress(300);
+      view.setCollection(List.of(failing, large, small, medium));
+      view.sortField = AddressField.NUMBER_OF_BYTES_PER_PAGE.getName();
+
+      view.sortOrder = "asc";
+      assertEquals(List.of(small, medium, large, failing), view.getPagedResult(-1, -1));
+
+      view.sortOrder = "desc";
+      assertEquals(List.of(large, medium, small, failing), view.getPagedResult(-1, -1));
+   }
+
+   private static AddressControl mockAddress(long numberOfBytesPerPage) throws Exception {
+      AddressControl address = Mockito.mock(AddressControl.class);
+      Mockito.when(address.getNumberOfBytesPerPage()).thenReturn(numberOfBytesPerPage);
+      return address;
    }
 }

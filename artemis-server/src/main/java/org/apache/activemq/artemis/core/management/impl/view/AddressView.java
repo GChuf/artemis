@@ -106,7 +106,8 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
             try {
                yield address.getNumberOfBytesPerPage();
             } catch (Exception e) {
-               yield N_A;
+               // sorts with the other values which couldn't be retrieved
+               yield null;
             }
          }
          case ADDRESS_LIMIT_PERCENT -> address.getAddressLimitPercent();
@@ -114,7 +115,8 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
             try {
                yield address.isPaging();
             } catch (Exception e) {
-               yield N_A;
+               // sorts with the other values which couldn't be retrieved
+               yield null;
             }
          }
          case NUMBER_OF_PAGES -> address.getNumberOfPages();
