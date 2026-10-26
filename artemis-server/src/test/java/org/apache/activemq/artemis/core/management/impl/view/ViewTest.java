@@ -30,6 +30,9 @@ import org.apache.activemq.artemis.json.JsonObjectBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ViewTest {
 
@@ -107,6 +110,35 @@ public class ViewTest {
       }
    }
 
+   @Test
+   public void testSortWithMixedValueTypes() {
+      List<Object> list = new ArrayList<>();
+      int nulls = 0;
+      for (int i = 0; i < SORT_TEST_SIZE; i++) {
+         Object value = switch (i % 4) {
+            case 0 -> null;
+            case 1 -> i;
+            case 2 -> "s" + i;
+            // not Comparable
+            default -> List.of(i);
+         };
+         if (value == null) {
+            nulls++;
+         }
+         list.add(value);
+      }
+
+      List<List<Object>> ascending = sortShuffled(list, "asc");
+      List<List<Object>> descending = sortShuffled(list, "desc");
+
+      for (List<Object> result : ascending) {
+         assertSorted(result, list.size(), nulls, true);
+      }
+      for (List<Object> result : descending) {
+         assertSorted(result, list.size(), nulls, false);
+      }
+   }
+
    /*
     * Sorts 20 shuffled copies of the values. All of them are sorted before any result is checked: TimSort only fails
     * with "Comparison method violates its general contract!" for some orderings and that failure must not be hidden
@@ -122,6 +154,33 @@ public class ViewTest {
          results.add(view.getPagedResult(-1, -1));
       }
       return results;
+   }
+
+   // non-null values grouped by type and ordered within each type, followed by all the nulls
+   @SuppressWarnings("unchecked")
+   private static void assertSorted(List<Object> result, int size, int nulls, boolean ascending) {
+      assertEquals(size, result.size());
+      int nonNull = size - nulls;
+      for (int i = 0; i < size; i++) {
+         if (i < nonNull) {
+            assertNotNull(result.get(i), "unexpected null at index " + i + " in " + result);
+         } else {
+            assertNull(result.get(i), "expected null at index " + i + " in " + result);
+         }
+      }
+      for (int i = 1; i < nonNull; i++) {
+         Object previous = result.get(i - 1);
+         Object current = result.get(i);
+         int comparison;
+         if (previous.getClass() != current.getClass()) {
+            comparison = previous.getClass().getName().compareTo(current.getClass().getName());
+         } else if (previous instanceof Comparable comparable) {
+            comparison = comparable.compareTo(current);
+         } else {
+            comparison = previous.toString().compareTo(current.toString());
+         }
+         assertTrue(ascending ? comparison <= 0 : comparison >= 0, previous + " and " + current + " out of order in " + result);
+      }
    }
 
    private static <T> ActiveMQAbstractView<T, ?> createIdentityView(List<T> list) {
