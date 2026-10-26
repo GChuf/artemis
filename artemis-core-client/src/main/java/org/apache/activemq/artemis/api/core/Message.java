@@ -841,8 +841,9 @@ public interface Message {
       Map map = toPropertyMap(valueSizeLimit);
       map.put("messageID", getMessageID());
       Object userID = getUserID();
-      if (getUserID() != null) {
-         map.put("userID", "ID:" + userID.toString());
+      if (userID != null) {
+         String userIDString = userID.toString();
+         map.put("userID", userIDString.startsWith("ID:") ? userIDString : "ID:" + userIDString);
       }
 
       map.put("address", Objects.requireNonNullElse(getAddress(), ""));

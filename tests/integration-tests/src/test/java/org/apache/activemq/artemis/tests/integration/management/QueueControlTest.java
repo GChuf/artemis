@@ -4633,6 +4633,19 @@ public class QueueControlTest extends ManagementTestBase {
 
       assertEquals("theCoreBody", body);
 
+      // listMessages uses Message.toMap() instead of CompositeData
+      Map<String, Object>[] messages = queueControl.listMessages(null);
+
+      assertEquals(2, messages.length);
+
+      for (Map<String, Object> message : messages) {
+         userID = (String) message.get("userID");
+
+         assertTrue(userID.startsWith("ID:"));
+
+         assertFalse(userID.startsWith("ID:ID:"));
+      }
+
    }
 
 
