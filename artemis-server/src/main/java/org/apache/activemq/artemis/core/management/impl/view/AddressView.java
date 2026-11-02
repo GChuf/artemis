@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
 import org.apache.activemq.artemis.api.core.management.AddressControl;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.AddressPredicateFilterPart;
 import org.apache.activemq.artemis.json.JsonObjectBuilder;
@@ -26,6 +30,30 @@ import org.apache.activemq.artemis.utils.JsonLoader;
 public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPredicateFilterPart> {
 
    private static final String defaultSortField = AddressField.ID.getName();
+
+   private static final List<String> dataFields = Stream.of(
+      AddressField.ID,
+      AddressField.NAME,
+      AddressField.ROUTING_TYPES,
+      AddressField.QUEUE_COUNT,
+      AddressField.INTERNAL,
+      AddressField.TEMPORARY,
+      AddressField.AUTO_CREATED,
+      AddressField.PAUSED,
+      AddressField.CURRENT_DUPLICATE_ID_CACHE_SIZE,
+      AddressField.RETROACTIVE_RESOURCE,
+      AddressField.UNROUTED_MESSAGE_COUNT,
+      AddressField.ROUTED_MESSAGE_COUNT,
+      AddressField.MESSAGE_COUNT,
+      AddressField.ADDRESS_LIMIT_PERCENT,
+      AddressField.NUMBER_OF_PAGES,
+      AddressField.ADDRESS_SIZE,
+      AddressField.MAX_PAGE_READ_BYTES,
+      AddressField.MAX_PAGE_READ_MESSAGES,
+      AddressField.PREFETCH_PAGE_BYTES,
+      AddressField.PREFETCH_PAGE_MESSAGES,
+      AddressField.NUMBER_OF_BYTES_PER_PAGE,
+      AddressField.PAGING).map(AddressField::getName).toList();
 
    private final ActiveMQServer server;
 
@@ -83,6 +111,14 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
    }
 
    @Override
+   public Map<String, Object> toMap(AddressControl address) {
+      if (address == null) {
+         return null;
+      }
+      return super.toMap(address);
+   }
+
+   @Override
    public Object getField(AddressControl address, String fieldName) {
       if (address == null) {
          return null;
@@ -106,7 +142,8 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
             try {
                yield address.getNumberOfBytesPerPage();
             } catch (Exception e) {
-               yield N_A;
+               // null rather than N_A, so the field keeps its type in toMap()
+               yield null;
             }
          }
          case ADDRESS_LIMIT_PERCENT -> address.getAddressLimitPercent();
@@ -114,7 +151,7 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
             try {
                yield address.isPaging();
             } catch (Exception e) {
-               yield N_A;
+               yield null;
             }
          }
          case NUMBER_OF_PAGES -> address.getNumberOfPages();
@@ -130,5 +167,10 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
    @Override
    public String getDefaultOrderColumn() {
       return defaultSortField;
+   }
+
+   @Override
+   public List<String> getDataFields() {
+      return dataFields;
    }
 }

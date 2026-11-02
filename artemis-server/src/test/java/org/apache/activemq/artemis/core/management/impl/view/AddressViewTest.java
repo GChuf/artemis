@@ -16,15 +16,49 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.activemq.artemis.api.core.management.AddressControl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.json.JsonObject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class AddressViewTest extends ViewTest {
+
+   @Test
+   public void testToMapKeepsTypes() throws Exception {
+      AddressControl address = Mockito.mock(AddressControl.class);
+      Mockito.when(address.getAddressSize()).thenReturn(10L);
+      Mockito.when(address.isPaused()).thenReturn(true);
+      Mockito.when(address.getRoutingTypes()).thenReturn(new String[]{"ANYCAST"});
+      Mockito.when(address.getPrefetchPageBytes()).thenReturn(9);
+      Mockito.when(address.getPrefetchPageMessages()).thenReturn(7);
+      Mockito.when(address.isPaging()).thenThrow(new IllegalStateException());
+      Mockito.when(address.getNumberOfBytesPerPage()).thenThrow(new IllegalStateException());
+
+      AddressView view = new AddressView(Mockito.mock(ActiveMQServer.class));
+      Map<String, Object> map = view.toMap(address);
+
+      assertEquals(view.getDataFields(), List.copyOf(map.keySet()));
+      assertEquals(10L, map.get(AddressField.ADDRESS_SIZE.getName()));
+      assertEquals(Boolean.TRUE, map.get(AddressField.PAUSED.getName()));
+      assertArrayEquals(new Object[]{"ANYCAST"}, (Object[]) map.get(AddressField.ROUTING_TYPES.getName()));
+      assertEquals(7, map.get(AddressField.PREFETCH_PAGE_MESSAGES.getName()));
+      // values which can't be retrieved are null rather than "n/a"
+      assertNull(map.get(AddressField.PAGING.getName()));
+      assertNull(map.get(AddressField.NUMBER_OF_BYTES_PER_PAGE.getName()));
+
+      JsonObject json = view.toJson(address).build();
+      assertEquals("7", json.getString(AddressField.PREFETCH_PAGE_MESSAGES.getName()));
+      assertEquals("n/a", json.getString(AddressField.PAGING.getName()));
+   }
 
    @Test
    public void testDefaultViewNullOptions() {

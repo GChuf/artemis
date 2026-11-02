@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ProducerPredicateFilterPart;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ProducerFilterPredicate;
@@ -29,6 +32,22 @@ import org.apache.activemq.artemis.utils.JsonLoader;
 public class ProducerView extends ActiveMQAbstractView<ServerProducer, ProducerPredicateFilterPart> {
 
    private static final String defaultSortField = ProducerField.CREATION_TIME.getName();
+
+   private static final List<String> dataFields = Stream.of(
+      ProducerField.ID,
+      ProducerField.NAME,
+      ProducerField.SESSION,
+      ProducerField.CLIENT_ID,
+      ProducerField.USER,
+      ProducerField.VALIDATED_USER,
+      ProducerField.PROTOCOL,
+      ProducerField.ADDRESS,
+      ProducerField.LOCAL_ADDRESS,
+      ProducerField.REMOTE_ADDRESS,
+      ProducerField.CREATION_TIME,
+      ProducerField.MESSAGE_SENT,
+      ProducerField.MESSAGE_SENT_SIZE,
+      ProducerField.LAST_PRODUCED_MESSAGE_ID).map(ProducerField::getName).toList();
 
    private final ActiveMQServer server;
 
@@ -71,6 +90,15 @@ public class ProducerView extends ActiveMQAbstractView<ServerProducer, ProducerP
    }
 
    @Override
+   public Map<String, Object> toMap(ServerProducer producer) {
+      //if session is not available then producer is not in valid state - ignore
+      if (server.getSessionByID(producer.getSessionID()) == null) {
+         return null;
+      }
+      return super.toMap(producer);
+   }
+
+   @Override
    public Object getField(ServerProducer producer, String fieldName) {
       ServerSession session = server.getSessionByID(producer.getSessionID());
 
@@ -83,6 +111,7 @@ public class ProducerView extends ActiveMQAbstractView<ServerProducer, ProducerP
 
       return switch (field) {
          case ID -> producer.getID();
+         case NAME -> producer.getName();
          case SESSION -> session.getName();
          case USER -> session.getUsername();
          case VALIDATED_USER -> session.getValidatedUser();
@@ -92,6 +121,9 @@ public class ProducerView extends ActiveMQAbstractView<ServerProducer, ProducerP
          case LOCAL_ADDRESS -> session.getRemotingConnection().getTransportConnection().getLocalAddress();
          case REMOTE_ADDRESS -> session.getRemotingConnection().getTransportConnection().getRemoteAddress();
          case CREATION_TIME -> producer.getCreationTime();
+         case MESSAGE_SENT -> producer.getMessagesSent();
+         case MESSAGE_SENT_SIZE -> producer.getMessagesSentSize();
+         case LAST_PRODUCED_MESSAGE_ID -> producer.getLastProducedMessageID();
          default -> throw new IllegalArgumentException("Unsupported field, " + fieldName);
       };
    }
@@ -99,5 +131,10 @@ public class ProducerView extends ActiveMQAbstractView<ServerProducer, ProducerP
    @Override
    public String getDefaultOrderColumn() {
       return defaultSortField;
+   }
+
+   @Override
+   public List<String> getDataFields() {
+      return dataFields;
    }
 }

@@ -2299,6 +2299,67 @@ public interface ActiveMQServerControl {
                      @Parameter(name = "pageSize", desc = "Page Size") int pageSize) throws Exception;
 
    /**
+    * Same as {@link #listConnections(String, int, int)} but returns the result as structured data instead of a JSON
+    * string. The returned map contains {@code data}, an array with one map per connection, and {@code count}, the
+    * total number of matching connections. Field values keep their type (e.g. numbers and booleans) and times are
+    * returned as epoch milliseconds.
+    */
+   @Operation(desc = "Search for Connections, returning structured data", impact = MBeanOperationInfo.INFO)
+   Map<String, Object> listConnectionsAsData(@Parameter(name = "options", desc = "Options") String options,
+                                             @Parameter(name = "pageNumber", desc = "Page Number") int page,
+                                             @Parameter(name = "pageSize", desc = "Page Size") int pageSize) throws Exception;
+
+   /**
+    * Same as {@link #listSessions(String, int, int)} but returns the result as structured data.
+    *
+    * @see #listConnectionsAsData(String, int, int)
+    */
+   @Operation(desc = "Search for Sessions, returning structured data", impact = MBeanOperationInfo.INFO)
+   Map<String, Object> listSessionsAsData(@Parameter(name = "options", desc = "Options") String options,
+                                          @Parameter(name = "pageNumber", desc = "Page Number") int page,
+                                          @Parameter(name = "pageSize", desc = "Page Size") int pageSize) throws Exception;
+
+   /**
+    * Same as {@link #listConsumers(String, int, int)} but returns the result as structured data.
+    *
+    * @see #listConnectionsAsData(String, int, int)
+    */
+   @Operation(desc = "Search for Consumers, returning structured data", impact = MBeanOperationInfo.INFO)
+   Map<String, Object> listConsumersAsData(@Parameter(name = "options", desc = "Options") String options,
+                                           @Parameter(name = "pageNumber", desc = "Page Number") int page,
+                                           @Parameter(name = "pageSize", desc = "Page Size") int pageSize) throws Exception;
+
+   /**
+    * Same as {@link #listProducers(String, int, int)} but returns the result as structured data.
+    *
+    * @see #listConnectionsAsData(String, int, int)
+    */
+   @Operation(desc = "Search for Producers, returning structured data", impact = MBeanOperationInfo.INFO)
+   Map<String, Object> listProducersAsData(@Parameter(name = "options", desc = "Options") String options,
+                                           @Parameter(name = "pageNumber", desc = "Page Number") int page,
+                                           @Parameter(name = "pageSize", desc = "Page Size") int pageSize) throws Exception;
+
+   /**
+    * Same as {@link #listAddresses(String, int, int)} but returns the result as structured data.
+    *
+    * @see #listConnectionsAsData(String, int, int)
+    */
+   @Operation(desc = "Search for Addresses, returning structured data", impact = MBeanOperationInfo.INFO)
+   Map<String, Object> listAddressesAsData(@Parameter(name = "options", desc = "Options") String options,
+                                           @Parameter(name = "pageNumber", desc = "Page Number") int page,
+                                           @Parameter(name = "pageSize", desc = "Page Size") int pageSize) throws Exception;
+
+   /**
+    * Same as {@link #listQueues(String, int, int)} but returns the result as structured data.
+    *
+    * @see #listConnectionsAsData(String, int, int)
+    */
+   @Operation(desc = "Search for Queues, returning structured data", impact = MBeanOperationInfo.INFO)
+   Map<String, Object> listQueuesAsData(@Parameter(name = "options", desc = "Options") String options,
+                                        @Parameter(name = "pageNumber", desc = "Page Number") int page,
+                                        @Parameter(name = "pageSize", desc = "Page Size") int pageSize) throws Exception;
+
+   /**
     * {@return the names of the queues created on this server with the given routing-type.}
     */
    @Operation(desc = "Names of the queues created on this server with the given routing-type (i.e. ANYCAST or MULTICAST)", impact = MBeanOperationInfo.INFO)

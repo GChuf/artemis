@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -112,6 +114,49 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
       obj.add("data", array);
       obj.add("count", collection.size());
       return obj.build().toString();
+   }
+
+   public Map<String, Object> getResultsAsData(int page, int pageSize) {
+      collection = collection.stream().filter(getPredicate()).collect(Collectors.toList());
+      return asData(page, pageSize);
+   }
+
+   /**
+    * Structured equivalent of {@link #AsJson(int, int)}. Field values keep their type (numbers, booleans, strings) and
+    * dates are returned as epoch milliseconds, so management clients (e.g. Jolokia) can serialize the result natively
+    * instead of receiving JSON inside a string.
+    * <p>
+    * The rows are returned as an array rather than a {@code List} because core management messages serialize arrays
+    * but not collections.
+    *
+    * @return a map with the keys {@code data} (an array of maps, one per element) and {@code count}
+    */
+   public Map<String, Object> asData(int page, int pageSize) {
+      List<Map<String, Object>> data = new ArrayList<>();
+      for (T element : getPagedResult(page, pageSize)) {
+         Map<String, Object> map = toMap(element);
+         //toMap() may return a null
+         if (map != null) {
+            data.add(map);
+         }
+      }
+      Map<String, Object> result = new LinkedHashMap<>();
+      result.put("data", data.toArray(new Map[0]));
+      result.put("count", collection.size());
+      return result;
+   }
+
+   /**
+    * Builds the structured representation of an element from {@link #getField(Object, String)} for each of
+    * {@link #getDataFields()}. Views override this to return {@code null} for elements which should be skipped, like
+    * {@link #toJson(Object)} does.
+    */
+   public Map<String, Object> toMap(T obj) {
+      Map<String, Object> map = new LinkedHashMap<>();
+      for (String field : getDataFields()) {
+         map.put(field, toDataValue(getField(obj, field)));
+      }
+      return map;
    }
 
    public List<T> getPagedResult(int page, int pageSize) {
@@ -230,6 +275,12 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
 
    public abstract String getDefaultOrderColumn();
 
+   /**
+    * {@return the names of the fields returned by {@link #toMap(Object)}; the same fields {@link #toJson(Object)}
+    * returns}
+    */
+   public abstract List<String> getDataFields();
+
    public String getSortField() {
       return sortField;
    }
@@ -244,5 +295,24 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
     */
    protected String toString(Object o) {
       return o == null ? "" : o.toString();
+   }
+
+   /**
+    * Converts a value returned by {@link #getField(Object, String)} to a type every management client can serialize.
+    */
+   protected static Object toDataValue(Object o) {
+      if (o == null || o instanceof Number || o instanceof Boolean || o instanceof String) {
+         return o;
+      } else if (o instanceof Date date) {
+         return date.getTime();
+      } else if (o instanceof Object[] array) {
+         Object[] values = new Object[array.length];
+         for (int i = 0; i < array.length; i++) {
+            values[i] = toDataValue(array[i]);
+         }
+         return values;
+      } else {
+         return o.toString();
+      }
    }
 }
