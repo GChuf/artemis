@@ -2626,7 +2626,7 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
       checkStarted();
       clearIO();
       try {
-         return createAddressView(options).getResultsAsJson(page, pageSize);
+         return createAddressView(options).AsJson(page, pageSize);
       } finally {
          blockOnIO();
       }
@@ -2640,7 +2640,7 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
       checkStarted();
       clearIO();
       try {
-         return createAddressView(options).getResultsAsData(page, pageSize);
+         return createAddressView(options).asData(page, pageSize);
       } finally {
          blockOnIO();
       }
