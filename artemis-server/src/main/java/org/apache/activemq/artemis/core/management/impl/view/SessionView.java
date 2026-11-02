@@ -19,7 +19,9 @@ package org.apache.activemq.artemis.core.management.impl.view;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.SessionPredicateFilterPart;
 import org.apache.activemq.artemis.json.JsonObjectBuilder;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.apache.activemq.artemis.core.management.impl.view.predicate.SessionFilterPredicate;
 import org.apache.activemq.artemis.core.server.ServerSession;
@@ -28,6 +30,16 @@ import org.apache.activemq.artemis.utils.JsonLoader;
 public class SessionView extends ActiveMQAbstractView<ServerSession, SessionPredicateFilterPart> {
 
    private static final String defaultSortField = SessionField.ID.getName();
+
+   private static final List<String> dataFields = Stream.of(
+      SessionField.ID,
+      SessionField.USER,
+      SessionField.VALIDATED_USER,
+      SessionField.CREATION_TIME,
+      SessionField.CONSUMER_COUNT,
+      SessionField.PRODUCER_COUNT,
+      SessionField.CONNECTION_ID,
+      SessionField.CLIENT_ID).map(SessionField::getName).toList();
 
    public SessionView() {
       super();
@@ -73,5 +85,10 @@ public class SessionView extends ActiveMQAbstractView<ServerSession, SessionPred
    @Override
    public String getDefaultOrderColumn() {
       return defaultSortField;
+   }
+
+   @Override
+   public List<String> getDataFields() {
+      return dataFields;
    }
 }

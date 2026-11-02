@@ -17,6 +17,9 @@
 package org.apache.activemq.artemis.core.management.impl.view;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ConsumerPredicateFilterPart;
@@ -34,6 +37,30 @@ public class ConsumerView extends ActiveMQAbstractView<ServerConsumer, ConsumerP
 
 
    private static final String defaultSortField = ConsumerField.ID.getName();
+
+   private static final List<String> dataFields = Stream.of(
+      ConsumerField.ID,
+      ConsumerField.SESSION,
+      ConsumerField.CLIENT_ID,
+      ConsumerField.USER,
+      ConsumerField.VALIDATED_USER,
+      ConsumerField.PROTOCOL,
+      ConsumerField.QUEUE,
+      ConsumerField.QUEUE_TYPE,
+      ConsumerField.FILTER,
+      ConsumerField.ADDRESS,
+      ConsumerField.LOCAL_ADDRESS,
+      ConsumerField.REMOTE_ADDRESS,
+      ConsumerField.CREATION_TIME,
+      ConsumerField.MESSAGES_IN_TRANSIT,
+      ConsumerField.MESSAGES_IN_TRANSIT_SIZE,
+      ConsumerField.MESSAGES_DELIVERED,
+      ConsumerField.MESSAGES_DELIVERED_SIZE,
+      ConsumerField.MESSAGES_ACKNOWLEDGED,
+      ConsumerField.MESSAGES_ACKNOWLEDGED_AWAITING_COMMIT,
+      ConsumerField.LAST_DELIVERED_TIME,
+      ConsumerField.LAST_ACKNOWLEDGED_TIME,
+      ConsumerField.STATUS).map(ConsumerField::getName).toList();
 
    private final ActiveMQServer server;
 
@@ -85,6 +112,15 @@ public class ConsumerView extends ActiveMQAbstractView<ServerConsumer, ConsumerP
    }
 
    @Override
+   public Map<String, Object> toMap(ServerConsumer consumer) {
+      //if session is not available then consumer is not in valid state - ignore
+      if (server.getSessionByID(consumer.getSessionID()) == null) {
+         return null;
+      }
+      return super.toMap(consumer);
+   }
+
+   @Override
    public Object getField(ServerConsumer consumer, String fieldName) {
       ServerSession session = server.getSessionByID(consumer.getSessionID());
 
@@ -132,5 +168,10 @@ public class ConsumerView extends ActiveMQAbstractView<ServerConsumer, ConsumerP
    @Override
    public String getDefaultOrderColumn() {
       return defaultSortField;
+   }
+
+   @Override
+   public List<String> getDataFields() {
+      return dataFields;
    }
 }

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ConnectionPredicateFilterPart;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ConnectionFilterPredicate;
@@ -35,6 +36,19 @@ import org.apache.activemq.artemis.utils.StringUtil;
 public class ConnectionView extends ActiveMQAbstractView<RemotingConnection, ConnectionPredicateFilterPart> {
 
    private static final String defaultSortField = ConnectionField.CONNECTION_ID.getName();
+
+   private static final List<String> dataFields = Stream.of(
+      ConnectionField.CONNECTION_ID,
+      ConnectionField.REMOTE_ADDRESS,
+      ConnectionField.USERS,
+      ConnectionField.CREATION_TIME,
+      ConnectionField.IMPLEMENTATION,
+      ConnectionField.PROTOCOL,
+      ConnectionField.CLIENT_ID,
+      ConnectionField.LOCAL_ADDRESS,
+      ConnectionField.SESSION_COUNT,
+      ConnectionField.PROXY_ADDRESS,
+      ConnectionField.PROXY_PROTOCOL_VERSION).map(ConnectionField::getName).toList();
 
    private final ActiveMQServer server;
 
@@ -112,5 +126,10 @@ public class ConnectionView extends ActiveMQAbstractView<RemotingConnection, Con
    @Override
    public String getDefaultOrderColumn() {
       return defaultSortField;
+   }
+
+   @Override
+   public List<String> getDataFields() {
+      return dataFields;
    }
 }

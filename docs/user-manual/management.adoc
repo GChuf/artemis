@@ -676,6 +676,15 @@ Either such command would give you back something like the following (after form
 }
 ----
 
+The methods `listConnections`, `listSessions`, `listConsumers`, `listProducers`, `listAddresses` and `listQueues` return this JSON as a string, so clients have to parse the `value` a second time (hence the `fromjson` above).
+Each of them has a variant with the suffix `AsData` (e.g. `listConnectionsAsData`) which accepts the same parameters, but returns the result as structured data.
+Jolokia then returns `value` as a JSON object instead of a string, and the fields keep their type (e.g. numbers and booleans instead of strings), with times returned as epoch milliseconds.
+
+[,console]
+----
+$ curl -s -H "Origin: http://localhost" -u myUser:myPass --header "Content-type: application/json" --request POST --data '{"operation": "listConnectionsAsData", "mbean": "org.apache.activemq.artemis:broker=\"0.0.0.0\"", "type": "exec", "arguments": [ "{\"field\":\"protocol\",\"operation\":\"EQUALS\",\"value\":\"OPENWIRE\"}", -1, -1 ] }' http://localhost:8161/console/jolokia | jq '.value'
+----
+
 See more details on Jolokia's `exec` functionality in the https://jolokia.org/reference/html/manual/jolokia_protocol.html#exec[Jolokia documentation].
 
 === Management Method Option Syntax

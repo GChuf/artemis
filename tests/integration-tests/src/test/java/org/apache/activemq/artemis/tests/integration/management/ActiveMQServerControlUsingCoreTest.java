@@ -1799,6 +1799,36 @@ public class ActiveMQServerControlUsingCoreTest extends ActiveMQServerControlTes
          }
 
          @Override
+         public Map<String, Object> listConnectionsAsData(String options, int page, int pageSize) throws Exception {
+            return (Map<String, Object>) proxy.invokeOperation("listConnectionsAsData", options, page, pageSize);
+         }
+
+         @Override
+         public Map<String, Object> listSessionsAsData(String options, int page, int pageSize) throws Exception {
+            return (Map<String, Object>) proxy.invokeOperation("listSessionsAsData", options, page, pageSize);
+         }
+
+         @Override
+         public Map<String, Object> listConsumersAsData(String options, int page, int pageSize) throws Exception {
+            return (Map<String, Object>) proxy.invokeOperation("listConsumersAsData", options, page, pageSize);
+         }
+
+         @Override
+         public Map<String, Object> listProducersAsData(String options, int page, int pageSize) throws Exception {
+            return (Map<String, Object>) proxy.invokeOperation("listProducersAsData", options, page, pageSize);
+         }
+
+         @Override
+         public Map<String, Object> listAddressesAsData(String options, int page, int pageSize) throws Exception {
+            return (Map<String, Object>) proxy.invokeOperation("listAddressesAsData", options, page, pageSize);
+         }
+
+         @Override
+         public Map<String, Object> listQueuesAsData(String options, int page, int pageSize) throws Exception {
+            return (Map<String, Object>) proxy.invokeOperation("listQueuesAsData", options, page, pageSize);
+         }
+
+         @Override
          public void replay(String address, String target, String filter) throws Exception {
             proxy.invokeOperation("replay", address, target, filter);
          }

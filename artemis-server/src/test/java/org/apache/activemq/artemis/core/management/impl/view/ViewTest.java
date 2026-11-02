@@ -17,18 +17,34 @@
 package org.apache.activemq.artemis.core.management.impl.view;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.activemq.artemis.api.core.JsonUtil;
+import org.apache.activemq.artemis.api.core.RoutingType;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.json.JsonObject;
 import org.apache.activemq.artemis.json.JsonObjectBuilder;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ViewTest {
+
+   @Test
+   public void testToDataValue() {
+      assertNull(ActiveMQAbstractView.toDataValue(null));
+      assertEquals(5L, ActiveMQAbstractView.toDataValue(5L));
+      assertEquals(Boolean.TRUE, ActiveMQAbstractView.toDataValue(true));
+      assertEquals("text", ActiveMQAbstractView.toDataValue("text"));
+      assertEquals(1234L, ActiveMQAbstractView.toDataValue(new Date(1234)));
+      assertEquals("simple", ActiveMQAbstractView.toDataValue(SimpleString.of("simple")));
+      assertArrayEquals(new Object[]{"ANYCAST", 1000L}, (Object[]) ActiveMQAbstractView.toDataValue(new Object[]{RoutingType.ANYCAST, new Date(1000)}));
+   }
 
    @Test
    public void testPageSizeAndPageNumber() {
@@ -51,6 +67,11 @@ public class ViewTest {
          @Override
          public String getDefaultOrderColumn() {
             return "";
+         }
+
+         @Override
+         public List<String> getDataFields() {
+            return List.of();
          }
       };
 

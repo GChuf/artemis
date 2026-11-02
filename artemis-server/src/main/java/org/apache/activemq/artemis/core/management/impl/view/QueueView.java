@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import org.apache.activemq.artemis.core.management.impl.view.predicate.QueuePredicateFilterPart;
 import org.apache.activemq.artemis.json.JsonObjectBuilder;
 import org.apache.activemq.artemis.api.core.SimpleString;
@@ -28,6 +31,43 @@ import org.apache.activemq.artemis.utils.JsonLoader;
 public class QueueView extends ActiveMQAbstractView<QueueControl, QueuePredicateFilterPart> {
 
    private static final String defaultSortField = QueueField.NAME.getName();
+
+   private static final List<String> dataFields = Stream.of(
+      QueueField.ID,
+      QueueField.NAME,
+      QueueField.ADDRESS,
+      QueueField.FILTER,
+      QueueField.DURABLE,
+      QueueField.PAUSED,
+      QueueField.PERSISTEDPAUSE,
+      QueueField.TEMPORARY,
+      QueueField.PURGE_ON_NO_CONSUMERS,
+      QueueField.CONSUMER_COUNT,
+      QueueField.MAX_CONSUMERS,
+      QueueField.AUTO_CREATED,
+      QueueField.USER,
+      QueueField.ROUTING_TYPE,
+      QueueField.MESSAGES_ADDED,
+      QueueField.MESSAGE_COUNT,
+      QueueField.MESSAGES_ACKED,
+      QueueField.MESSAGES_EXPIRED,
+      QueueField.DELIVERING_COUNT,
+      QueueField.MESSAGES_KILLED,
+      QueueField.DIRECT_DELIVER,
+      QueueField.EXCLUSIVE,
+      QueueField.LAST_VALUE,
+      QueueField.LAST_VALUE_KEY,
+      QueueField.SCHEDULED_COUNT,
+      QueueField.GROUP_REBALANCE,
+      QueueField.GROUP_REBALANCE_PAUSE_DISPATCH,
+      QueueField.GROUP_BUCKETS,
+      QueueField.GROUP_FIRST_KEY,
+      QueueField.ENABLED,
+      QueueField.RING_SIZE,
+      QueueField.CONSUMERS_BEFORE_DISPATCH,
+      QueueField.DELAY_BEFORE_DISPATCH,
+      QueueField.AUTO_DELETE,
+      QueueField.INTERNAL_QUEUE).map(QueueField::getName).toList();
 
    private ActiveMQServer server;
 
@@ -124,6 +164,7 @@ public class QueueView extends ActiveMQAbstractView<QueueControl, QueuePredicate
          case RING_SIZE -> q.getRingSize();
          case CONSUMERS_BEFORE_DISPATCH -> q.getConsumersBeforeDispatch();
          case DELAY_BEFORE_DISPATCH -> q.getDelayBeforeDispatch();
+         case AUTO_DELETE -> q.isAutoDelete();
          case INTERNAL_QUEUE -> q.isInternalQueue();
          default -> throw new IllegalArgumentException("Unsupported field, " + fieldName);
       };
@@ -132,5 +173,10 @@ public class QueueView extends ActiveMQAbstractView<QueueControl, QueuePredicate
    @Override
    public String getDefaultOrderColumn() {
       return defaultSortField;
+   }
+
+   @Override
+   public List<String> getDataFields() {
+      return dataFields;
    }
 }

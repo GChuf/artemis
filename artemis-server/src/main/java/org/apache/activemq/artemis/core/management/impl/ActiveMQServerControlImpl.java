@@ -65,7 +65,6 @@ import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.management.ActiveMQServerControl;
 import org.apache.activemq.artemis.api.core.management.CoreNotificationType;
 import org.apache.activemq.artemis.api.core.management.ManagementHelper;
-import org.apache.activemq.artemis.api.core.management.Parameter;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.core.client.impl.Topology;
 import org.apache.activemq.artemis.core.client.impl.TopologyMemberImpl;
@@ -2543,11 +2542,21 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
       checkStarted();
       clearIO();
       try {
-         server.getPostOffice().getAddresses();
-         ConnectionView view = new ConnectionView(server);
-         view.setCollection(server.getRemotingService().getConnections());
-         view.setOptions(options);
-         return view.getResultsAsJson(page, pageSize);
+         return createConnectionView(options).getResultsAsJson(page, pageSize);
+      } finally {
+         blockOnIO();
+      }
+   }
+
+   @Override
+   public Map<String, Object> listConnectionsAsData(String options, int page, int pageSize) throws Exception {
+      if (AuditLogger.isBaseLoggingEnabled()) {
+         AuditLogger.listConnections(this.server, options, page, pageSize);
+      }
+      checkStarted();
+      clearIO();
+      try {
+         return createConnectionView(options).getResultsAsData(page, pageSize);
       } finally {
          blockOnIO();
       }
@@ -2561,10 +2570,21 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
       checkStarted();
       clearIO();
       try {
-         SessionView view = new SessionView();
-         view.setCollection(server.getSessions());
-         view.setOptions(options);
-         return view.getResultsAsJson(page, pageSize);
+         return createSessionView(options).getResultsAsJson(page, pageSize);
+      } finally {
+         blockOnIO();
+      }
+   }
+
+   @Override
+   public Map<String, Object> listSessionsAsData(String options, int page, int pageSize) throws Exception {
+      if (AuditLogger.isBaseLoggingEnabled()) {
+         AuditLogger.listSessions(this.server, options, page, pageSize);
+      }
+      checkStarted();
+      clearIO();
+      try {
+         return createSessionView(options).getResultsAsData(page, pageSize);
       } finally {
          blockOnIO();
       }
@@ -2578,14 +2598,21 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
       checkStarted();
       clearIO();
       try {
-         Set<ServerConsumer> consumers = new HashSet();
-         for (ServerSession session : server.getSessions()) {
-            consumers.addAll(session.getServerConsumers());
-         }
-         ConsumerView view = new ConsumerView(server);
-         view.setCollection(consumers);
-         view.setOptions(options);
-         return view.getResultsAsJson(page, pageSize);
+         return createConsumerView(options).getResultsAsJson(page, pageSize);
+      } finally {
+         blockOnIO();
+      }
+   }
+
+   @Override
+   public Map<String, Object> listConsumersAsData(String options, int page, int pageSize) throws Exception {
+      if (AuditLogger.isBaseLoggingEnabled()) {
+         AuditLogger.listConsumers(this.server, options, page, pageSize);
+      }
+      checkStarted();
+      clearIO();
+      try {
+         return createConsumerView(options).getResultsAsData(page, pageSize);
       } finally {
          blockOnIO();
       }
@@ -2599,10 +2626,21 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
       checkStarted();
       clearIO();
       try {
-         AddressView view = new AddressView(server);
-         view.setOptions(options);
-         view.setCollection(server.getManagementService().getAddressControls(view.getPredicate()));
-         return view.getResultsAsJson(page, pageSize);
+         return createAddressView(options).getResultsAsJson(page, pageSize);
+      } finally {
+         blockOnIO();
+      }
+   }
+
+   @Override
+   public Map<String, Object> listAddressesAsData(String options, int page, int pageSize) throws Exception {
+      if (AuditLogger.isBaseLoggingEnabled()) {
+         AuditLogger.listAddresses(this.server, options, page, pageSize);
+      }
+      checkStarted();
+      clearIO();
+      try {
+         return createAddressView(options).getResultsAsData(page, pageSize);
       } finally {
          blockOnIO();
       }
@@ -2614,39 +2652,105 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
          AuditLogger.listQueues(this.server, options, page, pageSize);
       }
       checkStarted();
-
       clearIO();
       try {
-         QueueView view = new QueueView(server);
-         view.setOptions(options);
-         view.setCollection(server.getManagementService().getQueueControls(view.getPredicate()));
-         return view.AsJson(page, pageSize);
+         return createQueueView(options).AsJson(page, pageSize);
       } finally {
          blockOnIO();
       }
    }
 
    @Override
-   public String listProducers(@Parameter(name = "Options") String options,
-                               @Parameter(name = "Page Number") int page,
-                               @Parameter(name = "Page Size") int pageSize) throws Exception {
+   public Map<String, Object> listQueuesAsData(String options, int page, int pageSize) throws Exception {
+      if (AuditLogger.isBaseLoggingEnabled()) {
+         AuditLogger.listQueues(this.server, options, page, pageSize);
+      }
+      checkStarted();
+      clearIO();
+      try {
+         return createQueueView(options).asData(page, pageSize);
+      } finally {
+         blockOnIO();
+      }
+   }
+
+   @Override
+   public String listProducers(String options, int page, int pageSize) throws Exception {
       if (AuditLogger.isBaseLoggingEnabled()) {
          AuditLogger.listProducers(this.server, options, page, pageSize);
       }
       checkStarted();
       clearIO();
       try {
-         Set<ServerProducer> producers = new HashSet<>();
-         for (ServerSession session : server.getSessions()) {
-            producers.addAll(session.getServerProducers());
-         }
-         ProducerView view = new ProducerView(server);
-         view.setCollection(producers);
-         view.setOptions(options);
-         return view.getResultsAsJson(page, pageSize);
+         return createProducerView(options).getResultsAsJson(page, pageSize);
       } finally {
          blockOnIO();
       }
+   }
+
+   @Override
+   public Map<String, Object> listProducersAsData(String options, int page, int pageSize) throws Exception {
+      if (AuditLogger.isBaseLoggingEnabled()) {
+         AuditLogger.listProducers(this.server, options, page, pageSize);
+      }
+      checkStarted();
+      clearIO();
+      try {
+         return createProducerView(options).getResultsAsData(page, pageSize);
+      } finally {
+         blockOnIO();
+      }
+   }
+
+   private ConnectionView createConnectionView(String options) {
+      server.getPostOffice().getAddresses();
+      ConnectionView view = new ConnectionView(server);
+      view.setCollection(server.getRemotingService().getConnections());
+      view.setOptions(options);
+      return view;
+   }
+
+   private SessionView createSessionView(String options) {
+      SessionView view = new SessionView();
+      view.setCollection(server.getSessions());
+      view.setOptions(options);
+      return view;
+   }
+
+   private ConsumerView createConsumerView(String options) {
+      Set<ServerConsumer> consumers = new HashSet<>();
+      for (ServerSession session : server.getSessions()) {
+         consumers.addAll(session.getServerConsumers());
+      }
+      ConsumerView view = new ConsumerView(server);
+      view.setCollection(consumers);
+      view.setOptions(options);
+      return view;
+   }
+
+   private AddressView createAddressView(String options) {
+      AddressView view = new AddressView(server);
+      view.setOptions(options);
+      view.setCollection(server.getManagementService().getAddressControls(view.getPredicate()));
+      return view;
+   }
+
+   private QueueView createQueueView(String options) {
+      QueueView view = new QueueView(server);
+      view.setOptions(options);
+      view.setCollection(server.getManagementService().getQueueControls(view.getPredicate()));
+      return view;
+   }
+
+   private ProducerView createProducerView(String options) {
+      Set<ServerProducer> producers = new HashSet<>();
+      for (ServerSession session : server.getSessions()) {
+         producers.addAll(session.getServerProducers());
+      }
+      ProducerView view = new ProducerView(server);
+      view.setCollection(producers);
+      view.setOptions(options);
+      return view;
    }
 
    @Override

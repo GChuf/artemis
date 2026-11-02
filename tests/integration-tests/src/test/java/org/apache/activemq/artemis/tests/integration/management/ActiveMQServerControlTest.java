@@ -92,9 +92,12 @@ import org.apache.activemq.artemis.core.config.LockCoordinatorConfiguration;
 import org.apache.activemq.artemis.core.config.brokerConnectivity.BrokerConnectConfiguration;
 import org.apache.activemq.artemis.core.config.impl.SecurityConfiguration;
 import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
+import org.apache.activemq.artemis.core.management.impl.view.AddressField;
 import org.apache.activemq.artemis.core.management.impl.view.ConnectionField;
 import org.apache.activemq.artemis.core.management.impl.view.ConsumerField;
+import org.apache.activemq.artemis.core.management.impl.view.ConsumerView;
 import org.apache.activemq.artemis.core.management.impl.view.ProducerField;
+import org.apache.activemq.artemis.core.management.impl.view.QueueField;
 import org.apache.activemq.artemis.core.management.impl.view.SessionField;
 import org.apache.activemq.artemis.core.management.impl.view.predicate.ActiveMQFilterPredicate;
 import org.apache.activemq.artemis.core.messagecounter.impl.MessageCounterManagerImpl;
@@ -156,8 +159,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl.TMP_DIR_SYSTEM_PROPERTY;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -3799,6 +3804,80 @@ public class ActiveMQServerControlTest extends ManagementTestBase {
       assertEquals("-1", array.getJsonObject(0).getString("groupBuckets"), "groupBuckets");
       assertEquals("", array.getJsonObject(0).getString("groupFirstKey"), "groupFirstKey");
       assertEquals("false", array.getJsonObject(0).getString("autoDelete"), "autoDelete");
+   }
+
+   @TestTemplate
+   public void testListAsData() throws Exception {
+      SimpleString addressName = SimpleString.of("my_address");
+      SimpleString queueName = SimpleString.of("my_queue");
+
+      ActiveMQServerControl serverControl = createManagementControl();
+
+      server.addAddressInfo(new AddressInfo(addressName, RoutingType.ANYCAST));
+      server.createQueue(QueueConfiguration.of(queueName).setAddress(addressName).setRoutingType(RoutingType.ANYCAST).setDurable(false));
+
+      try (ServerLocator locator = createInVMNonHALocator();
+           ClientSessionFactory csf = createSessionFactory(locator);
+           ClientSession session = csf.createSession()) {
+
+         session.createConsumer(queueName);
+         ClientProducer producer = session.createProducer(addressName);
+         producer.send(session.createMessage(true));
+
+         String filter = createJsonFilter(QueueField.NAME.getName(), "EQUALS", queueName.toString());
+         Map<String, Object> queue = assertDataMatchesJson(serverControl.listQueues(filter, 1, 50), serverControl.listQueuesAsData(filter, 1, 50));
+         assertEquals(queueName.toString(), queue.get(QueueField.NAME.getName()));
+         assertEquals(Boolean.FALSE, queue.get(QueueField.DURABLE.getName()));
+         assertEquals(Boolean.FALSE, queue.get(QueueField.AUTO_DELETE.getName()));
+         assertEquals(1L, ((Number) queue.get(QueueField.MESSAGE_COUNT.getName())).longValue());
+         assertEquals(1L, ((Number) queue.get(QueueField.CONSUMER_COUNT.getName())).longValue());
+         assertEquals(-1L, ((Number) queue.get(QueueField.MAX_CONSUMERS.getName())).longValue());
+
+         filter = createJsonFilter(AddressField.NAME.getName(), "EQUALS", addressName.toString());
+         Map<String, Object> address = assertDataMatchesJson(serverControl.listAddresses(filter, 1, 50), serverControl.listAddressesAsData(filter, 1, 50));
+         assertArrayEquals(new Object[]{RoutingType.ANYCAST.toString()}, (Object[]) address.get(AddressField.ROUTING_TYPES.getName()));
+         assertEquals(1L, ((Number) address.get(AddressField.QUEUE_COUNT.getName())).longValue());
+         assertEquals(Boolean.FALSE, address.get(AddressField.PAUSED.getName()));
+
+         filter = createJsonFilter(ConsumerField.QUEUE.getName(), "EQUALS", queueName.toString());
+         Map<String, Object> consumer = assertDataMatchesJson(serverControl.listConsumers(filter, 1, 50), serverControl.listConsumersAsData(filter, 1, 50));
+         assertEquals(queueName.toString(), consumer.get(ConsumerField.QUEUE.getName()));
+         assertEquals(ConsumerView.CONSUMER_STATUS_OK, consumer.get(ConsumerField.STATUS.getName()));
+         assertTrue(((Number) consumer.get(ConsumerField.CREATION_TIME.getName())).longValue() > 0);
+
+         filter = createJsonFilter(ProducerField.ADDRESS.getName(), "EQUALS", addressName.toString());
+         Map<String, Object> producerData = assertDataMatchesJson(serverControl.listProducers(filter, 1, 50), serverControl.listProducersAsData(filter, 1, 50));
+         assertEquals(1L, ((Number) producerData.get(ProducerField.MESSAGE_SENT.getName())).longValue());
+         assertTrue(((Number) producerData.get(ProducerField.CREATION_TIME.getName())).longValue() > 0);
+
+         Map<String, Object> sessionData = assertDataMatchesJson(serverControl.listSessions("", 1, 50), serverControl.listSessionsAsData("", 1, 50));
+         assertInstanceOf(Number.class, sessionData.get(SessionField.CONSUMER_COUNT.getName()));
+         assertInstanceOf(Number.class, sessionData.get(SessionField.CREATION_TIME.getName()));
+
+         Map<String, Object> connection = assertDataMatchesJson(serverControl.listConnections("", 1, 50), serverControl.listConnectionsAsData("", 1, 50));
+         assertInstanceOf(Number.class, connection.get(ConnectionField.SESSION_COUNT.getName()));
+         assertInstanceOf(Number.class, connection.get(ConnectionField.CREATION_TIME.getName()));
+      }
+   }
+
+   /**
+    * Checks that the structured result contains the same rows and fields as the JSON result.
+    *
+    * @return the first row of the structured result
+    */
+   @SuppressWarnings("unchecked")
+   private static Map<String, Object> assertDataMatchesJson(String json, Map<String, Object> data) {
+      JsonObject jsonObject = JsonUtil.readJsonObject(json);
+      JsonArray jsonRows = jsonObject.getJsonArray("data");
+      Object[] rows = (Object[]) data.get("data");
+
+      assertEquals(jsonObject.getInt("count"), ((Number) data.get("count")).intValue());
+      assertEquals(jsonRows.size(), rows.length);
+      assertTrue(rows.length > 0);
+      for (int i = 0; i < rows.length; i++) {
+         assertEquals(jsonRows.getJsonObject(i).keySet(), ((Map<String, Object>) rows[i]).keySet());
+      }
+      return (Map<String, Object>) rows[0];
    }
 
    @TestTemplate
