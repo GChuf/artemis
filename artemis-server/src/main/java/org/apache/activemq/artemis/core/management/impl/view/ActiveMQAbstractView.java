@@ -149,10 +149,13 @@ public abstract class ActiveMQAbstractView<T, V extends PredicateFilterPart<T>> 
 
    /**
     * Builds the structured representation of an element from {@link #getField(Object, String)} for each of
-    * {@link #getDataFields()}. Views override this to return {@code null} for elements which should be skipped, like
-    * {@link #toJson(Object)} does.
+    * {@link #getDataFields()}. Returns {@code null} for a {@code null} element. Views override this to return
+    * {@code null} for other elements which should be skipped, like {@link #toJson(Object)} does.
     */
    public Map<String, Object> toMap(T obj) {
+      if (obj == null) {
+         return null;
+      }
       Map<String, Object> map = new LinkedHashMap<>();
       for (String field : getDataFields()) {
          map.put(field, toDataValue(getField(obj, field)));

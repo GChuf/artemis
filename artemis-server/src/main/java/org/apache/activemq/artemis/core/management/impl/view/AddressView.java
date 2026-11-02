@@ -17,7 +17,6 @@
 package org.apache.activemq.artemis.core.management.impl.view;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.activemq.artemis.api.core.management.AddressControl;
@@ -108,14 +107,6 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
          obj.add(AddressField.PAGING.getName(), N_A);
       }
       return obj;
-   }
-
-   @Override
-   public Map<String, Object> toMap(AddressControl address) {
-      if (address == null) {
-         return null;
-      }
-      return super.toMap(address);
    }
 
    @Override

@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class QueueViewTest extends ViewTest {
 
@@ -45,5 +46,10 @@ public class QueueViewTest extends ViewTest {
       assertNotEquals("id", view.getDefaultOrderColumn());
       view.setOptions(createLegacyJsonFilter("id", "EQUALS", "123", "id", "asc"));
       assertEquals("id", view.getSortField());
+   }
+
+   @Test
+   public void testToMapNullElement() {
+      assertNull(new QueueView(Mockito.mock(ActiveMQServer.class)).toMap(null));
    }
 }
