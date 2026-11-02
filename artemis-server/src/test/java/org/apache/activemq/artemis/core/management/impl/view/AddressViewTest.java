@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
+import org.apache.activemq.artemis.api.core.management.AddressControl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,5 +46,17 @@ public class AddressViewTest extends ViewTest {
       assertNotEquals("name", view.getDefaultOrderColumn());
       view.setOptions(createLegacyJsonFilter("name", "EQUALS", "123", "name", "asc"));
       assertEquals("name", view.getSortField());
+   }
+
+   @Test
+   public void testPrefetchPageMessages() throws Exception {
+      AddressControl address = Mockito.mock(AddressControl.class);
+      Mockito.when(address.getPrefetchPageBytes()).thenReturn(9);
+      Mockito.when(address.getPrefetchPageMessages()).thenReturn(7);
+
+      AddressView view = new AddressView(Mockito.mock(ActiveMQServer.class));
+
+      assertEquals("7", view.toJson(address).build().getString(AddressField.PREFETCH_PAGE_MESSAGES.getName()));
+      assertEquals(7, view.getField(address, AddressField.PREFETCH_PAGE_MESSAGES.getName()));
    }
 }

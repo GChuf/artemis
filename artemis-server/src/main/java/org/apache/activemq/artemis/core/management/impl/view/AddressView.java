@@ -66,7 +66,7 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
          .add(AddressField.MAX_PAGE_READ_BYTES.getName(), toString(address.getMaxPageReadBytes()))
          .add(AddressField.MAX_PAGE_READ_MESSAGES.getName(), toString(address.getMaxPageReadMessages()))
          .add(AddressField.PREFETCH_PAGE_BYTES.getName(), toString(address.getPrefetchPageBytes()))
-         .add(AddressField.PREFETCH_PAGE_MESSAGES.getName(), toString(address.getPrefetchPageBytes()));
+         .add(AddressField.PREFETCH_PAGE_MESSAGES.getName(), toString(address.getPrefetchPageMessages()));
 
       try {
          obj.add(AddressField.NUMBER_OF_BYTES_PER_PAGE.getName(), toString(address.getNumberOfBytesPerPage()));
@@ -122,7 +122,7 @@ public class AddressView extends ActiveMQAbstractView<AddressControl, AddressPre
          case MAX_PAGE_READ_BYTES -> address.getMaxPageReadBytes();
          case MAX_PAGE_READ_MESSAGES -> address.getMaxPageReadMessages();
          case PREFETCH_PAGE_BYTES -> address.getPrefetchPageBytes();
-         case PREFETCH_PAGE_MESSAGES -> address.getPrefetchPageBytes();
+         case PREFETCH_PAGE_MESSAGES -> address.getPrefetchPageMessages();
          default -> throw new IllegalArgumentException("Unsupported field, " + fieldName);
       };
    }
