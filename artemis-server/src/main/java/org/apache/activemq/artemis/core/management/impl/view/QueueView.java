@@ -16,8 +16,9 @@
  */
 package org.apache.activemq.artemis.core.management.impl.view;
 
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Map;
 
 import org.apache.activemq.artemis.core.management.impl.view.predicate.QueuePredicateFilterPart;
 import org.apache.activemq.artemis.json.JsonObjectBuilder;
@@ -32,7 +33,7 @@ public class QueueView extends ActiveMQAbstractView<QueueControl, QueuePredicate
 
    private static final String defaultSortField = QueueField.NAME.getName();
 
-   private static final List<String> dataFields = Stream.of(
+   private static final List<QueueField> dataQueueFields = List.of(
       QueueField.ID,
       QueueField.NAME,
       QueueField.ADDRESS,
@@ -67,7 +68,9 @@ public class QueueView extends ActiveMQAbstractView<QueueControl, QueuePredicate
       QueueField.CONSUMERS_BEFORE_DISPATCH,
       QueueField.DELAY_BEFORE_DISPATCH,
       QueueField.AUTO_DELETE,
-      QueueField.INTERNAL_QUEUE).map(QueueField::getName).toList();
+      QueueField.INTERNAL_QUEUE);
+
+   private static final List<String> dataFields = dataQueueFields.stream().map(QueueField::getName).toList();
 
    private ActiveMQServer server;
 
@@ -124,12 +127,29 @@ public class QueueView extends ActiveMQAbstractView<QueueControl, QueuePredicate
       return obj;
    }
 
+   /**
+    * Same as the default implementation, but locates the {@link Queue} once per element instead of once per field.
+    */
+   @Override
+   public Map<String, Object> toMap(QueueControl queue) {
+      if (queue == null) {
+         return null;
+      }
+      Queue q = server.locateQueue(SimpleString.of(queue.getName()));
+      Map<String, Object> map = new LinkedHashMap<>();
+      for (QueueField field : dataQueueFields) {
+         map.put(field.getName(), toDataValue(getField(queue, q, field)));
+      }
+      return map;
+   }
+
    @Override
    public Object getField(QueueControl queue, String fieldName) {
       Queue q = server.locateQueue(SimpleString.of(queue.getName()));
+      return getField(queue, q, QueueField.valueOfName(fieldName));
+   }
 
-      QueueField field = QueueField.valueOfName(fieldName);
-
+   private static Object getField(QueueControl queue, Queue q, QueueField field) {
       return switch (field) {
          case ID -> queue.getID();
          case NAME -> queue.getName();
@@ -166,7 +186,7 @@ public class QueueView extends ActiveMQAbstractView<QueueControl, QueuePredicate
          case DELAY_BEFORE_DISPATCH -> q.getDelayBeforeDispatch();
          case AUTO_DELETE -> q.isAutoDelete();
          case INTERNAL_QUEUE -> q.isInternalQueue();
-         default -> throw new IllegalArgumentException("Unsupported field, " + fieldName);
+         default -> throw new IllegalArgumentException("Unsupported field, " + field.getName());
       };
    }
 
