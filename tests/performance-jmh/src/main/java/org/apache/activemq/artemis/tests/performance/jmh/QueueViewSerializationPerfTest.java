@@ -59,7 +59,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.SECONDS)
 public class QueueViewSerializationPerfTest {
 
-   @Param({"1000"})
+   @Param({"1000", "10000"})
    private int queueCount;
 
    @Param({"50"})
