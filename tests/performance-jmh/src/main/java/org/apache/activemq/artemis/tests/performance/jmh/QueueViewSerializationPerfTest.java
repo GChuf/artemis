@@ -62,7 +62,7 @@ public class QueueViewSerializationPerfTest {
    @Param({"1000", "10000"})
    private int queueCount;
 
-   @Param({"50"})
+   @Param({"50", "1000"})
    private int pageSize;
 
    private QueueView view;
