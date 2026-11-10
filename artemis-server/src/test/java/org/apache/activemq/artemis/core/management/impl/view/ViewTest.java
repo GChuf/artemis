@@ -224,6 +224,11 @@ public class ViewTest {
          public String getDefaultOrderColumn() {
             return "";
          }
+
+         @Override
+         public List<String> getDataFields() {
+            return List.of();
+         }
       };
       view.setCollection(list);
       return view;
