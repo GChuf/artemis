@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.artemis.tests.performance.jmh;
 
+import javax.management.AttributeNotFoundException;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +33,9 @@ import org.apache.activemq.artemis.core.management.impl.view.QueueView;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.json.JsonObject;
+import org.jolokia.core.service.serializer.SerializeOptions;
+import org.jolokia.json.JSONObject;
+import org.jolokia.service.serializer.JolokiaSerializer;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -50,6 +56,10 @@ import org.openjdk.jmh.annotations.Warmup;
  * <p>
  * {@link QueueControl}, {@link Queue} and {@link ActiveMQServer} are dynamic proxies, so the getters cost the same in
  * both variants. {@link ActiveMQServer#locateQueue(SimpleString)} does a hash map lookup, like the real broker does.
+ * <p>
+ * The {@code jolokia*} benchmarks add what Jolokia does with the result of an {@code exec} request: serialize the
+ * return value with {@link JolokiaSerializer}, wrap it in a response object and write it as JSON text. The serialize
+ * options match the limits the web console sends ({@code maxDepth=7}, {@code maxCollectionSize=50000}).
  */
 @State(Scope.Benchmark)
 @Fork(value = 1)
@@ -67,6 +77,9 @@ public class QueueViewSerializationPerfTest {
 
    private QueueView view;
    private QueueControl singleQueue;
+
+   private final JolokiaSerializer serializer = new JolokiaSerializer();
+   private final SerializeOptions serializeOptions = new SerializeOptions.Builder().maxDepth(7).maxCollectionSize(50000).build();
 
    @Setup(Level.Trial)
    public void init() {
@@ -120,6 +133,35 @@ public class QueueViewSerializationPerfTest {
    @Benchmark
    public Map<String, Object> asDataAll() {
       return view.asData(-1, -1);
+   }
+
+   @Benchmark
+   public String jolokiaAsJsonFirstPage() throws Exception {
+      return toJolokiaResponse(view.AsJson(1, pageSize));
+   }
+
+   @Benchmark
+   public String jolokiaAsDataFirstPage() throws Exception {
+      return toJolokiaResponse(view.asData(1, pageSize));
+   }
+
+   @Benchmark
+   public String jolokiaAsJsonAll() throws Exception {
+      return toJolokiaResponse(view.AsJson(-1, -1));
+   }
+
+   @Benchmark
+   public String jolokiaAsDataAll() throws Exception {
+      return toJolokiaResponse(view.asData(-1, -1));
+   }
+
+   private String toJolokiaResponse(Object value) throws AttributeNotFoundException, IOException {
+      JSONObject response = new JSONObject();
+      response.put("value", serializer.serialize(value, null, serializeOptions));
+      response.put("status", 200);
+      StringWriter writer = new StringWriter();
+      response.writeJSONString(writer);
+      return writer.toString();
    }
 
    /**

@@ -31,6 +31,8 @@
     <properties>
         <activemq.basedir>${project.basedir}/../..</activemq.basedir>
         <jmh.version>1.37</jmh.version>
+        <!-- same version the web console bundles -->
+        <jolokia.version>2.6.3</jolokia.version>
     </properties>
 
     <dependencies>
@@ -66,6 +68,12 @@
             <artifactId>jmh-generator-annprocess</artifactId>
             <version>${jmh.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- ALv2 license -->
+        <dependency>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-service-serializer</artifactId>
+            <version>${jolokia.version}</version>
         </dependency>
     </dependencies>
 
