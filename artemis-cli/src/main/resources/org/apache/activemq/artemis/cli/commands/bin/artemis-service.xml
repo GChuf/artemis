@@ -30,6 +30,7 @@
    <logpath>@artemis.instance@\log</logpath>
    <logmode>roll</logmode>
 
+   <!-- WinSW quotes every argument containing spaces, so do not add quotes to the arguments below -->
    <executable>%JAVA_HOME%\bin\java.exe</executable>
    <startargument>-XX:+UseG1GC</startargument>
    <startargument>-Xms512M</startargument>
@@ -71,7 +72,7 @@
    <stopargument>-Dartemis.home=%ARTEMIS_HOME%</stopargument>
    <stopargument>-Dartemis.instance=%ARTEMIS_INSTANCE%</stopargument>
    <stopargument>-Ddata.dir=%ARTEMIS_DATA_DIR%</stopargument>
-   <stopargument>-Dartemis.instance.etc="%ARTEMIS_INSTANCE_ETC%"</stopargument>
+   <stopargument>-Dartemis.instance.etc=%ARTEMIS_INSTANCE_ETC%</stopargument>
 
    <stopargument>org.apache.activemq.artemis.boot.Artemis</stopargument>
 
