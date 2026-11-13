@@ -124,11 +124,16 @@ public class Upgrade extends InstallAbstract {
          final File serviceExe = new File(directory, Create.BIN_ARTEMIS_SERVICE_EXE);
          final File serviceExeBkp = new File(bkpFolder, Create.BIN_ARTEMIS_SERVICE_EXE);
 
-         context.out.println("Copying " + serviceExe + " to " + serviceExeBkp);
-         Files.copy(serviceExe.toPath(), serviceExeBkp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+         if (serviceExe.exists()) {
+            // the instance has no service wrapper if the broker home it was created from did not ship one
+            context.out.println("Copying " + serviceExe + " to " + serviceExeBkp);
+            Files.copy(serviceExe.toPath(), serviceExeBkp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+         }
 
-         context.out.println("Updating " + serviceExe.toPath());
-         write(Create.BIN_ARTEMIS_SERVICE_EXE, true);
+         // if the broker home does not ship the service wrapper the existing one is kept
+         if (writeServiceExe(true)) {
+            context.out.println("Updated " + serviceExe.toPath());
+         }
 
          final File serviceExeConfig = new File(directory, Create.BIN_ARTEMIS_SERVICE_EXE_CONFIG);
          final File serviceExeConfigBkp = new File(bkpFolder, Create.BIN_ARTEMIS_SERVICE_EXE_CONFIG);

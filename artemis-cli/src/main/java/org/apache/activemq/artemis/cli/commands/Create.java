@@ -71,6 +71,8 @@ public class Create extends InstallAbstract {
    public static final String BIN_ARTEMIS_CMD = "bin/" + ARTEMIS_CMD;
    public static final String ARTEMIS_SERVICE_EXE = "artemis-service.exe";
    public static final String BIN_ARTEMIS_SERVICE_EXE = "bin/" + ARTEMIS_SERVICE_EXE;
+   // location of the Windows service wrapper in the broker home, it is not bundled in the artemis-cli jar
+   public static final String HOME_BIN_WINDOWS_ARTEMIS_SERVICE_EXE = "bin/windows/" + ARTEMIS_SERVICE_EXE;
    public static final String ARTEMIS_SERVICE_EXE_CONFIG = "artemis-service.exe.config";
    public static final String BIN_ARTEMIS_SERVICE_EXE_CONFIG = "bin/" + ARTEMIS_SERVICE_EXE_CONFIG;
    public static final String ARTEMIS_SERVICE_XML = "artemis-service.xml";
@@ -842,7 +844,7 @@ public class Create extends InstallAbstract {
 
       if (IS_WINDOWS) {
          write(BIN_ARTEMIS_CMD, filters, false);
-         write(BIN_ARTEMIS_SERVICE_EXE, force);
+         writeServiceExe(force);
          write(BIN_ARTEMIS_SERVICE_EXE_CONFIG, force);
          write(BIN_ARTEMIS_SERVICE_XML, filters, false);
          writeEtc(ETC_ARTEMIS_PROFILE_CMD, etcFolder, filters, false);
@@ -951,8 +953,8 @@ public class Create extends InstallAbstract {
          context.out.println("");
       }
 
-      if (IS_WINDOWS) {
-         service = new File(directory, BIN_ARTEMIS_SERVICE_EXE);
+      service = new File(directory, BIN_ARTEMIS_SERVICE_EXE);
+      if (IS_WINDOWS && service.exists()) {
          context.out.println("Or you can setup the broker as Windows service and run it in the background:");
          context.out.println("");
          context.out.println(String.format("   \"%s\" install", path(service)));

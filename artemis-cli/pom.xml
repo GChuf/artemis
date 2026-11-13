@@ -28,10 +28,6 @@
    <packaging>jar</packaging>
    <name>Apache Artemis CLI</name>
 
-   <properties>
-      <winsw.version>2.9.0</winsw.version>
-   </properties>
-
    <dependencies>
       <dependency>
          <groupId>jakarta.jms</groupId>
@@ -150,14 +146,6 @@
          <scope>test</scope>
       </dependency>
       <dependency>
-         <groupId>com.sun.winsw</groupId>
-         <artifactId>winsw</artifactId>
-         <version>${winsw.version}</version>
-         <classifier>bin</classifier>
-         <type>exe</type>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
          <groupId>org.junit.jupiter</groupId>
          <artifactId>junit-jupiter-api</artifactId>
          <scope>test</scope>
@@ -211,46 +199,6 @@
             </includes>
          </resource>
       </resources>
-
-      <plugins>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <executions>
-               <execution>
-                  <id>unpack</id>
-                  <phase>process-resources</phase>
-                  <goals>
-                     <goal>copy</goal>
-                  </goals>
-                  <configuration>
-                     <artifactItems>
-                        <artifactItem>
-                           <groupId>com.sun.winsw</groupId>
-                           <artifactId>winsw</artifactId>
-                           <version>${winsw.version}</version>
-                           <classifier>bin</classifier>
-                           <type>exe</type>
-                           <outputDirectory>${basedir}/target/classes/org/apache/activemq/artemis/cli/commands/bin/</outputDirectory>
-                           <destFileName>artemis-service.exe</destFileName>
-                        </artifactItem>
-                     </artifactItems>
-                  </configuration>
-               </execution>
-            </executions>
-         </plugin>
-      </plugins>
    </build>
-
-   <repositories>
-      <repository>
-         <id>jenkins</id>
-         <name>jenkins</name>
-         <url>https://repo.jenkins-ci.org/releases/</url>
-         <snapshots>
-            <enabled>false</enabled>
-         </snapshots>
-      </repository>
-   </repositories>
 
 </project>

@@ -158,6 +158,15 @@
          <directoryMode>0755</directoryMode>
          <fileMode>0755</fileMode>
       </fileSet>
+      <fileSet>
+         <directory>target/winsw</directory>
+         <outputDirectory>bin/windows</outputDirectory>
+         <includes>
+            <include>artemis-service.exe</include>
+         </includes>
+         <directoryMode>0755</directoryMode>
+         <fileMode>0644</fileMode>
+      </fileSet>
       <!-- Include license and notice files -->
       <fileSet>
          <directory>${activemq.basedir}/artemis-distribution/src/main/resources/licenses/bin</directory>

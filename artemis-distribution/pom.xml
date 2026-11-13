@@ -32,6 +32,7 @@
    <properties>
       <schemaLocation>${project.build.directory}/${project.artifactId}-${project.version}-bin/${project.artifactId}-${project.version}/schema</schemaLocation>
       <configLocation>src/main/resources/config</configLocation>
+      <winsw.version>2.9.0</winsw.version>
    </properties>
 
    <dependencies>
@@ -166,6 +167,28 @@
                      <outputDirectory>${project.build.directory}/console</outputDirectory>
                   </configuration>
                </execution>
+               <!-- The Windows service wrapper, copied into bin/windows by the assembly. Create copies
+                    it from there into the bin folder of instances created for Windows. -->
+               <execution>
+                  <id>copy-winsw</id>
+                  <phase>process-resources</phase>
+                  <goals>
+                     <goal>copy</goal>
+                  </goals>
+                  <configuration>
+                     <artifactItems>
+                        <artifactItem>
+                           <groupId>com.sun.winsw</groupId>
+                           <artifactId>winsw</artifactId>
+                           <version>${winsw.version}</version>
+                           <classifier>bin</classifier>
+                           <type>exe</type>
+                           <outputDirectory>${project.build.directory}/winsw</outputDirectory>
+                           <destFileName>artemis-service.exe</destFileName>
+                        </artifactItem>
+                     </artifactItems>
+                  </configuration>
+               </execution>
             </executions>
          </plugin>
          <plugin>
@@ -258,4 +281,15 @@
          </build>
       </profile>
    </profiles>
+
+   <repositories>
+      <repository>
+         <id>jenkins</id>
+         <name>jenkins</name>
+         <url>https://repo.jenkins-ci.org/releases/</url>
+         <snapshots>
+            <enabled>false</enabled>
+         </snapshots>
+      </repository>
+   </repositories>
 </project>

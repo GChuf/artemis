@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -266,6 +268,26 @@ public class InstallAbstract extends InputAbstract {
             copy(in, fout);
          }
       }
+   }
+
+   /**
+    * Copies the Windows service wrapper from {@code bin/windows} of the broker home into the {@code bin} folder of the
+    * instance. It is shipped with the distribution rather than bundled in the artemis-cli jar, so it may be missing when
+    * the broker home is not a full distribution (e.g. when the CLI is used embedded). In that case nothing is copied.
+    *
+    * @return {@code true} if the service wrapper was copied
+    */
+   protected boolean writeServiceExe(boolean force) throws IOException {
+      File source = new File(getHome(), Create.HOME_BIN_WINDOWS_ARTEMIS_SERVICE_EXE);
+      if (!source.isFile()) {
+         return false;
+      }
+      File target = new File(directory, Create.BIN_ARTEMIS_SERVICE_EXE);
+      if (target.exists() && !force) {
+         throw new RuntimeException(String.format("The file '%s' already exists.  Use --force to overwrite.", target));
+      }
+      Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      return true;
    }
 
    protected static InputStream openStream(String source) {
