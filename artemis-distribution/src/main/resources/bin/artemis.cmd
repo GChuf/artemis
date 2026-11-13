@@ -18,11 +18,13 @@ rem under the License.
 
 setlocal
 
-if NOT "%ARTEMIS_HOME%"=="" goto CHECK_ARTEMIS_HOME
-set ARTEMIS_HOME="%~dp0.."
+if defined ARTEMIS_HOME goto CHECK_ARTEMIS_HOME
+set "ARTEMIS_HOME=%~dp0.."
 
 :CHECK_ARTEMIS_HOME
-if exist %ARTEMIS_HOME%\bin\artemis.cmd goto CHECK_JAVA
+rem "ARTEMIS_HOME may be set with or without quotes, remove them and quote it where it is used"
+set "ARTEMIS_HOME=%ARTEMIS_HOME:"=%"
+if exist "%ARTEMIS_HOME%\bin\artemis.cmd" goto CHECK_JAVA
 
 :NO_HOME
 echo ARTEMIS_HOME environment variable is set incorrectly. Please set ARTEMIS_HOME.
@@ -50,8 +52,8 @@ if "%JAVA_ARGS%" == "" set JAVA_ARGS=-Xms512M -Xmx1024M
 rem "Create full JVM Args"
 set JVM_ARGS=%JAVA_ARGS%
 if not "%ARTEMIS_CLUSTER_PROPS%"=="" set JVM_ARGS=%JVM_ARGS% %ARTEMIS_CLUSTER_PROPS%
-set JVM_ARGS=%JVM_ARGS% -classpath %ARTEMIS_HOME%\lib\artemis-boot.jar
-set JVM_ARGS=%JVM_ARGS% -Dartemis.home=%ARTEMIS_HOME%
+set JVM_ARGS=%JVM_ARGS% -classpath "%ARTEMIS_HOME%\lib\artemis-boot.jar"
+set JVM_ARGS=%JVM_ARGS% "-Dartemis.home=%ARTEMIS_HOME%"
 if not "%DEBUG_ARGS%"=="" set JVM_ARGS=%JVM_ARGS% %DEBUG_ARGS%
 if not "%JAVA_ARGS_APPEND%"=="" set JVM_ARGS=%JVM_ARGS% %JAVA_ARGS_APPEND%
 

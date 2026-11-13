@@ -18,11 +18,13 @@ rem under the License.
 
 setlocal
 
-if NOT "%ARTEMIS_INSTANCE%"=="" goto CHECK_ARTEMIS_INSTANCE
-set ARTEMIS_INSTANCE="%~dp0.."
+if defined ARTEMIS_INSTANCE goto CHECK_ARTEMIS_INSTANCE
+set "ARTEMIS_INSTANCE=%~dp0.."
 
 :CHECK_ARTEMIS_INSTANCE
-if exist %ARTEMIS_INSTANCE%\bin\artemis.cmd goto CHECK_JAVA
+rem "ARTEMIS_INSTANCE may be set with or without quotes, remove them and quote it where it is used"
+set "ARTEMIS_INSTANCE=%ARTEMIS_INSTANCE:"=%"
+if exist "%ARTEMIS_INSTANCE%\bin\artemis.cmd" goto CHECK_JAVA
 
 :NO_HOME
 echo ARTEMIS_INSTANCE environment variable is set incorrectly. Please set ARTEMIS_INSTANCE.
