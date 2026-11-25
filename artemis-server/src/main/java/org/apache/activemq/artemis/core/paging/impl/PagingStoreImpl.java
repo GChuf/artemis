@@ -685,10 +685,18 @@ public class PagingStoreImpl implements PagingStore {
 
       final List<Runnable> pendingTasks = new ArrayList<>();
 
-      final Page page = currentPage;
-      if (page != null) {
-         page.close(true);
-         currentPage = null;
+      // A cleanup that was already running holds the write lock and can still open a new page, for example when it
+      // leaves page mode. Wait for it, so the page closed here is the last one opened; later cleanups see the store
+      // stopped and return.
+      writeLock();
+      try {
+         final Page page = currentPage;
+         if (page != null) {
+            page.close(true);
+            currentPage = null;
+         }
+      } finally {
+         writeUnlock();
       }
    }
 
