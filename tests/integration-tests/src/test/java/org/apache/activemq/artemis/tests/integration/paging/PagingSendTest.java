@@ -47,6 +47,7 @@ import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.core.settings.impl.PageFullMessagePolicy;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
+import org.apache.activemq.artemis.utils.Wait;
 import org.apache.activemq.artemis.utils.collections.LinkedListIterator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -560,6 +561,10 @@ public class PagingSendTest extends ActiveMQTestBase {
 
             queue = server.locateQueue(queueAddr);
 
+            // the page counters are rebuilt asynchronously on start, and the existing messages only count once that is
+            // done, so messages sent before then are not checked against pageLimitMessages
+            Wait.assertFalse(queue.getPageSubscription()::isCounterPending, 5000, 100);
+
             queuePagingStore = queue.getPagingStore();
             assertNotNull(queuePagingStore);
             assertTrue(queuePagingStore.isPageFull());
@@ -695,6 +700,9 @@ public class PagingSendTest extends ActiveMQTestBase {
                   message.acknowledge();
                   session.commit();
                }
+
+               // consumed pages are removed by an asynchronous cleanup, which also clears the page full state
+               Wait.assertFalse(queuePagingStore::isPageFull, 5000, 100);
 
                currentPages = queuePagingStore.getNumberOfPages();
                // check page store not page full
