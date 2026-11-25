@@ -287,38 +287,38 @@ public class PageCursorProviderImpl implements PageCursorProvider {
             }
 
             if (!pagingStore.isStorePaging()) {
-               logger.trace("Paging Store was not paging, so no reason to retry the cleanup");
-               return;
-            }
-
-            List<PageSubscription> cursorList = cloneSubscriptions();
-
-            long minPage = checkMinPage(cursorList);
-            final long firstPage = pagingStore.getFirstPage();
-            deliverIfNecessary(cursorList, minPage);
-
-            if (logger.isTraceEnabled()) {
-               logger.trace("firstPage={}, minPage={}, currentWritingPage={}", firstPage, minPage, pagingStore.getCurrentWritingPage());
-            }
-
-            // First we cleanup regular streaming, at the beginning of set of files
-            cleanupRegularStream(depagedPages, depagedPagesSet, cursorList, minPage, firstPage);
-
-            // Then we do some check on eventual pages that can be already removed but they are away from the streaming
-            cleanupMiddleStream(depagedPages, depagedPagesSet, cursorList, minPage, firstPage);
-
-            if (pagingStore.isPageFull()) {
-               checkClearPageLimit();
-            }
-
-            assert pagingStore.getNumberOfPages() >= 0;
-
-            if (!pagingStore.hasPendingIO() && (pagingStore.getNumberOfPages() == 0 || pagingStore.getNumberOfPages() == 1 && (pagingStore.getCurrentPage() == null || pagingStore.getCurrentPage().getNumberOfMessages() == 0))) {
-               logger.trace("StopPaging being called on {}, pending={}", pagingStore, pagingStore.hasPendingIO());
-               pagingStore.stopPaging();
+               logger.trace("Paging Store was not paging, only empty pages behind the current page can be removed");
+               cleanupEmptyPages(depagedPages);
             } else {
+               List<PageSubscription> cursorList = cloneSubscriptions();
+
+               long minPage = checkMinPage(cursorList);
+               final long firstPage = pagingStore.getFirstPage();
+               deliverIfNecessary(cursorList, minPage);
+
                if (logger.isTraceEnabled()) {
-                  logger.trace("Couldn't cleanup page on address {} as numberOfPages == {}  and currentPage.numberOfMessages = {}", pagingStore.getAddress(), pagingStore.getNumberOfPages(), pagingStore.getCurrentPage().getNumberOfMessages());
+                  logger.trace("firstPage={}, minPage={}, currentWritingPage={}", firstPage, minPage, pagingStore.getCurrentWritingPage());
+               }
+
+               // First we cleanup regular streaming, at the beginning of set of files
+               cleanupRegularStream(depagedPages, depagedPagesSet, cursorList, minPage, firstPage);
+
+               // Then we do some check on eventual pages that can be already removed but they are away from the streaming
+               cleanupMiddleStream(depagedPages, depagedPagesSet, cursorList, minPage, firstPage);
+
+               if (pagingStore.isPageFull()) {
+                  checkClearPageLimit();
+               }
+
+               assert pagingStore.getNumberOfPages() >= 0;
+
+               if (!pagingStore.hasPendingIO() && (pagingStore.getNumberOfPages() == 0 || pagingStore.getNumberOfPages() == 1 && (pagingStore.getCurrentPage() == null || pagingStore.getCurrentPage().getNumberOfMessages() == 0))) {
+                  logger.trace("StopPaging being called on {}, pending={}", pagingStore, pagingStore.hasPendingIO());
+                  pagingStore.stopPaging();
+               } else {
+                  if (logger.isTraceEnabled()) {
+                     logger.trace("Couldn't cleanup page on address {} as numberOfPages == {}  and currentPage.numberOfMessages = {}", pagingStore.getAddress(), pagingStore.getNumberOfPages(), pagingStore.getCurrentPage().getNumberOfMessages());
+                  }
                }
             }
          } catch (Throwable ex) {
@@ -369,6 +369,30 @@ public class PageCursorProviderImpl implements PageCursorProvider {
          }
 
          depagedPagesSet.add(page.getPageId());
+         depagedPages.add(page);
+      }
+   }
+
+   /**
+    * A store that left page mode keeps its empty current page for the next time it pages. Page files can still appear
+    * behind that page while the store is not paging, for example when a replication sync forces a new page, and the
+    * regular cleanup never sees them. Depage the empty ones so {@link #finishCleanup(List)} deletes them together with
+    * any cursor records on them. A page with data stops the walk, as it is never expected here.
+    */
+   private void cleanupEmptyPages(List<Page> depagedPages) throws Exception {
+      final long lastPage = pagingStore.getCurrentWritingPage() - 1;
+      for (long i = pagingStore.getFirstPage(); i <= lastPage; i++) {
+         // checkPageFileExists is only true for a page file with data
+         if (pagingStore.checkPageFileExists(i)) {
+            break;
+         }
+         Page page = pagingStore.depage();
+         if (page == null) {
+            break;
+         }
+
+         logger.debug("Depaging empty page {} on address {}, which is not paging", page.getPageId(), pagingStore.getAddress());
+
          depagedPages.add(page);
       }
    }
