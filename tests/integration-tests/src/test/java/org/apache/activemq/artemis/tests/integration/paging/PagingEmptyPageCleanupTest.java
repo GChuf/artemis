@@ -33,6 +33,7 @@ import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.paging.impl.PagingStoreImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
+import org.apache.activemq.artemis.core.server.impl.AddressInfo;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.apache.activemq.artemis.tests.util.CFUtil;
 import org.apache.activemq.artemis.utils.Wait;
@@ -106,6 +107,51 @@ public class PagingEmptyPageCleanupTest extends ActiveMQTestBase {
 
       Wait.assertTrue(() -> !restartedStore.isStorePaging(), 10_000);
       assertFalse(new File(folder, pageFileName(lastDataPage + 1)).exists(), "empty page should have been removed");
+   }
+
+   /**
+    * With no queue left on the address, cleanup has no cursor to bound it and removes every page, including the
+    * current one, so paging stops and no page file is left behind.
+    */
+   @Test
+   public void testPagingStopsWhenLastQueueIsDeleted() throws Throwable {
+      Configuration config = createDefaultConfig(true).setJournalSyncNonTransactional(false);
+
+      ActiveMQServer server = createServer(true, config, 10 * 1024, 100 * 1024, new HashMap<>());
+      server.start();
+
+      // created on its own, so the address and its paging store stay when the queue is deleted
+      server.addAddressInfo(new AddressInfo(QUEUE).addRoutingType(RoutingType.ANYCAST));
+      Queue queue = server.createQueue(QueueConfiguration.of(QUEUE).setRoutingType(RoutingType.ANYCAST));
+      PagingStoreImpl store = (PagingStoreImpl) queue.getPagingStore();
+      store.startPaging();
+
+      ConnectionFactory factory = CFUtil.createConnectionFactory("CORE", "tcp://localhost:61616");
+      try (Connection connection = factory.createConnection()) {
+         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+         MessageProducer producer = session.createProducer(session.createQueue(QUEUE.toString()));
+         for (int i = 0; i < 5; i++) {
+            producer.send(session.createTextMessage("hello " + i));
+         }
+         session.commit();
+      }
+
+      File folder = store.getFolder();
+      assertTrue(store.isStorePaging(), "the address should be paging");
+      assertEquals(1, pageFiles(folder).length, "the messages should be on the current page");
+
+      // hold cleanup back while the queue is deleted, so the next cleanup runs with no queue on the address
+      store.disableCleanup();
+      server.destroyQueue(QUEUE);
+      store.enableCleanup();
+
+      Wait.assertFalse(store::isStorePaging, 5000, 100);
+      Wait.assertEquals(0, () -> pageFiles(folder).length, 5000, 100);
+   }
+
+   private static String[] pageFiles(File folder) {
+      String[] files = folder.list((dir, name) -> name.endsWith(".page"));
+      return files == null ? new String[0] : files;
    }
 
    private static long findOnlyPage(File folder) {
