@@ -35,7 +35,6 @@ import java.io.PrintWriter;
 import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
@@ -521,7 +520,11 @@ public class JournalPagingTest extends ActiveMQTestBase {
       try (AssertionLoggerHandler loggerHandler = new AssertionLoggerHandler()) {
          clearDataRecreateServerDirs();
 
-         Configuration config = createDefaultInVMConfig().setJournalSyncNonTransactional(false).setPagingDirectory("/" + UUID.randomUUID().toString());
+         // the paging directory can't be created under a regular file, on any OS and for any user
+         File notADirectory = new File(getTestDir(), "not-a-directory");
+         assertTrue(notADirectory.createNewFile());
+
+         Configuration config = createDefaultInVMConfig().setJournalSyncNonTransactional(false).setPagingDirectory(new File(notADirectory, "paging").getAbsolutePath());
 
          server = createServer(true, config, JournalPagingTest.PAGE_SIZE, JournalPagingTest.PAGE_MAX);
 
