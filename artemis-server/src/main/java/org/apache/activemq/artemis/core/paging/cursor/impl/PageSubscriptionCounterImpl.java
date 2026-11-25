@@ -90,9 +90,14 @@ public class PageSubscriptionCounterImpl extends BasePagingCounter {
       if (logger.isDebugEnabled()) {
          logger.debug("Subscription {} marked for rebuilding", subscriptionID);
       }
+      final boolean alreadyRebuilding = isRebuilding();
       super.markRebuilding();
-      recordedSizeUpdater.set(this, persistentSizeUpdater.get(this));
-      recordedValueUpdater.set(this, valueUpdater.get(this));
+      // a rebuild that is already running has reset the value, so keep the baseline it recorded instead of that
+      // partial value
+      if (!alreadyRebuilding) {
+         recordedSizeUpdater.set(this, persistentSizeUpdater.get(this));
+         recordedValueUpdater.set(this, valueUpdater.get(this));
+      }
       try {
          reset();
       } catch (Exception e) {
